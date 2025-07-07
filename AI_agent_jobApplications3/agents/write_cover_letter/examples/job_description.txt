@@ -1,0 +1,9 @@
+ We're seeking a skilled Frontend Engineer to join our growing team at RocketLaunch Labs.
+
+In this role, you’ll develop beautiful user interfaces, collaborate with designers, and deliver features that impact thousands of users. Ideal candidates have experience with React, are comfortable with modern frontend tooling, and love clean, maintainable code.
+
+Requirements:
+- 3+ years of frontend development
+- Proficiency with React, TypeScript, HTML, CSS
+- Good understanding of component-driven design
+- Experience working in fast-paced startup environments
