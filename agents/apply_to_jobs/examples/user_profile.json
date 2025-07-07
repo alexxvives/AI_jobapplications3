@@ -1,0 +1,75 @@
+{
+    "profile": {
+      "full_name": "Jane Smith",
+      "email": "jane.smith@email.com",
+      "phone": "+1 555-234-5678",
+      "address": "123 Main Street",
+      "city": "San Francisco",
+      "state": "CA",
+      "zip_code": "94105",
+      "country": "USA",
+      "linkedin": "https://linkedin.com/in/janesmith",
+      "portfolio": "https://janesmith.dev",
+      "work_experience": [
+        {
+          "title": "Frontend Developer",
+          "company": "Tech Solutions Inc.",
+          "location": "San Francisco, CA",
+          "start_date": "2021-05",
+          "end_date": null,
+          "description": "• Built React components\n• Collaborated with design team\n• Optimized web performance"
+        }
+      ],
+      "education": [
+        {
+          "degree": "B.Sc. in Computer Science",
+          "school": "University of California, Berkeley",
+          "start_date": "2017-08",
+          "end_date": "2021-05",
+          "gpa": "3.8"
+        }
+      ],
+      "skills": [
+        { "name": "React", "years": 2 },
+        { "name": "Python", "years": 3 }
+      ],
+      "languages": ["English", "Spanish"],
+      "achievements": [
+        {
+          "title": "Best UI Award",
+          "issuer": "Hackathon SF",
+          "date": "2020-11",
+          "description": "Recognized for building the most intuitive UX in a 48hr challenge."
+        }
+      ],
+      "certificates": [
+        {
+          "name": "AWS Certified Developer",
+          "organization": "Amazon",
+          "issue_date": "2022-01",
+          "expiry_date": "2025-01",
+          "credential_id": "AWS-123456",
+          "credential_url": "https://aws.amazon.com/certification/cert123"
+        }
+      ],
+      "job_preferences": {
+        "linkedin": "https://linkedin.com/in/janesmith",
+        "twitter": "",
+        "github": "https://github.com/janesmith",
+        "portfolio": "https://janesmith.dev",
+        "other_url": "",
+        "notice_period": "2 weeks",
+        "total_experience": "3 years",
+        "default_experience": "Frontend Developer",
+        "highest_education": "Bachelor's",
+        "companies_to_exclude": "",
+        "willing_to_relocate": "Yes",
+        "driving_license": "Yes",
+        "visa_requirement": "No",
+        "race_ethnicity": "Prefer not to say"
+      }
+    },
+    "url": "https://jobs.greenhouse.io/startupxyz/45678",
+    "submit": false
+  }
+  
