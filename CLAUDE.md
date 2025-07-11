@@ -17,6 +17,7 @@ Help job seekers apply to dozens of jobs in just a few clicks — with AI-genera
 1. **Create Profile**
    - Manually enter data or upload resume
    - Resume is parsed into structured JSON (`parse_resume` agent)
+   - Data is stored in user_profiles table with JSON fields
 
 2. **Search for Jobs**
    - Uses Crawlfire API to pull from job platforms
@@ -69,7 +70,7 @@ Each agent lives in `/agents/{agent_name}/` with:
 
 - All agents use `/agents/{name}/prp.md`, `INITIAL.md`, and `examples/`
 - Core logic is in `/core/` (e.g. profile, job_search, job_application)
-- DB schema lives in `/core/db/models.py`
+- DB schema lives in `/core/profile/schema.sql`
 - Claude-specific config lives in `.claude/`
 - `TASK.md` is your roadmap. Always consult + update it.
 
@@ -82,7 +83,7 @@ All Claude agents must follow these rules strictly:
 - ✅ **Input/Output Formats**
   - Output **only raw JSON or plain text** — never include markdown, explanations, or extra content
   - Bullet points must be separated with `\n`
-  - Normalize any “Present” date into `null`
+  - Normalize any "Present" date into `null`
 
 - ✅ **Data Handling**
   - Return all required keys, even if data is missing
@@ -92,6 +93,7 @@ All Claude agents must follow these rules strictly:
 - ✅ **Resume Parsing**
   - Must match the profile schema exactly
   - Resume parsing is not summarization — extract all structured data
+  - Output will be stored in user_profiles table with JSON fields
 
 - ✅ **Behavior**
   - Never hallucinate functions or imports
@@ -100,9 +102,73 @@ All Claude agents must follow these rules strictly:
 
 ---
 
+## ⚠️ Error Handling Guidelines
+
+### **Input Validation**
+- **Required Fields**: Each agent has specific required input fields
+- **Data Types**: Validate JSON structure and data types
+- **URL Validation**: Ensure valid HTTP/HTTPS URLs for job applications
+- **Empty Inputs**: Handle gracefully with appropriate error messages
+
+### **Output Validation**
+- **JSON Syntax**: All JSON outputs must be valid syntax
+- **Schema Compliance**: Outputs must match expected schemas exactly
+- **Required Keys**: All required keys must be present (even if null)
+- **Data Types**: Arrays must be arrays, objects must be objects
+
+### **Error Responses**
+- **Invalid Input**: Return clear error message with specific issue
+- **Missing Data**: Use null/empty values rather than failing
+- **Processing Errors**: Provide actionable error messages
+- **Timeout Handling**: Include timeout considerations for automation
+
+---
+
+## 🔄 Agent Integration Patterns
+
+### **Data Flow Between Agents**
+```
+parse_resume → write_cover_letter → apply_to_jobs
+     ↓              ↓                    ↓
+Profile JSON → Cover Letter → Selenium Instructions
+```
+
+### **Error Propagation**
+- **Upstream Errors**: If parse_resume fails, downstream agents should handle gracefully
+- **Partial Data**: Agents should work with incomplete data when possible
+- **Fallback Values**: Use sensible defaults for missing critical data
+
+### **Validation Chain**
+- **Input Validation**: Each agent validates its own inputs
+- **Output Validation**: Each agent ensures its outputs match expected format
+- **Cross-Agent Validation**: Downstream agents validate upstream outputs
+
+---
+
+## ⏱️ Performance & Timeout Guidelines
+
+### **Agent Timeout Limits**
+- **parse_resume**: 60 seconds for large resumes
+- **write_cover_letter**: 30 seconds for generation
+- **apply_to_jobs**: 45 seconds for instruction generation
+- **Overall pipeline**: 5 minutes maximum
+
+### **Progress Feedback**
+- **parse_resume**: "Processing resume sections...", "Extracting contact info...", "Parsing work experience..."
+- **write_cover_letter**: "Analyzing job requirements...", "Generating cover letter...", "Finalizing content..."
+- **apply_to_jobs**: "Mapping profile data...", "Generating instructions...", "Adding form fields..."
+
+### **Rate Limiting Considerations**
+- **API Calls**: Limit to 10 requests per minute per user
+- **Automation**: Maximum 5 concurrent applications per user
+- **Database**: Implement connection pooling for high concurrency
+- **Error Recovery**: Exponential backoff for failed requests
+
+---
+
 ## 📋 Resume → Profile Schema
 
-Used by the `parse_resume` agent.
+Used by the `parse_resume` agent. Output will be stored in user_profiles table with JSON fields.
 
 ```json
 {
@@ -179,3 +245,36 @@ Used by the `parse_resume` agent.
     }
   ]
 }
+
+```
+
+**Database Storage:**
+- `personal_information` fields → Individual columns in `user_profiles`
+- `work_experience` → JSON field in `user_profiles`
+- `education` → JSON field in `user_profiles`
+- `skills` → JSON field in `user_profiles`
+- `languages` → JSON field in `user_profiles`
+- `job_preferences` fields → Individual columns in `user_profiles`
+- `achievements` → JSON field in `user_profiles`
+- `certificates` → JSON field in `user_profiles`
+
+---
+
+## 🧪 Testing & Validation
+
+### **Agent Testing Strategy**
+- **Unit Tests**: Each agent has example inputs/outputs in `/examples/`
+- **Integration Tests**: Test data flow between agents
+- **Edge Case Testing**: Handle malformed inputs gracefully
+- **Performance Testing**: Ensure reasonable response times
+
+### **Validation Checklist**
+- [ ] All required schema keys are present
+- [ ] Date formats are consistent (YYYY-MM)
+- [ ] JSON syntax is valid
+- [ ] No hallucinated data included
+- [ ] Error handling is comprehensive
+- [ ] Output format matches expectations
+- [ ] Timeout limits are respected
+- [ ] Progress feedback is provided
+- [ ] Database compatibility is maintained

@@ -1,0 +1,84 @@
+{
+  "personal_information": {
+    "full_name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "(555) 123-4567",
+    "gender": null,
+    "address": "123 Main St",
+    "city": "Springfield",
+    "state": "IL",
+    "zip_code": "62704",
+    "country": null,
+    "citizenship": null
+  },
+  "work_experience": [
+    {
+      "title": "Software Engineer",
+      "company": "TechCorp Inc.",
+      "location": "San Francisco, CA",
+      "start_date": "2020-01",
+      "end_date": null,
+      "description": "Led backend development of job automation system using Python and FastAPI\\nImproved CI/CD pipeline with Docker and GitHub Actions\\nMentored 3 junior developers"
+    },
+    {
+      "title": "Junior Developer",
+      "company": "CodeBase",
+      "location": "Austin, TX",
+      "start_date": "2018-06",
+      "end_date": "2019-12",
+      "description": "Built internal tools using Flask and SQLAlchemy\\nCollaborated with frontend team to integrate REST APIs"
+    }
+  ],
+  "education": [
+    {
+      "degree": "B.S. in Computer Science",
+      "school": "University of Illinois, Urbana-Champaign",
+      "start_date": "2014-01",
+      "end_date": "2018-01",
+      "gpa": null
+    }
+  ],
+  "skills": [
+    { "name": "Python", "years": null },
+    { "name": "SQL", "years": null },
+    { "name": "Git", "years": null },
+    { "name": "Docker", "years": null },
+    { "name": "FastAPI", "years": null },
+    { "name": "Selenium", "years": null }
+  ],
+  "languages": ["English", "Spanish"],
+  "job_preferences": {
+    "linkedin": null,
+    "twitter": null,
+    "github": null,
+    "portfolio": null,
+    "other_url": null,
+    "notice_period": null,
+    "total_experience": null,
+    "default_experience": null,
+    "highest_education": null,
+    "companies_to_exclude": null,
+    "willing_to_relocate": null,
+    "driving_license": null,
+    "visa_requirement": null,
+    "race_ethnicity": null
+  },
+  "achievements": [
+    {
+      "title": "Employee of the Month",
+      "issuer": "TechCorp Inc.",
+      "date": "2022-06",
+      "description": null
+    }
+  ],
+  "certificates": [
+    {
+      "name": "AWS Certified Developer – Associate",
+      "organization": null,
+      "issue_date": "2021-09",
+      "expiry_date": null,
+      "credential_id": null,
+      "credential_url": null
+    }
+  ]
+}

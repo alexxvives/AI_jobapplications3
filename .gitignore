@@ -86,3 +86,12 @@ htmlcov/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Old/unused code archive
+OLD_CODE/
+
+# Large binary files (Chrome, etc.)
+*.zip
+chrome-extracted/
+**/chrome
+**/chromium*

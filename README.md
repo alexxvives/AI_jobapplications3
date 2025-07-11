@@ -1,8 +1,8 @@
-# Context Engineering Template
+# AI Job Application Assistant - Hybrid Architecture
 
-A comprehensive template for getting started with Context Engineering - the discipline of engineering context for AI coding assistants so they have the information necessary to get the job done end to end.
+A comprehensive job automation platform that combines FastAPI backend with agent-based processing for resume parsing, job scraping, cover letter generation, and application automation.
 
-> **Context Engineering is 10x better than prompt engineering and 100x better than vibe coding.**
+> **Hybrid Architecture**: Proven job scraping + flexible agent processing
 
 ## 🚀 Quick Start
 
