@@ -6,9 +6,9 @@ import asyncio
 from typing import Dict, Any, List
 from fastapi import UploadFile, HTTPException
 
-# Add the agents directory to the Python path
-AGENTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "agents")
-sys.path.append(AGENTS_DIR)
+# Add the modules directory to the Python path
+MODULES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "modules")
+sys.path.append(MODULES_DIR)
 
 class AgentOrchestrator:
     """
@@ -17,7 +17,7 @@ class AgentOrchestrator:
     """
     
     def __init__(self):
-        self.agents_dir = AGENTS_DIR
+        self.modules_dir = MODULES_DIR
         
     async def process_resume_upload(self, file: UploadFile, title: str = "Resume Profile") -> Dict[str, Any]:
         """
@@ -83,10 +83,10 @@ class AgentOrchestrator:
         Call the parse_resume agent with the uploaded file
         """
         try:
-            # Read the prompt from the agent
-            prompt_path = os.path.join(self.agents_dir, "parse_resume", "prp.md")
+            # Read the prompt from the module
+            prompt_path = os.path.join(self.modules_dir, "profile_parsing", "prompts", "main_prompt.md")
             if not os.path.exists(prompt_path):
-                raise Exception("parse_resume agent prompt not found")
+                raise Exception("profile_parsing module prompt not found")
             
             with open(prompt_path, 'r', encoding='utf-8') as f:
                 agent_prompt = f.read()
@@ -97,9 +97,8 @@ class AgentOrchestrator:
             if not resume_text or len(resume_text.strip()) < 50:
                 raise Exception("Could not extract meaningful text from the uploaded file")
             
-            # Use the DEMO's proven approach with Ollama
+            # Use the built-in Ollama approach
             profile_data = await self._call_ollama_for_resume_parsing(resume_text)
-            
             return profile_data
             
         except Exception as e:
@@ -337,6 +336,10 @@ Return only the JSON:
         response = await self._call_ollama(prompt)
         
         try:
+            # If response is already JSON (from fallback), parse it directly
+            if response.startswith('{') and response.endswith('}'):
+                profile_data = json.loads(response)
+                return profile_data
             # Clean up the response
             start = response.find('{')
             end = response.rfind('}')
@@ -461,27 +464,316 @@ Return only the JSON:
     
     async def _call_ollama(self, prompt: str, model: str = "llama3:latest") -> str:
         """
-        Call Ollama API
+        Call Ollama API with fallback for when Ollama is not available
         """
-        import aiohttp
+        try:
+            import aiohttp
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    "http://127.0.0.1:11434/api/generate",
+                    json={
+                        "model": model,
+                        "prompt": prompt,
+                        "stream": False,
+                        "temperature": 0,
+                        "top_k": 1,
+                        "top_p": 0.1,
+                        "repeat_penalty": 1.1,
+                        "seed": 12345
+                    }
+                ) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        raise Exception(f"Ollama API error: {response.status} - {error_text}")
+                    
+                    data = await response.json()
+                    return data.get("response", "")
+                    
+        except Exception as e:
+            print(f"[Ollama] Error calling Ollama API: {e}")
+            print(f"[Ollama] Falling back to basic profile extraction")
+            return await self._extract_basic_profile_from_text(prompt)
+    
+    async def _extract_basic_profile_from_text(self, prompt: str) -> str:
+        """
+        Advanced fallback parser when Ollama is not available
+        """
+        import re
+        from datetime import datetime
         
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "http://127.0.0.1:11434/api/generate",
-                json={
-                    "model": model,
-                    "prompt": prompt,
-                    "stream": False,
-                    "temperature": 0,
-                    "top_k": 1,
-                    "top_p": 0.1,
-                    "repeat_penalty": 1.1,
-                    "seed": 12345
-                }
-            ) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    raise Exception(f"Ollama API error: {response.status} - {error_text}")
+        # Extract resume text from prompt
+        resume_text = prompt.split("Resume Text:")[-1].split("Return only the JSON:")[0].strip()
+        print(f"[Advanced Parser] Processing resume ({len(resume_text)} chars)...")
+        
+        # Advanced regex patterns
+        email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', resume_text, re.IGNORECASE)
+        phone_patterns = [
+            r'(\+\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})',
+            r'(\+\d{1,3}[-.\s]?)?\d{3}[-.\s]?\d{3}[-.\s]?\d{4}',
+            r'(\+\d{1,3}[-.\s]?)?\d{10}'
+        ]
+        phone_match = None
+        for pattern in phone_patterns:
+            phone_match = re.search(pattern, resume_text)
+            if phone_match:
+                break
+        
+        # Extract name (much more sophisticated)
+        lines = [line.strip() for line in resume_text.split('\n') if line.strip()]
+        name_line = ""
+        
+        # Look for name in first few lines, exclude contact info
+        for line in lines[:5]:
+            if any(x in line.lower() for x in ['@', 'phone', 'email', 'tel:', 'linkedin', 'github']):
+                continue
+            if any(x in line.lower() for x in ['resume', 'cv', 'curriculum']):
+                continue
+            # Name should be 2-4 words, not too long
+            words = line.split()
+            if 2 <= len(words) <= 4 and len(line) <= 50:
+                # Check if it looks like a name (starts with capital letters)
+                if all(word[0].isupper() for word in words if word):
+                    name_line = line
+                    break
+        
+        name_parts = name_line.split() if name_line else []
+        first_name = name_parts[0] if name_parts else ""
+        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+        
+        # Extract work experience (much better)
+        work_experience = []
+        
+        # Find experience section
+        exp_patterns = [
+            r'(?:PROFESSIONAL\s+)?EXPERIENCE(.*?)(?:EDUCATION|SKILLS|PROJECTS|CERTIFICATIONS|$)',
+            r'WORK\s+EXPERIENCE(.*?)(?:EDUCATION|SKILLS|PROJECTS|CERTIFICATIONS|$)',
+            r'EMPLOYMENT\s+HISTORY(.*?)(?:EDUCATION|SKILLS|PROJECTS|CERTIFICATIONS|$)',
+            r'CAREER\s+HISTORY(.*?)(?:EDUCATION|SKILLS|PROJECTS|CERTIFICATIONS|$)'
+        ]
+        
+        exp_text = ""
+        for pattern in exp_patterns:
+            match = re.search(pattern, resume_text, re.IGNORECASE | re.DOTALL)
+            if match:
+                exp_text = match.group(1)
+                break
+        
+        if exp_text:
+            # Split by job entries (look for date patterns)
+            job_blocks = re.split(r'\n(?=\d{4}|\w+\s+\d{4}|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec))', exp_text)
+            
+            for block in job_blocks[:4]:  # Max 4 jobs
+                if len(block.strip()) < 10:
+                    continue
+                    
+                # Extract job title and company
+                lines = [l.strip() for l in block.split('\n') if l.strip()]
                 
-                data = await response.json()
-                return data.get("response", "")
+                title = ""
+                company = ""
+                location = ""
+                start_date = ""
+                end_date = None
+                description_lines = []
+                
+                for i, line in enumerate(lines):
+                    # Look for dates (improved)
+                    date_match = re.search(r'(\w+\s+\d{4}|\d{4})(?:\s*[-–—]\s*(\w+\s+\d{4}|\d{4}|present|current))?', line, re.IGNORECASE)
+                    if date_match:
+                        start_date = date_match.group(1)
+                        if date_match.group(2):
+                            if 'present' in date_match.group(2).lower() or 'current' in date_match.group(2).lower():
+                                end_date = None
+                            else:
+                                end_date = date_match.group(2)
+                        continue
+                    
+                    # First non-date line is likely title
+                    if not title and not any(x in line.lower() for x in ['•', 'responsible', 'developed', 'managed']):
+                        if ' - ' in line or ' at ' in line or ' | ' in line:
+                            parts = re.split(r'\s+[-|]\s+|\s+at\s+', line)
+                            title = parts[0].strip()
+                            if len(parts) > 1:
+                                company = parts[1].strip()
+                        else:
+                            title = line
+                    elif not company and title and not any(x in line.lower() for x in ['•', 'responsible', 'developed', 'managed']):
+                        company = line
+                    elif line.startswith('•') or line.startswith('-') or any(x in line.lower() for x in ['responsible', 'developed', 'managed', 'led', 'created']):
+                        description_lines.append(line)
+                
+                if title:
+                    work_experience.append({
+                        "title": title,
+                        "company": company if company else "Company",
+                        "location": location,
+                        "start_date": start_date,
+                        "end_date": end_date,
+                        "description": "\n".join(description_lines) if description_lines else f"Work experience at {company}"
+                    })
+        
+        # Extract education (better)
+        education = []
+        edu_patterns = [
+            r'EDUCATION(.*?)(?:EXPERIENCE|SKILLS|PROJECTS|CERTIFICATIONS|$)',
+            r'ACADEMIC\s+BACKGROUND(.*?)(?:EXPERIENCE|SKILLS|PROJECTS|CERTIFICATIONS|$)',
+            r'QUALIFICATIONS(.*?)(?:EXPERIENCE|SKILLS|PROJECTS|CERTIFICATIONS|$)'
+        ]
+        
+        edu_text = ""
+        for pattern in edu_patterns:
+            match = re.search(pattern, resume_text, re.IGNORECASE | re.DOTALL)
+            if match:
+                edu_text = match.group(1)
+                break
+        
+        if edu_text:
+            # Look for degree patterns
+            degree_patterns = [
+                r'(Bachelor(?:\s+of\s+Science|\s+of\s+Arts|\s+of\s+Engineering)?|BS|BA|BE|B\.S\.|B\.A\.|B\.E\.)[^\n]*',
+                r'(Master(?:\s+of\s+Science|\s+of\s+Arts|\s+of\s+Engineering)?|MS|MA|ME|M\.S\.|M\.A\.|M\.E\.)[^\n]*',
+                r'(PhD|Ph\.D\.|Doctor\s+of\s+Philosophy|Doctorate)[^\n]*',
+                r'(Associate|AA|AS|A\.A\.|A\.S\.)[^\n]*'
+            ]
+            
+            # Parse education entries more carefully
+            edu_lines = [line.strip() for line in edu_text.split('\n') if line.strip()]
+            current_degree = None
+            current_school = None
+            
+            for line in edu_lines:
+                # Check if line contains a degree
+                for pattern in degree_patterns:
+                    degree_match = re.search(pattern, line, re.IGNORECASE)
+                    if degree_match:
+                        current_degree = degree_match.group(0).strip()
+                        # Look for school in the same line
+                        remainder = line.replace(current_degree, '').strip()
+                        if remainder and len(remainder) > 3:
+                            current_school = remainder
+                        break
+                
+                # Look for university/school names
+                if any(x in line.lower() for x in ['university', 'college', 'institute', 'school']) and not current_school:
+                    current_school = line.strip()
+                
+                # If we have both degree and school, add to education
+                if current_degree and current_school:
+                    # Extract dates from this section
+                    date_match = re.search(r'(\d{4})(?:\s*[-–—]\s*(\d{4}))?', edu_text)
+                    start_date = date_match.group(1) if date_match else ""
+                    end_date = date_match.group(2) if date_match and date_match.group(2) else ""
+                    
+                    education.append({
+                        "degree": current_degree,
+                        "school": current_school,
+                        "start_date": start_date,
+                        "end_date": end_date,
+                        "gpa": ""
+                    })
+                    current_degree = None
+                    current_school = None
+        
+        # Extract skills (much better)
+        skills = []
+        skills_patterns = [
+            r'(?:TECHNICAL\s+)?SKILLS(.*?)(?:EXPERIENCE|EDUCATION|PROJECTS|CERTIFICATIONS|$)',
+            r'TECHNOLOGIES(.*?)(?:EXPERIENCE|EDUCATION|PROJECTS|CERTIFICATIONS|$)',
+            r'PROGRAMMING\s+LANGUAGES(.*?)(?:EXPERIENCE|EDUCATION|PROJECTS|CERTIFICATIONS|$)'
+        ]
+        
+        skills_text = ""
+        for pattern in skills_patterns:
+            match = re.search(pattern, resume_text, re.IGNORECASE | re.DOTALL)
+            if match:
+                skills_text = match.group(1)
+                break
+        
+        if skills_text:
+            # Clean and split skills
+            skills_text = re.sub(r'[\n\r]+', ' ', skills_text)
+            skill_list = re.split(r'[,•\-\|]', skills_text)
+            
+            for skill in skill_list:
+                skill = skill.strip()
+                # Filter out noise
+                if (skill and 
+                    len(skill) > 1 and 
+                    len(skill) < 50 and
+                    not any(x in skill.lower() for x in ['years', 'experience', 'including', 'such as', 'proficient'])):
+                    skills.append({"name": skill, "years": None})
+        
+        # Extract social links
+        linkedin = None
+        github = None
+        portfolio = None
+        
+        # LinkedIn
+        linkedin_match = re.search(r'linkedin\.com/in/([a-zA-Z0-9\-]+)', resume_text, re.IGNORECASE)
+        if linkedin_match:
+            linkedin = f"https://linkedin.com/in/{linkedin_match.group(1)}"
+        
+        # GitHub
+        github_match = re.search(r'github\.com/([a-zA-Z0-9\-]+)', resume_text, re.IGNORECASE)
+        if github_match:
+            github = f"https://github.com/{github_match.group(1)}"
+        
+        # Portfolio/Website
+        portfolio_match = re.search(r'(?:portfolio|website|personal site):\s*(https?://[^\s]+)', resume_text, re.IGNORECASE)
+        if portfolio_match:
+            portfolio = portfolio_match.group(1)
+        
+        print(f"[Advanced Parser] Extracted: {first_name} {last_name}, {len(work_experience)} jobs, {len(education)} education, {len(skills)} skills")
+        
+        # Create comprehensive profile structure with extracted data
+        basic_profile = {
+            "personal_information": {
+                "basic_information": {
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "gender": None
+                },
+                "contact_information": {
+                    "email": email_match.group() if email_match else "",
+                    "country_code": phone_match.group(1) if phone_match and phone_match.group(1) else None,
+                    "telephone": phone_match.group() if phone_match else ""
+                },
+                "address": {
+                    "address": None,
+                    "city": None,
+                    "state": None,
+                    "zip_code": None,
+                    "country": None,
+                    "citizenship": None
+                }
+            },
+            "work_experience": work_experience,
+            "education": education,
+            "skills": skills,
+            "languages": [],
+            "job_preferences": {
+                "linkedin": linkedin,
+                "twitter": None,
+                "github": github,
+                "portfolio": portfolio,
+                "other_url": None,
+                "notice_period": None,
+                "total_experience": f"{len(work_experience)} years" if work_experience else None,
+                "default_experience": None,
+                "highest_education": education[0]["degree"] if education else None,
+                "companies_to_exclude": None,
+                "willing_to_relocate": None,
+                "driving_license": None,
+                "visa_requirement": None,
+                "race_ethnicity": None
+            },
+            "achievements": [],
+            "certificates": []
+        }
+        
+        import json
+        return json.dumps(basic_profile)
+
+# Create global agent orchestrator instance
+agent_orchestrator = AgentOrchestrator()

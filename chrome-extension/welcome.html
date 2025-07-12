@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to AI Job Application Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .welcome-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 40px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .feature {
+            padding: 24px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #e5e7eb;
+        }
+
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .feature h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        .feature p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .get-started {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 24px;
+        }
+
+        .get-started:hover {
+            transform: translateY(-2px);
+        }
+
+        .steps {
+            text-align: left;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 32px;
+        }
+
+        .steps h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+
+        .steps ol {
+            padding-left: 20px;
+        }
+
+        .steps li {
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <div class="logo">🤖</div>
+        <h1>Welcome to AI Job Application Assistant!</h1>
+        <p class="subtitle">Automate your job applications and save hours of repetitive form filling</p>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>Instant Form Filling</h3>
+                <p>Automatically detect and fill job application forms with your saved profile data</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <h3>Smart Detection</h3>
+                <p>Works on major job sites like Lever, Greenhouse, Workday, and many more</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <h3>Privacy First</h3>
+                <p>Your data stays on your device. We never store or share your personal information</p>
+            </div>
+        </div>
+
+        <button class="get-started" onclick="openPopup()">Get Started - Setup Your Profile</button>
+
+        <div class="steps">
+            <h3>How to use:</h3>
+            <ol>
+                <li>Click "Get Started" to setup your profile with personal and work information</li>
+                <li>Visit any supported job application site (Lever, Greenhouse, etc.)</li>
+                <li>Look for the floating AI assistant on the page</li>
+                <li>Click "Fill Application Form" to automatically populate the form</li>
+                <li>Review the filled information and submit your application</li>
+            </ol>
+        </div>
+
+        <div class="footer">
+            <p>
+                Need help? Check out our 
+                <a href="#" onclick="openHelp()">documentation</a> or 
+                <a href="#" onclick="openFeedback()">provide feedback</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function openPopup() {
+            // Send message to background script to open popup
+            chrome.runtime.sendMessage({ action: 'openPopup' });
+            window.close();
+        }
+
+        function openHelp() {
+            chrome.tabs.create({
+                url: 'https://github.com/yourusername/ai-job-assistant/wiki'
+            });
+        }
+
+        function openFeedback() {
+            chrome.tabs.create({
+                url: 'https://github.com/yourusername/ai-job-assistant/issues'
+            });
+        }
+
+        // Auto-close this tab after 30 seconds if user doesn't interact
+        setTimeout(() => {
+            window.close();
+        }, 30000);
+    </script>
+</body>
+</html>

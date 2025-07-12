@@ -6,7 +6,20 @@ from typing import Dict, Any, List, Optional
 from fastapi import HTTPException, UploadFile
 from datetime import datetime
 import asyncio
-from visual_automation import visual_automator
+# REMOVED: from visual_automation import visual_automator - NO BROWSER AUTOMATION
+
+# Import new LangChain automation with improved fallback handling
+try:
+    import sys
+    import os
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'modules'))
+    from job_application.integration_service import intelligent_automation_service
+    LANGCHAIN_AVAILABLE = True
+    print("✅ LangChain automation available (with fallback support)")
+except ImportError as e:
+    print(f"⚠️  LangChain automation not available: {e}")
+    print("📝 Will use traditional automation only")
+    LANGCHAIN_AVAILABLE = False
 
 class JobApplicationAutomator:
     """
@@ -15,12 +28,12 @@ class JobApplicationAutomator:
     
     def __init__(self):
         self.max_applications_per_session = 5
-        self.resume_storage_dir = os.path.join(os.getcwd(), "temp_resumes")
+        self.temp_resume_dir = os.path.join(os.getcwd(), "storage", "temp_automation")
         self.active_sessions = {}
         self.active_browser_sessions = {}  # Track browser sessions
         
-        # Ensure resume storage directory exists
-        os.makedirs(self.resume_storage_dir, exist_ok=True)
+        # Ensure temporary resume directory exists (for automation file uploads only)
+        os.makedirs(self.temp_resume_dir, exist_ok=True)
     
     async def start_automation_session(self, jobs: List[Dict], user_profile: Dict, resume_file: UploadFile) -> Dict[str, Any]:
         """
@@ -78,6 +91,30 @@ class JobApplicationAutomator:
             if not session:
                 raise HTTPException(status_code=404, detail="Automation session not found")
             
+            # Check if session has failed - if so, stop everything
+            if session.get("status") == "failed":
+                print(f"DEBUG: 🛑 Session has failed - stopping all job processing")
+                return {
+                    "success": False,
+                    "status": "session_failed",
+                    "message": f"Session failed: {session.get('error', 'Unknown error')} - all job processing stopped",
+                    "error": session.get("error", "Session failed"),
+                    "stop_all_jobs": True
+                }
+            
+            # Check if current job is awaiting submission - if so, don't process next
+            if session.get("current_job_needs_submission", False):
+                print(f"🚀 DEBUG AUTOMATION: ⛔ BLOCKING NEXT JOB - Current job awaiting submission")
+                print(f"🚀 DEBUG AUTOMATION: current_job_needs_submission: {session.get('current_job_needs_submission')}")
+                print(f"🚀 DEBUG AUTOMATION: current_job_index: {session.get('current_job_index')}")
+                return {
+                    "success": False,
+                    "status": "awaiting_submission",
+                    "message": "Please submit the current job before proceeding to the next one",
+                    "current_job_index": session["current_job_index"],
+                    "require_submission": True
+                }
+            
             current_index = session["current_job_index"]
             jobs = session["jobs"]
             
@@ -95,42 +132,102 @@ class JobApplicationAutomator:
             user_profile = session["user_profile"]
             resume_path = session.get("resume_path")
             
-            # Try visual automation, fallback to manual if it fails
-            try:
-                automation_result = await visual_automator.start_visual_automation(
-                    job_url=current_job.get("link", ""),
-                    user_profile=user_profile,
-                    resume_path=resume_path
-                )
-                
-                # If visual automation returns success=False, treat it as a fallback case
-                if not automation_result.get("success", False):
-                    print(f"DEBUG: Visual automation returned success=False: {automation_result}")
-                    raise Exception(automation_result.get("error", "Visual automation failed"))
+            # Try LangChain AI automation first, then visual automation as fallback
+            automation_result = None
+            
+            print(f"DEBUG: ===== AUTOMATION FLOW START =====")
+            print(f"DEBUG: Job URL: {current_job.get('link', '')}")
+            print(f"DEBUG: Job Title: {current_job.get('title', '')}")
+            print(f"DEBUG: LangChain Available: {LANGCHAIN_AVAILABLE}")
+            print(f"DEBUG: Session ID: {session_id}")
+            
+            if LANGCHAIN_AVAILABLE:
+                try:
+                    print(f"🚀 DEBUG AUTOMATION: ===== AUTOMATION SERVICE START =====")
+                    print(f"🚀 DEBUG AUTOMATION: VERSION: NO BROWSER AUTOMATION - SEMANTIC JAVASCRIPT ONLY")
+                    print(f"🚀 DEBUG AUTOMATION: ✅ Attempting SEMANTIC FORM FILLING for {current_job.get('title', '')}")
+                    print(f"🚀 DEBUG AUTOMATION: Profile keys: {list(user_profile.keys()) if user_profile else 'None'}")
+                    print(f"🚀 DEBUG AUTOMATION: Resume path: {resume_path}")
+                    print(f"🚀 DEBUG AUTOMATION: About to call intelligent_automation_service.start_intelligent_automation()")
                     
-            except Exception as e:
-                # Fallback to manual mode - but still apply URL transformations
-                print(f"DEBUG: Visual automation failed with error: {str(e)}")
-                print(f"DEBUG: Error type: {type(e).__name__}")
-                original_url = current_job.get("link", "")
-                print(f"DEBUG: Original Lever URL: {original_url}")
+                    automation_result = await intelligent_automation_service.start_intelligent_automation(
+                        job_url=current_job.get("link", ""),
+                        user_profile=user_profile,
+                        resume_file_path=resume_path,
+                        session_id=session_id
+                    )
+                    
+                    print(f"🚀 DEBUG AUTOMATION: ===== AUTOMATION RESULT RECEIVED =====")
+                    print(f"🚀 DEBUG AUTOMATION: Result keys: {list(automation_result.keys()) if automation_result else 'None'}")
+                    print(f"🚀 DEBUG AUTOMATION: Success: {automation_result.get('success', False)}")
+                    print(f"🚀 DEBUG AUTOMATION: Automation type: {automation_result.get('automation_type', 'unknown')}")
+                    print(f"🚀 DEBUG AUTOMATION: Status: {automation_result.get('status', 'unknown')}")
+                    print(f"🚀 DEBUG AUTOMATION: Has JS injection: {'js_injection' in automation_result}")
+                    print(f"🚀 DEBUG AUTOMATION: Full result: {automation_result}")
+                    
+                    # Check for STOP conditions - no more jobs if anything fails
+                    if automation_result.get("stop_process", False) or not automation_result.get("success", False):
+                        print(f"DEBUG: 🛑 STOPPING ENTIRE PROCESS - Chrome tab automation failed")
+                        print(f"DEBUG: Error: {automation_result.get('error', 'Unknown error')}")
+                        
+                        # Mark session as failed and stop processing
+                        session["status"] = "failed"
+                        session["error"] = automation_result.get("error", "Chrome tab automation failed")
+                        
+                        return {
+                            "success": False,
+                            "status": "process_stopped",
+                            "message": automation_result.get("message", "Chrome tab automation failed - process stopped"),
+                            "error": automation_result.get("error", "Automation failed"),
+                            "automation_type": "chrome_tab_only",
+                            "stop_all_jobs": True,
+                            "session_id": session_id
+                        }
+                    
+                    # Only continue if success
+                    if automation_result.get("success", False):
+                        print(f"DEBUG: ✅ Chrome tab automation succeeded")
+                        print(f"DEBUG: Automation type: {automation_result.get('automation_type', 'unknown')}")
+                        print(f"DEBUG: Result status: {automation_result.get('status', 'unknown')}")
+                        
+                except Exception as e:
+                    print(f"DEBUG: 💥 Chrome tab automation exception: {str(e)}")
+                    import traceback
+                    print(f"DEBUG: Exception traceback: {traceback.format_exc()}")
+                    
+                    # STOP EVERYTHING on exception
+                    session["status"] = "failed"
+                    session["error"] = str(e)
+                    
+                    return {
+                        "success": False,
+                        "status": "process_stopped",
+                        "message": f"Chrome tab automation exception: {str(e)} - process stopped",
+                        "error": str(e),
+                        "automation_type": "chrome_tab_only",
+                        "stop_all_jobs": True,
+                        "session_id": session_id
+                    }
+            else:
+                print(f"DEBUG: 🛑 Chrome tab automation not available - STOPPING")
                 
-                # Apply the same URL transformations as visual automation
-                if "jobs.lever.co" in original_url and not original_url.endswith("/apply"):
-                    fallback_url = original_url.rstrip("/") + "/apply"
-                    print(f"DEBUG: Transformed to: {fallback_url}")
-                else:
-                    fallback_url = original_url
-                    print(f"DEBUG: No transformation needed: {fallback_url}")
+                # STOP if Chrome tab automation not available
+                session["status"] = "failed"
+                session["error"] = "Chrome tab automation not available"
                 
-                automation_result = {
-                    "success": True,
-                    "status": "manual_fallback",
-                    "message": f"Visual automation unavailable ({str(e)}). Opening job URL for manual application.",
-                    "fields_filled": [],
-                    "browser_session_active": False,
-                    "fallback_url": fallback_url
+                return {
+                    "success": False,
+                    "status": "process_stopped", 
+                    "message": "Chrome tab automation not available - process stopped",
+                    "error": "Chrome tab automation not available",
+                    "automation_type": "none",
+                    "stop_all_jobs": True,
+                    "session_id": session_id
                 }
+            
+            # NO FALLBACKS - Chrome tab automation result is final
+            print(f"DEBUG: ===== NO FALLBACKS - CHROME TAB ONLY =====")
+            print(f"DEBUG: Using Chrome tab automation result as final result")
             
             # Update session status based on automation result
             session["status"] = automation_result.get("status", "unknown")
@@ -155,19 +252,59 @@ class JobApplicationAutomator:
                     application_url = original_url
                     print(f"DEBUG: Success path - No transformation: {application_url}")
                 
-                return {
-                    "success": True,
-                    "status": automation_result.get("status", "visual_automation_active"),
-                    "current_job": current_job,
-                    "job_index": current_index + 1,
-                    "total_jobs": len(jobs),
-                    "message": automation_result.get("message", "Browser automation started"),
-                    "fields_filled": automation_result.get("fields_filled", []),
-                    "application_url": application_url,
-                    "fallback_url": automation_result.get("fallback_url"),
-                    "session_id": session_id,
-                    "automation_status": automation_result.get("status", "unknown")
-                }
+                # Check if this requires manual submission
+                if automation_result.get("require_manual_submit", False) or automation_result.get("status") == "awaiting_user_confirmation" or automation_result.get("status") == "tab_ready":
+                    print(f"DEBUG: Automation requires manual submission - NOT advancing to next job")
+                    print(f"DEBUG: automation_result keys: {list(automation_result.keys())}")
+                    print(f"DEBUG: automation_result automation_type: {automation_result.get('automation_type')}")
+                    print(f"DEBUG: automation_result status: {automation_result.get('status')}")
+                    
+                    # Store the current state for submit monitoring
+                    print(f"🚀 DEBUG AUTOMATION: 🔒 SETTING submission flag - next job will be blocked")
+                    session["current_job_needs_submission"] = True
+                    session["current_job_session_id"] = session_id
+                    print(f"🚀 DEBUG AUTOMATION: Session state: current_job_needs_submission = {session['current_job_needs_submission']}")
+                    
+                    final_response = {
+                        "success": True,
+                        "status": automation_result.get("status", "awaiting_user_confirmation"),
+                        "automation_type": automation_result.get("automation_type", "tab_automation"),
+                        "current_job": current_job,
+                        "job_index": current_index + 1,  # For display purposes only
+                        "total_jobs": len(jobs),
+                        "message": automation_result.get("message", "Please review the filled form and submit manually"),
+                        "fields_filled": automation_result.get("fields_filled", []),
+                        "application_url": application_url,
+                        "form_data": automation_result.get("form_data", {}),
+                        "session_id": session_id,
+                        "automation_status": automation_result.get("status", "awaiting_user_confirmation"),
+                        "require_manual_submit": True,
+                        "next_action": "user_must_submit_before_proceeding",
+                        "tab_url": automation_result.get("tab_url"),
+                        # PASS THROUGH SEMANTIC FORM FILLER DATA
+                        "js_injection": automation_result.get("js_injection", ""),
+                        "semantic_matches": automation_result.get("semantic_matches", 0),
+                        "total_fields_filled": automation_result.get("total_fields_filled", 0)
+                    }
+                    
+                    print(f"DEBUG: Final response automation_type: {final_response.get('automation_type')}")
+                    print(f"DEBUG: Final response status: {final_response.get('status')}")
+                    return final_response
+                else:
+                    # Auto-advance only if submission was automated
+                    return {
+                        "success": True,
+                        "status": automation_result.get("status", "visual_automation_active"),
+                        "current_job": current_job,
+                        "job_index": current_index + 1,
+                        "total_jobs": len(jobs),
+                        "message": automation_result.get("message", "Browser automation started"),
+                        "fields_filled": automation_result.get("fields_filled", []),
+                        "application_url": application_url,
+                        "fallback_url": automation_result.get("fallback_url"),
+                        "session_id": session_id,
+                        "automation_status": automation_result.get("status", "unknown")
+                    }
             else:
                 # Automation failed, record error and move to next
                 session["status"] = "automation_failed"
@@ -208,6 +345,10 @@ class JobApplicationAutomator:
             
             session["results"].append(result)
             
+            # Clear the submission requirement for this job
+            session["current_job_needs_submission"] = False
+            session.pop("current_job_session_id", None)
+            
             # Move to next job
             session["current_job_index"] += 1
             
@@ -234,6 +375,33 @@ class JobApplicationAutomator:
                     "next_job_index": session["current_job_index"] + 1,
                     "total_jobs": len(session["jobs"])
                 }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    async def mark_job_submitted(self, session_id: str) -> Dict[str, Any]:
+        """
+        Mark current job as submitted by user - allows next job to proceed
+        """
+        try:
+            session = self.active_sessions.get(session_id)
+            if not session:
+                raise HTTPException(status_code=404, detail="Automation session not found")
+            
+            # Clear the submission requirement
+            session["current_job_needs_submission"] = False
+            session.pop("current_job_session_id", None)
+            
+            print(f"DEBUG: ✅ Job marked as submitted - next job can now proceed")
+            
+            return {
+                "success": True,
+                "message": "Job marked as submitted - next job can now proceed",
+                "can_proceed": True
+            }
             
         except Exception as e:
             return {
@@ -332,7 +500,7 @@ class JobApplicationAutomator:
             # Create unique filename
             file_extension = os.path.splitext(resume_file.filename)[1]
             unique_filename = f"resume_{uuid.uuid4()}{file_extension}"
-            file_path = os.path.join(self.resume_storage_dir, unique_filename)
+            file_path = os.path.join(self.temp_resume_dir, unique_filename)
             
             # Save file
             content = await resume_file.read()
@@ -367,12 +535,11 @@ class JobApplicationAutomator:
     
     async def _cleanup_browser_session(self, session_id: str):
         """
-        Clean up browser session for specific session
+        Clean up browser session for specific session - NO BROWSER AUTOMATION
         """
         try:
             if session_id in self.active_browser_sessions:
-                # Clean up browser
-                visual_automator.cleanup()
+                # NO BROWSER CLEANUP - just remove session tracking
                 del self.active_browser_sessions[session_id]
                 print(f"Browser session cleaned up for {session_id}")
         except Exception as e:
@@ -412,21 +579,12 @@ class JobApplicationAutomator:
             
             browser_session = self.active_browser_sessions[session_id]
             
-            # Check if browser is still active
+            # NO BROWSER - always return inactive
             try:
-                if visual_automator.driver:
-                    current_url = visual_automator.driver.current_url
-                    return {
-                        "browser_active": True,
-                        "current_url": current_url,
-                        "job": browser_session["job"],
-                        "status": "active"
-                    }
-                else:
-                    return {
-                        "browser_active": False,
-                        "status": "browser_closed"
-                    }
+                return {
+                    "browser_active": False,
+                    "status": "no_browser_automation"
+                }
             except:
                 return {
                     "browser_active": False,

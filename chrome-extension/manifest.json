@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "AI Job Application Assistant",
+  "version": "1.0.0",
+  "description": "Automatically fill job application forms with your saved profile data",
+  
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "https://jobs.lever.co/*",
+        "https://boards.greenhouse.io/*",
+        "https://*.workday.com/*",
+        "https://*.bamboohr.com/*",
+        "https://*.smartrecruiters.com/*",
+        "https://*.icims.com/*",
+        "https://*.taleo.net/*",
+        "https://*.jobvite.com/*",
+        "https://*.breezy.hr/*",
+        "https://*.applytojob.com/*",
+        "https://apply.workable.com/*",
+        "https://recruiting.adp.com/*",
+        "https://*.myworkdayjobs.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Job Application Assistant"
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["injected-script.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

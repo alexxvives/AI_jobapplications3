@@ -1,0 +1,280 @@
+/* AI Job Application Assistant - Content Script Styles */
+
+#job-assistant-ui {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 320px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  z-index: 999999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border: 1px solid #e1e5e9;
+  overflow: hidden;
+  transform: translate(0, 0);
+}
+
+.assistant-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  cursor: move;
+  user-select: none;
+}
+
+.assistant-logo {
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.assistant-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.assistant-close {
+  cursor: pointer;
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.assistant-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.assistant-content {
+  padding: 16px;
+}
+
+.assistant-status {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.assistant-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assistant-actions button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#fill-form-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+#fill-form-btn:enabled:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+#fill-form-btn:disabled {
+  background: #e1e5e9;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+#setup-profile-btn {
+  background: #f8f9fa;
+  color: #374151;
+  border: 1px solid #e1e5e9;
+}
+
+#setup-profile-btn:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.assistant-progress {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e1e5e9;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e1e5e9;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+.assistant-notification {
+  position: fixed;
+  top: 50px;
+  right: 20px;
+  background: #10b981;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  z-index: 1000000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  #job-assistant-ui {
+    background: #1f2937;
+    border-color: #374151;
+    color: #f9fafb;
+  }
+  
+  .assistant-status {
+    color: #d1d5db;
+  }
+  
+  #setup-profile-btn {
+    background: #374151;
+    color: #f9fafb;
+    border-color: #4b5563;
+  }
+  
+  #setup-profile-btn:hover {
+    background: #4b5563;
+  }
+  
+  .progress-bar {
+    background: #374151;
+  }
+  
+  .progress-text {
+    color: #d1d5db;
+  }
+  
+  .assistant-progress {
+    border-color: #374151;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  #job-assistant-ui {
+    width: 280px;
+    right: 10px;
+    top: 10px;
+  }
+}
+
+/* Form field highlighting (optional enhancement) */
+.job-assistant-highlighted {
+  outline: 2px solid #667eea !important;
+  outline-offset: 2px !important;
+  transition: outline 0.3s ease !important;
+}
+
+/* Overlay for form submission */
+.job-assistant-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.job-assistant-modal {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.2);
+}
+
+.job-assistant-modal h3 {
+  margin: 0 0 16px 0;
+  color: #1f2937;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.job-assistant-modal p {
+  margin: 0 0 20px 0;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.job-assistant-modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.job-assistant-modal button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.job-assistant-modal .primary-btn {
+  background: #667eea;
+  color: white;
+}
+
+.job-assistant-modal .secondary-btn {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.job-assistant-modal button:hover {
+  transform: translateY(-1px);
+}

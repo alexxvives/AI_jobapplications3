@@ -61,8 +61,10 @@ agent_orchestrator = AgentOrchestrator()
 def read_root():
     return {
         "message": "AI Job Application Assistant API",
-        "version": "1.0.0",
-        "status": "running"
+        "version": "2.0.0-NO-BROWSER-AUTOMATION",
+        "status": "running",
+        "semantic_form_filler": "PURE JAVASCRIPT INJECTION ONLY",
+        "browser_automation": "DISABLED"
     }
 
 @app.get("/health")
@@ -221,8 +223,9 @@ async def parse_resume_endpoint(
 async def save_resume_file_permanently(file: UploadFile, user_id: int) -> str:
     """Save uploaded resume file permanently and return the file path"""
     try:
-        # Create user-specific resumes directory if it doesn't exist
-        user_resumes_dir = os.path.join(os.getcwd(), "saved_resumes", f"user_{user_id}")
+        # Create organized resume storage
+        resumes_base_dir = os.path.join(os.getcwd(), "storage", "resumes")
+        user_resumes_dir = os.path.join(resumes_base_dir, f"user_{user_id}")
         os.makedirs(user_resumes_dir, exist_ok=True)
         
         # Create unique filename
@@ -245,7 +248,7 @@ async def save_resume_file_permanently(file: UploadFile, user_id: int) -> str:
         print(f"Error saving resume file: {str(e)}")
         return ""
 
-async def save_profile_to_database(profile_data: dict, title: str, resume_file_path: str, user_id: int, db: Session) -> bool:
+async def save_profile_to_database(profile_data: dict, title: str, resume_file_path: str = None, user_id: int = None, db: Session = None) -> bool:
     """Save parsed profile data to database"""
     try:
         # Extract data from parsed profile
@@ -275,7 +278,7 @@ async def save_profile_to_database(profile_data: dict, title: str, resume_file_p
             job_preferences=profile_data.get("job_preferences", {}),
             achievements=profile_data.get("achievements", []),
             certificates=profile_data.get("certificates", []),
-            resume_path=resume_file_path  # Store the resume file path
+            resume_path=resume_file_path  # Optional resume file path (None if not saving files)
         )
         
         # Add to database
@@ -328,10 +331,12 @@ async def start_automation_session(
     try:
         print("DEBUG: /automation/start endpoint reached")
         print(f"DEBUG: Current user: {current_user.email if current_user else 'None'}")
+        print(f"DEBUG: Current user ID: {current_user.id if current_user else 'None'}")
         data = await request.json()
         print(f"DEBUG: Request data: {data}")
         jobs = data.get("jobs", [])
         profile_id = data.get("profile_id")
+        print(f"DEBUG: Looking for profile_id: {profile_id} for user_id: {current_user.id if current_user else 'None'}")
         
         if not profile_id:
             raise HTTPException(status_code=400, detail="profile_id is required")
@@ -341,6 +346,18 @@ async def start_automation_session(
             Profile.id == profile_id,
             Profile.user_id == current_user.id
         ).first()
+        
+        print(f"DEBUG: Profile lookup result: {profile}")
+        if profile:
+            print(f"DEBUG: Found profile - ID: {profile.id}, Title: {profile.title}, User: {profile.user_id}")
+        else:
+            print(f"DEBUG: No profile found for profile_id={profile_id} and user_id={current_user.id}")
+            # Let's see what profiles exist for this user
+            user_profiles = db.query(Profile).filter(Profile.user_id == current_user.id).all()
+            print(f"DEBUG: User {current_user.id} has {len(user_profiles)} profiles:")
+            for p in user_profiles:
+                print(f"DEBUG:   - Profile ID: {p.id}, Title: {p.title}")
+        
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found or access denied")
         
@@ -436,6 +453,48 @@ async def get_browser_status(session_id: str):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get browser status: {str(e)}")
+
+@app.get("/automation/{session_id}/submission-status")
+async def check_submission_status(session_id: str):
+    """Check if current job has been submitted by user"""
+    try:
+        # Import submit monitor
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'modules'))
+        from job_application.submit_monitor import submit_monitor
+        
+        result = await submit_monitor.check_submission_status(session_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to check submission status: {str(e)}")
+
+@app.post("/automation/{session_id}/wait-for-submit") 
+async def wait_for_submit(session_id: str, request: Request):
+    """Wait for user to submit current job before proceeding"""
+    try:
+        data = await request.json()
+        timeout = data.get("timeout", 300)  # 5 minute default
+        
+        # Import submit monitor
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'modules'))
+        from job_application.submit_monitor import submit_monitor
+        
+        result = await submit_monitor.start_monitoring(session_id, timeout)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to wait for submission: {str(e)}")
+
+@app.post("/automation/{session_id}/mark-submitted")
+async def mark_job_submitted(session_id: str):
+    """Mark current job as submitted by user - allows next job to proceed"""
+    try:
+        result = await automator.mark_job_submitted(session_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to mark job as submitted: {str(e)}")
 
 @app.get("/user/profiles")
 async def get_all_user_profiles(

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Job Application Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 40px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .stat-card.working {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            color: white;
+        }
+
+        .stat-card.inactive {
+            background: #f1f3f4;
+            color: #6c757d;
+        }
+
+        .stat-card.rate-limited {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            color: #2d3436;
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .stat-detail {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .platform-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status-working {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-inactive {
+            background: #6c757d;
+            color: white;
+        }
+
+        .status-rate-limited {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .overall-stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .overall-stats h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .overall-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .overall-item {
+            text-align: center;
+        }
+
+        .overall-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .overall-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            transition: width 0.5s ease;
+        }
+
+        .last-updated {
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .actions {
+            padding: 30px;
+            text-align: center;
+            background: #f8f9fa;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin: 0 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .overall-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>🤖 AI Job Application Dashboard</h1>
+            <p>Multi-Platform Job Scraping & Profile Matching System</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card working">
+                <span class="stat-number">2,240</span>
+                <div class="stat-label">Lever Jobs</div>
+                <div class="stat-detail">68/490 companies (13.9%)</div>
+                <div class="platform-status status-working">✅ EXCELLENT</div>
+            </div>
+
+            <div class="stat-card inactive">
+                <span class="stat-number">0</span>
+                <div class="stat-label">ADP Jobs</div>
+                <div class="stat-detail">0/108 companies (0.0%)</div>
+                <div class="platform-status status-inactive">❌ NO JOBS</div>
+            </div>
+
+            <div class="stat-card rate-limited">
+                <span class="stat-number">0</span>
+                <div class="stat-label">Workable Jobs</div>
+                <div class="stat-detail">0/97 companies (Rate Limited)</div>
+                <div class="platform-status status-rate-limited">⚠️ RATE LIMITED</div>
+            </div>
+
+            <div class="stat-card inactive">
+                <span class="stat-number">0</span>
+                <div class="stat-label">Workday Jobs</div>
+                <div class="stat-detail">0/88 companies (0.0%)</div>
+                <div class="platform-status status-inactive">❌ NO JOBS</div>
+            </div>
+        </div>
+
+        <div class="overall-stats">
+            <h2>📊 Overall Performance</h2>
+            <div class="overall-grid">
+                <div class="overall-item">
+                    <span class="overall-number">2,240</span>
+                    <div class="overall-label">Total Jobs Scraped</div>
+                </div>
+                <div class="overall-item">
+                    <span class="overall-number">1</span>
+                    <div class="overall-label">Working Platforms</div>
+                </div>
+                <div class="overall-item">
+                    <span class="overall-number">68</span>
+                    <div class="overall-label">Successful Companies</div>
+                </div>
+                <div class="overall-item">
+                    <span class="overall-number">13.9%</span>
+                    <div class="overall-label">Success Rate (Lever)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn" onclick="runScraper()">🔄 Run Scraper</button>
+            <button class="btn btn-secondary" onclick="processJobs()">🧠 Process Jobs</button>
+            <button class="btn" onclick="viewJobs()">👀 View Jobs</button>
+        </div>
+
+        <div class="last-updated">
+            <p>Last updated: July 9, 2025 at 2:12 PM</p>
+            <p>Next scraping run: Continuous monitoring enabled</p>
+        </div>
+    </div>
+
+    <script>
+        function runScraper() {
+            alert('🚀 Starting multi-platform scraper...\n\nThis will scrape all available sources:\n✅ Lever (Working)\n⚠️ Workable (Rate Limited)\n❌ ADP (No Jobs)\n❌ Workday (No Jobs)');
+        }
+
+        function processJobs() {
+            alert('🧠 Starting job processing...\n\nThis will:\n• Extract skills from job descriptions\n• Classify seniority levels\n• Identify remote work policies\n• Match against user profiles');
+        }
+
+        function viewJobs() {
+            alert('👀 Job viewer coming soon...\n\nThis will show:\n• All scraped jobs\n• Filtering by platform\n• Search functionality\n• Application tracking');
+        }
+
+        // Auto-refresh every 30 seconds (in production)
+        // setInterval(() => {
+        //     location.reload();
+        // }, 30000);
+    </script>
+</body>
+</html>

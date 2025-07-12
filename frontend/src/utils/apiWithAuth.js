@@ -125,18 +125,30 @@ export const checkUserProfile = async () => {
 }
 
 // Automation-related API calls (now with auth and profile selection)
-export const startJobAutomation = async ({ job, profile }) => {
+export const startJobAutomation = async ({ jobs, job, profile }) => {
   try {
-    // Start automation session
+    console.log('startJobAutomation called with profile:', profile)
+    console.log('Profile ID being sent:', profile?.id)
+    
+    if (!profile || !profile.id) {
+      throw new Error('Profile or profile ID is missing')
+    }
+    
+    // Handle both single job and multiple jobs
+    const jobsToProcess = jobs || [job]
+    console.log('🎯 API DEBUG: Creating session with jobs:', jobsToProcess.length)
+    
+    // Start automation session with ALL jobs
     const response = await api.post('/automation/start', {
-      jobs: [job], // Start with single job
-      profile_id: profile.id // Send profile ID instead of full profile object
+      jobs: jobsToProcess, // Send all jobs
+      profile_id: profile.id
     })
     
     if (response.data.success) {
       const sessionId = response.data.session_id
+      console.log('🎯 API DEBUG: Session created:', sessionId)
       
-      // Process the first (and only) job
+      // Process the first job
       const jobResponse = await api.post(`/automation/${sessionId}/next`)
       
       return {
@@ -147,8 +159,13 @@ export const startJobAutomation = async ({ job, profile }) => {
         total_jobs: jobResponse.data.total_jobs,
         application_url: jobResponse.data.application_url,
         status: jobResponse.data.status,
+        automation_type: jobResponse.data.automation_type,
+        form_data: jobResponse.data.form_data,
         fields_filled: jobResponse.data.fields_filled,
-        fallback_url: jobResponse.data.fallback_url
+        fallback_url: jobResponse.data.fallback_url,
+        js_injection: jobResponse.data.js_injection,
+        semantic_matches: jobResponse.data.semantic_matches,
+        total_fields_filled: jobResponse.data.total_fields_filled
       }
     } else {
       throw new Error(response.data.error || 'Failed to start automation')
@@ -158,6 +175,17 @@ export const startJobAutomation = async ({ job, profile }) => {
       success: false,
       error: error.response?.data?.detail || error.message
     }
+  }
+}
+
+export const processNextJobInSession = async (sessionId) => {
+  try {
+    console.log('🎯 API DEBUG: Processing next job in session:', sessionId)
+    const response = await api.post(`/automation/${sessionId}/next`)
+    return response.data
+  } catch (error) {
+    console.error('processNextJobInSession error:', error)
+    throw error
   }
 }
 

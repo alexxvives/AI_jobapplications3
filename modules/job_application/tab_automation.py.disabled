@@ -1,0 +1,471 @@
+"""
+Tab-based job application automation
+Uses JavaScript window.open() to create tabs instead of separate browser windows
+"""
+
+import json
+import time
+import asyncio
+from typing import Dict, Any, Optional
+from datetime import datetime
+import logging
+
+try:
+    from playwright.async_api import async_playwright, Page, Browser, BrowserContext
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+
+class TabBasedAutomation:
+    """
+    Tab-based automation that opens jobs in new tabs and fills forms
+    """
+    
+    def __init__(self):
+        self.browser = None
+        self.context = None
+        self.main_page = None
+        self.current_job_page = None
+        self.playwright = None
+        self.logger = logging.getLogger(__name__)
+        self.session_data = {}
+    
+    async def start_browser_session(self):
+        """Start a browser session for tab-based automation"""
+        if not PLAYWRIGHT_AVAILABLE:
+            raise ImportError("Playwright is required for tab automation")
+        
+        try:
+            self.playwright = await async_playwright().start()
+            
+            # Launch browser
+            self.browser = await self.playwright.chromium.launch(
+                headless=False,
+                args=[
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-web-security',
+                    '--start-maximized'
+                ]
+            )
+            
+            # Create context
+            self.context = await self.browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            )
+            
+            # Create main page (this stays open)
+            self.main_page = await self.context.new_page()
+            await self.main_page.goto('about:blank')
+            
+            self.logger.info("🚀 Tab-based browser session started")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Failed to start browser: {e}")
+            raise
+    
+    async def open_job_in_new_tab(self, job_url: str, user_profile: Dict[str, Any], session_id: str) -> Dict[str, Any]:
+        """Open job application in a new tab and fill the form"""
+        try:
+            # Transform Lever URLs
+            if "jobs.lever.co" in job_url and not job_url.endswith("/apply"):
+                job_url = job_url.rstrip("/") + "/apply"
+                self.logger.info(f"🔗 Lever URL transformed to: {job_url}")
+            
+            # Create new tab for this job
+            self.current_job_page = await self.context.new_page()
+            
+            self.logger.info(f"📂 Opening job in new tab: {job_url}")
+            
+            # Navigate to job in the new tab
+            await self.current_job_page.goto(job_url, wait_until="load", timeout=30000)
+            
+            # Wait for page to load
+            try:
+                await self.current_job_page.wait_for_load_state("networkidle", timeout=15000)
+            except:
+                await self.current_job_page.wait_for_load_state("domcontentloaded", timeout=10000)
+                await self.current_job_page.wait_for_timeout(3000)
+            
+            # Validate job is still available
+            is_valid = await self._validate_job_posting()
+            if not is_valid:
+                await self.current_job_page.close()
+                return {
+                    "success": False,
+                    "error": "job_no_longer_available",
+                    "message": "Job posting is no longer available"
+                }
+            
+            # Fill the form
+            fill_result = await self._fill_application_form(user_profile)
+            
+            if fill_result["success"]:
+                # Store session data for submit monitoring
+                self.session_data[session_id] = {
+                    "job_url": job_url,
+                    "page": self.current_job_page,
+                    "start_url": self.current_job_page.url,
+                    "filled_at": datetime.now().isoformat()
+                }
+                
+                # Show completion message to user
+                await self._show_completion_message()
+                
+                return {
+                    "success": True,
+                    "message": "Form filled successfully. Please review and click Submit.",
+                    "status": "awaiting_user_submission",
+                    "fields_filled": fill_result.get("fields_filled", []),
+                    "session_id": session_id,
+                    "tab_url": job_url
+                }
+            else:
+                await self.current_job_page.close()
+                return fill_result
+                
+        except Exception as e:
+            if self.current_job_page:
+                try:
+                    await self.current_job_page.close()
+                except:
+                    pass
+            
+            return {
+                "success": False,
+                "error": str(e),
+                "message": f"Failed to open job in tab: {str(e)}"
+            }
+    
+    async def wait_for_submission(self, session_id: str, timeout: int = 300) -> Dict[str, Any]:
+        """Wait for user to submit the current job before proceeding to next"""
+        if session_id not in self.session_data:
+            return {"success": False, "error": "Session not found"}
+        
+        session = self.session_data[session_id]
+        page = session["page"]
+        start_url = session["start_url"]
+        
+        try:
+            self.logger.info("⏳ Waiting for user to submit the form...")
+            
+            # Wait for page navigation (indicates form submission)
+            await page.wait_for_url(lambda url: url != start_url, timeout=timeout * 1000)
+            
+            self.logger.info("✅ Form submission detected!")
+            
+            # Clean up this session
+            await page.close()
+            del self.session_data[session_id]
+            
+            return {
+                "success": True,
+                "submitted": True,
+                "message": "Form successfully submitted by user"
+            }
+            
+        except Exception as e:
+            self.logger.warning(f"Timeout or error waiting for submission: {e}")
+            return {
+                "success": False,
+                "submitted": False,
+                "message": "User has not submitted the form yet",
+                "timeout": True
+            }
+    
+    async def _validate_job_posting(self) -> bool:
+        """Check if job posting is still valid and available"""
+        try:
+            # Look for common indicators that job is no longer available
+            page_text = await self.current_job_page.content()
+            
+            # Check for error indicators
+            error_indicators = [
+                "job is no longer available",
+                "position has been filled",
+                "posting has expired",
+                "404",
+                "not found",
+                "page not found"
+            ]
+            
+            page_text_lower = page_text.lower()
+            for indicator in error_indicators:
+                if indicator in page_text_lower:
+                    self.logger.warning(f"Job validation failed: {indicator}")
+                    return False
+            
+            # Look for form elements (good sign)
+            form_elements = await self.current_job_page.query_selector_all('form, input, textarea, select')
+            
+            if len(form_elements) > 0:
+                return True
+            
+            # If no clear indicators, assume it's valid
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error validating job posting: {e}")
+            return True  # Assume valid if we can't determine
+    
+    async def _fill_application_form(self, user_profile: Dict[str, Any]) -> Dict[str, Any]:
+        """Fill the application form with user profile data"""
+        try:
+            filled_fields = []
+            
+            # Debug: Print the profile structure
+            print(f"DEBUG: Profile data structure: {user_profile.keys()}")
+            
+            # Get personal information - handle the correct structure
+            personal_info = user_profile.get("personal_information", {})
+            print(f"DEBUG: Personal info keys: {personal_info.keys() if personal_info else 'None'}")
+            
+            # Extract data based on actual structure
+            full_name = personal_info.get("full_name", "")
+            email = personal_info.get("email", "")
+            phone = personal_info.get("phone", "")
+            
+            print(f"DEBUG: Extracted data - Name: {full_name}, Email: {email}, Phone: {phone}")
+            
+            # Split name for first/last name fields
+            name_parts = full_name.split() if full_name else []
+            first_name = name_parts[0] if name_parts else ""
+            last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+            
+            # Common field mappings
+            field_mappings = {
+                "first_name": first_name,
+                "last_name": last_name,
+                "full_name": full_name,
+                "name": full_name,
+                "email": email,
+                "phone": phone,
+                "telephone": phone,
+                "city": personal_info.get("city", ""),
+                "state": personal_info.get("state", ""),
+                "country": personal_info.get("country", ""),
+                "zip": personal_info.get("zip_code", ""),
+                "zip_code": personal_info.get("zip_code", "")
+            }
+            
+            # Find and fill form fields
+            for field_name, field_value in field_mappings.items():
+                if field_value:
+                    success = await self._fill_field_by_name(field_name, field_value)
+                    if success:
+                        filled_fields.append({"field": field_name, "value": field_value})
+            
+            # Try to fill common fields by selectors - much more comprehensive
+            common_selectors = [
+                # Name fields
+                ('input[name*="name"]', full_name),
+                ('input[name*="Name"]', full_name),
+                ('input[placeholder*="name"]', full_name),
+                ('input[placeholder*="Name"]', full_name),
+                ('input[name="first_name"]', first_name),
+                ('input[name="firstName"]', first_name),
+                ('input[name="last_name"]', last_name),
+                ('input[name="lastName"]', last_name),
+                
+                # Email fields
+                ('input[name*="email"]', email),
+                ('input[name*="Email"]', email),
+                ('input[type="email"]', email),
+                ('input[placeholder*="email"]', email),
+                ('input[placeholder*="Email"]', email),
+                
+                # Phone fields
+                ('input[name*="phone"]', phone),
+                ('input[name*="Phone"]', phone),
+                ('input[type="tel"]', phone),
+                ('input[placeholder*="phone"]', phone),
+                ('input[placeholder*="Phone"]', phone),
+                
+                # Generic by ID
+                ('input[id*="name"]', full_name),
+                ('input[id*="email"]', email),
+                ('input[id*="phone"]', phone),
+            ]
+            
+            print(f"DEBUG: Attempting to fill {len(common_selectors)} field selectors")
+            
+            for selector, value in common_selectors:
+                if value and value.strip():
+                    print(f"DEBUG: Trying selector '{selector}' with value '{value}'")
+                    success = await self._fill_field_by_selector(selector, value)
+                    if success:
+                        filled_fields.append({"selector": selector, "value": value})
+                        print(f"DEBUG: ✅ Successfully filled field with selector '{selector}'")
+            
+            self.logger.info(f"✅ Filled {len(filled_fields)} form fields")
+            
+            return {
+                "success": True,
+                "fields_filled": filled_fields,
+                "message": f"Successfully filled {len(filled_fields)} fields"
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error filling form: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "fields_filled": []
+            }
+    
+    async def _fill_field_by_name(self, field_name: str, value: str) -> bool:
+        """Fill a field by name attribute"""
+        try:
+            selectors = [
+                f'input[name="{field_name}"]',
+                f'input[name*="{field_name}"]',
+                f'textarea[name="{field_name}"]',
+                f'select[name="{field_name}"]'
+            ]
+            
+            for selector in selectors:
+                elements = await self.current_job_page.query_selector_all(selector)
+                for element in elements:
+                    try:
+                        # Highlight field
+                        await element.evaluate("el => el.style.border = '3px solid red'")
+                        await self.current_job_page.wait_for_timeout(500)
+                        
+                        # Fill field
+                        await element.clear()
+                        await element.fill(value)
+                        
+                        # Remove highlight
+                        await element.evaluate("el => el.style.border = ''")
+                        return True
+                    except:
+                        continue
+            
+            return False
+            
+        except Exception:
+            return False
+    
+    async def _fill_field_by_selector(self, selector: str, value: str) -> bool:
+        """Fill a field by CSS selector"""
+        try:
+            elements = await self.current_job_page.query_selector_all(selector)
+            if not elements:
+                return False
+                
+            # Try each matching element
+            for element in elements:
+                try:
+                    # Check if element is visible and editable
+                    is_visible = await element.is_visible()
+                    is_editable = await element.is_editable()
+                    
+                    if not (is_visible and is_editable):
+                        continue
+                    
+                    # Highlight field
+                    await element.evaluate("el => el.style.border = '3px solid red'")
+                    await self.current_job_page.wait_for_timeout(300)
+                    
+                    # Clear and fill field
+                    await element.click()  # Focus the element first
+                    await element.fill("")  # Clear field
+                    await element.fill(value)  # Fill with new value
+                    
+                    # Verify the value was set
+                    filled_value = await element.input_value()
+                    if filled_value == value:
+                        # Remove highlight
+                        await element.evaluate("el => el.style.border = ''")
+                        return True
+                    
+                except Exception as e:
+                    print(f"DEBUG: Error filling element with selector '{selector}': {e}")
+                    continue
+            
+            return False
+            
+        except Exception as e:
+            print(f"DEBUG: Error with selector '{selector}': {e}")
+            return False
+    
+    async def _show_completion_message(self):
+        """Show a completion message to the user"""
+        try:
+            # Inject a completion message into the page
+            await self.current_job_page.evaluate("""
+                () => {
+                    // Remove any existing message
+                    const existing = document.getElementById('ai-completion-message');
+                    if (existing) existing.remove();
+                    
+                    // Create completion message
+                    const message = document.createElement('div');
+                    message.id = 'ai-completion-message';
+                    message.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #4CAF50;
+                        color: white;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        font-family: Arial, sans-serif;
+                        font-size: 16px;
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                        z-index: 10000;
+                        max-width: 300px;
+                    `;
+                    message.innerHTML = `
+                        <strong>✅ Form Filled!</strong><br>
+                        Please review the information and click Submit to apply.
+                    `;
+                    
+                    document.body.appendChild(message);
+                    
+                    // Auto-remove after 10 seconds
+                    setTimeout(() => {
+                        if (message.parentNode) {
+                            message.parentNode.removeChild(message);
+                        }
+                    }, 10000);
+                }
+            """)
+            
+            # Also highlight the submit button if found
+            submit_selectors = [
+                'button[type="submit"]',
+                'input[type="submit"]',
+                'button:has-text("Submit")',
+                'button:has-text("Apply")',
+                '.submit-btn'
+            ]
+            
+            for selector in submit_selectors:
+                try:
+                    submit_button = await self.current_job_page.query_selector(selector)
+                    if submit_button:
+                        await submit_button.evaluate("el => el.style.border = '3px solid green'")
+                        break
+                except:
+                    continue
+                    
+        except Exception as e:
+            self.logger.error(f"Error showing completion message: {e}")
+    
+    async def close_session(self):
+        """Close the browser session"""
+        try:
+            if self.browser:
+                await self.browser.close()
+            if self.playwright:
+                await self.playwright.stop()
+            
+            self.logger.info("🗙 Tab-based browser session closed")
+            
+        except Exception as e:
+            self.logger.error(f"Error closing browser session: {e}")
+
+# Global instance
+tab_automation = TabBasedAutomation()
