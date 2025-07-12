@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from database import SessionLocal, engine, get_db
 from models import Base, Job, User, Profile
 from schemas import JobResult, UserCreate, UserResponse, ProfileResponse
-from job_scraper import JobScraper
+# from services.job_scraping.scrapers import JobScraper  # TODO: Update when needed
 from agent_orchestrator import AgentOrchestrator
 from company_stats import get_comprehensive_stats, get_simple_job_stats_by_source
 from automation_service import automator

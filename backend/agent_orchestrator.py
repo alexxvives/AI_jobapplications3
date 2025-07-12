@@ -6,9 +6,9 @@ import asyncio
 from typing import Dict, Any, List
 from fastapi import UploadFile, HTTPException
 
-# Add the modules directory to the Python path
-MODULES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "modules")
-sys.path.append(MODULES_DIR)
+# Add the services directory to the Python path
+SERVICES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "services")
+sys.path.append(SERVICES_DIR)
 
 class AgentOrchestrator:
     """
@@ -17,7 +17,7 @@ class AgentOrchestrator:
     """
     
     def __init__(self):
-        self.modules_dir = MODULES_DIR
+        self.services_dir = SERVICES_DIR
         
     async def process_resume_upload(self, file: UploadFile, title: str = "Resume Profile") -> Dict[str, Any]:
         """

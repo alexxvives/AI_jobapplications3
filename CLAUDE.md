@@ -16,17 +16,17 @@ A Simplify.jobs clone that automates job applications using AI. Built with Ollam
 
 This platform has **3 core modules** that work together:
 
-### Module 1: Resume Parser (`modules/profile_parsing/`)
+### Module 1: Resume Parser (`backend/services/profile_parsing/`)
 - **Input**: PDF/DOCX resume files
 - **Output**: Structured JSON profile data
 - **Tech**: Python + pdf2text/mammoth + Ollama API
 
-### Module 2: Job Scraper (`modules/job_scraping/`)
+### Module 2: Job Scraper (`backend/services/job_scraping/`)
 - **Input**: Company lists
 - **Output**: Unified job listings from ATS platforms
 - **Tech**: Python + requests/Playwright + platform-specific APIs
 
-### Module 3: Job Applier (`modules/job_application/` + `chrome-extension/`)
+### Module 3: Job Applier (`backend/services/job_application/` + `chrome-extension/`)
 - **Input**: User profile + job application URL
 - **Output**: Auto-filled forms via Chrome extension
 - **Tech**: Chrome extension + DOM parsing + Ollama reasoning
@@ -36,24 +36,26 @@ This platform has **3 core modules** that work together:
 ## 📂 Project Structure
 
 ```
-├── modules/
-│   ├── profile_parsing/       # Resume → JSON conversion
-│   │   ├── ai_parser.py       # Ollama integration
-│   │   ├── file_extractor.py  # PDF/DOCX text extraction
-│   │   ├── schema.py          # Profile data structure
-│   │   └── prompts/           # Ollama prompts + examples
-│   ├── job_scraping/          # ATS platform scraping
-│   │   ├── scrapers/          # Platform-specific scrapers
-│   │   ├── company_data/      # Company lists & aliases
-│   │   └── databases/         # Local job storage
-│   └── job_application/       # Form automation logic
-│       ├── instruction_generator.py  # Profile → form mapping
-│       ├── intelligent_form_filler.py
-│       └── prompts/           # Form filling prompts
-├── backend/                   # FastAPI server
+├── backend/                   # FastAPI server (centralized)
 │   ├── main.py               # API routes
 │   ├── models.py             # Database models
-│   ├── automation_service.py # Orchestrates modules
+│   ├── database.py           # Database connection
+│   ├── job_automation.db     # Main database
+│   ├── multi_platform_jobs.db # Job scraping data
+│   ├── services/             # All business logic modules
+│   │   ├── profile_parsing/   # Resume → JSON conversion
+│   │   │   ├── ai_parser.py   # Ollama integration
+│   │   │   ├── file_extractor.py # PDF/DOCX text extraction
+│   │   │   ├── schema.py      # Profile data structure
+│   │   │   └── prompts/       # Ollama prompts + examples
+│   │   ├── job_scraping/      # ATS platform scraping
+│   │   │   └── scrapers/      # Platform-specific scrapers
+│   │   ├── job_application/   # Form automation logic
+│   │   │   ├── instruction_generator.py # Profile → form mapping
+│   │   │   ├── intelligent_form_filler.py
+│   │   │   └── prompts/       # Form filling prompts
+│   │   └── cover_letters/     # Cover letter generation
+│   ├── data/                 # Company lists & aliases
 │   └── storage/              # User resumes & data
 ├── frontend/                 # React dashboard
 │   └── src/components/       # UI components

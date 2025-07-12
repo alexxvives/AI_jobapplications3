@@ -23,7 +23,7 @@
 **Files to Modify**:
 - `chrome-extension/background.js`
 - `backend/main.py` (API bridge endpoint)
-- `modules/job_application/integration_service.py`
+- `backend/services/job_application/integration_service.py`
 
 **Acceptance Criteria**:
 - Chrome extension successfully communicates with Ollama
@@ -46,8 +46,8 @@
 
 **Files to Modify**:
 - `chrome-extension/content.js`
-- `modules/job_application/intelligent_form_filler.py`
-- `modules/job_application/prompts/main_prompt.md`
+- `backend/services/job_application/intelligent_form_filler.py`
+- `backend/services/job_application/prompts/main_prompt.md`
 
 **Acceptance Criteria**:
 - Complex forms detected with 90%+ field accuracy
@@ -234,14 +234,14 @@
 
 ## ✅ **COMPLETED FOUNDATION (Built on Previous Work)**
 
-### **✅ Module 1: Resume Parser - WORKING**
+### **✅ Module 1: Resume Parser - WORKING** (`backend/services/profile_parsing/`)
 - ✅ Ollama AI integration (llama3 model)
 - ✅ Multi-format support: PDF, DOC, DOCX, TXT
 - ✅ Structured JSON extraction matching profile schema
 - ✅ FastAPI endpoint: `/parse-resume`
 - ✅ React frontend integration complete
 
-### **✅ Module 2: Job Scraper - WORKING**
+### **✅ Module 2: Job Scraper - WORKING** (`backend/services/job_scraping/`)
 - ✅ Multi-platform scraping: Workday (182 jobs), Lever (33 jobs), ADP (9 jobs)
 - ✅ Company database: 583+ companies with platform mapping
 - ✅ Direct career page strategy proven successful
@@ -344,7 +344,7 @@ ollama pull mistral
 ### **Database Check**
 ```bash
 # Check job database
-python3 -c "import sqlite3; print(sqlite3.connect('modules/job_scraping/databases/multi_platform_jobs.db').execute('SELECT COUNT(*) FROM jobs').fetchone())"
+python3 -c "import sqlite3; print(sqlite3.connect('backend/multi_platform_jobs.db').execute('SELECT COUNT(*) FROM jobs').fetchone())"
 ```
 
 ---
