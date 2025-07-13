@@ -189,6 +189,106 @@ curl http://localhost:11434/api/generate \
 
 ---
 
+## 📊 Database Schema (Updated 2025-07-13)
+
+### **Recent Schema Changes**
+- ✅ **Jobs table**: Renamed `source` → `platform` for consistency
+- ✅ **Companies table**: Simplified - removed `domain`, `status`, `platform` fields
+- ✅ **Profiles table**: Removed `image_url` field
+- ✅ **Fixed job parsing**: No more character splitting issues in job_type/location fields
+
+### **Current Table Structure**
+
+**Jobs Table**:
+```sql
+CREATE TABLE jobs (
+    id INTEGER PRIMARY KEY,
+    title VARCHAR NOT NULL,
+    company VARCHAR NOT NULL, 
+    location VARCHAR,
+    description TEXT,
+    link VARCHAR UNIQUE NOT NULL,
+    platform VARCHAR,  -- "lever", "greenhouse", "workday", etc.
+    job_type VARCHAR,
+    work_type VARCHAR,
+    experience_level VARCHAR,
+    salary_range VARCHAR,
+    remote_option BOOLEAN,
+    fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME
+);
+```
+
+**Companies Table** (Simplified):
+```sql
+CREATE TABLE companies (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR UNIQUE NOT NULL,
+    url VARCHAR,
+    job_count INTEGER DEFAULT 0,
+    last_scraped DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Profiles Table** (No image_url):
+```sql
+CREATE TABLE profiles (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    title VARCHAR NOT NULL DEFAULT 'My Profile',
+    full_name VARCHAR,
+    email VARCHAR,
+    phone VARCHAR,
+    gender VARCHAR,
+    address VARCHAR,
+    city VARCHAR,
+    state VARCHAR,
+    zip_code VARCHAR,
+    country VARCHAR,
+    citizenship VARCHAR,
+    work_experience JSON,
+    education JSON,
+    skills JSON,
+    languages JSON,
+    job_preferences JSON,
+    achievements JSON,
+    certificates JSON,
+    resume_path VARCHAR,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME
+);
+```
+
+### **Database Path Management** 
+- **Single database file**: `backend/job_automation.db`
+- **All scrapers must run from**: `backend/` directory (not `backend/services/job_scraping/scrapers/`)
+- **Database service**: Uses relative path `./job_automation.db`
+
+⚠️ **Important**: Always run scraping scripts from `backend/` directory to avoid creating duplicate database files in subdirectories.
+
+### **Preventing Duplicate Database Files**
+**Problem**: SQLite with relative paths creates new database files when run from different directories.
+
+**Solution**:
+```bash
+# ✅ CORRECT - Run from backend directory
+cd backend
+python3 -c "from services.job_scraping.scrapers.lever_scraper import LeverScraper; ..."
+
+# ❌ WRONG - Creates duplicate database in scrapers/ directory  
+cd backend/services/job_scraping/scrapers
+python3 lever_scraper.py
+```
+
+**Prevention Rules**:
+1. **Always run Python scripts from** `backend/` **directory**
+2. **Database file path**: `backend/job_automation.db` (relative: `./job_automation.db`)
+3. **Import scrapers with**: `from services.job_scraping.scrapers.xxx import ...`
+4. **Before scraping**: Check you're in `backend/` directory with `pwd`
+
+---
+
 ## 🔧 Development Commands
 
 ```bash
@@ -197,6 +297,16 @@ cd backend && uvicorn main:app --reload
 
 # Frontend  
 cd frontend && npm run dev
+
+# Job Scrapers (prevents duplicate databases)
+cd backend && python3 run_scraper.py
+
+# Manual scraper testing
+cd backend
+python3 -c "from services.job_scraping.scrapers.lever_scraper import LeverScraper; ..."
+
+# Database inspection
+cd backend && python3 temp_db_inspection.py
 
 # Ollama (local)
 ollama serve
@@ -211,22 +321,26 @@ Load unpacked from chrome-extension/ directory
 ## 📋 Current Implementation Status
 
 ✅ **Completed**:
-- Resume parsing with Ollama integration
-- Job scraping for Lever, Greenhouse, Workday
-- React frontend with profile management
-- Chrome extension structure
-- FastAPI backend with SQLite
+- ✅ **Database schema cleanup** (2025-07-13): Simplified tables, renamed fields, fixed parsing issues
+- ✅ **Lever scraper working**: Successfully tested with Activecampaign (33+ jobs)
+- ✅ **Unified database architecture**: Single SQLite file, consistent schema
+- ✅ **Resume parsing** with Ollama integration
+- ✅ **Job scraping framework** for Lever, Greenhouse, Workday
+- ✅ **React frontend** with profile management
+- ✅ **Chrome extension structure**
+- ✅ **FastAPI backend** with SQLAlchemy + SQLite
 
 🔄 **In Progress**:
-- Chrome extension ↔ Ollama integration
-- Advanced form field detection
-- Application status tracking
+- **Job scraping scale-up**: Test more Lever companies, fix other platform scrapers
+- **Chrome extension ↔ Ollama integration**
+- **Advanced form field detection**
 
 🗓️ **Planned**:
-- Cover letter generation
-- Email follow-ups
-- Advanced job matching
-- Production deployment
+- **Application status tracking**
+- **Cover letter generation**
+- **Email follow-ups** 
+- **Advanced job matching**
+- **Production deployment**
 
 ---
 
@@ -247,3 +361,57 @@ Load unpacked from chrome-extension/ directory
 - **User Control**: Always allow manual review before submission
 - **Extensible**: Easy to add new ATS platforms and form types
 - **Transparent**: Show progress and reasoning to build user trust
+
+---
+
+## 🤖 AI Integration with Ollama
+
+The platform uses **Ollama** for local AI processing, providing privacy and speed for resume parsing and content generation.
+
+### Ollama Setup & Installation
+
+**Required Model**: `llama3.2` for resume parsing and cover letter generation
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.ai/install.sh  < /dev/null |  sh
+
+# Pull required model  
+ollama pull llama3.2
+
+# Start Ollama service (runs on localhost:11434)
+ollama serve
+```
+
+### AI-Powered Resume Parsing
+
+**Location**: `backend/agent_orchestrator.py` → `parse_resume()`
+
+**Process**:
+1. Extract text from PDF/DOCX files using PyPDF2/python-docx
+2. Send structured prompt to Ollama llama3.2 model
+3. Parse AI response into Profile model fields
+4. Fallback to regex parsing if Ollama unavailable
+
+**Benefits over regex parsing**:
+- ✅ Handles complex resume layouts and formats
+- ✅ Extracts rich context (job descriptions, achievements)
+- ✅ Better at parsing education, work experience, skills
+- ✅ Understands semantic meaning vs pattern matching
+
+### AI Agents Available
+
+| Agent               | Model | Location | Description |
+|--------------------|-------|----------|-------------|
+| `parse_resume`      | llama3.2 | `agent_orchestrator.py` | Extracts structured data from resume text |
+| `write_cover_letter` | llama3.2 | `agent_orchestrator.py` | Generates personalized cover letters |
+| `apply_to_jobs`     | llama3.2 | `agent_orchestrator.py` | Creates form-filling instructions |
+
+### Error Handling & Fallbacks
+
+- **Ollama Unavailable**: Falls back to regex-based parsing for basic fields
+- **JSON Parse Errors**: Cleans response and retries parsing  
+- **Model Not Found**: Automatically attempts to use available models
+- **Network Issues**: Graceful degradation to manual parsing
+
+---

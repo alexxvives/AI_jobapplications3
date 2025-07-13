@@ -54,7 +54,6 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 # Initialize components
-job_scraper = JobScraper()
 agent_orchestrator = AgentOrchestrator()
 
 @app.get("/")
@@ -120,7 +119,7 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     """Authenticate user and return access token"""
     try:
         # Authenticate user
-        user = authenticate_user(user_data.email, user_data.password, db)
+        user = authenticate_user(db, user_data.email, user_data.password)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -202,11 +201,22 @@ async def parse_resume_endpoint(
 ):
     """Parse resume using the parse_resume agent and save to database for authenticated user"""
     try:
-        # First save the resume file permanently
-        resume_file_path = await save_resume_file_permanently(file, current_user.id)
+        print(f"📝 DEBUG: Starting resume parsing for user {current_user.id}")
+        print(f"📝 DEBUG: File: {file.filename}, Title: {title}")
         
-        # Then parse the resume
-        result = await agent_orchestrator.process_resume_upload(file, title)
+        # Read file content once
+        file_content = await file.read()
+        print(f"📝 DEBUG: Read {len(file_content)} bytes from uploaded file")
+        
+        # Reset file for saving
+        await file.seek(0)
+        resume_file_path = await save_resume_file_permanently(file, current_user.id)
+        print(f"📝 DEBUG: Saved resume to: {resume_file_path}")
+        
+        # Parse the resume from content
+        print("📝 DEBUG: Calling agent_orchestrator.process_resume_content...")
+        result = await agent_orchestrator.process_resume_content(file_content, file.filename, title)
+        print(f"📝 DEBUG: Agent returned result with keys: {list(result.keys())}")
         
         # Save the parsed profile to database with resume file path
         profile_saved = await save_profile_to_database(result, title, resume_file_path, current_user.id, db)
@@ -251,25 +261,25 @@ async def save_resume_file_permanently(file: UploadFile, user_id: int) -> str:
 async def save_profile_to_database(profile_data: dict, title: str, resume_file_path: str = None, user_id: int = None, db: Session = None) -> bool:
     """Save parsed profile data to database"""
     try:
-        # Extract data from parsed profile
+        print(f"DEBUG: Attempting to save profile for user_id: {user_id}")
+        print(f"DEBUG: Profile data keys: {list(profile_data.keys())}")
+        print(f"DEBUG: Personal info: {profile_data.get('personal_information', {})}")
+        # Extract data from parsed profile (using correct structure)
         personal_info = profile_data.get("personal_information", {})
-        basic_info = personal_info.get("basic_information", {})
-        contact_info = personal_info.get("contact_information", {})
-        address_info = personal_info.get("address", {})
         
-        # Create new profile
+        # Create new profile using the flat structure from parse_resume
         new_profile = Profile(
             user_id=user_id,  # Associate profile with user
             title=title,
-            full_name=f"{basic_info.get('first_name', '')} {basic_info.get('last_name', '')}".strip(),
-            email=contact_info.get("email", ""),
-            phone=contact_info.get("telephone", ""),
-            address=address_info.get("address", ""),
-            city=address_info.get("city", ""),
-            state=address_info.get("state", ""),
-            zip_code=address_info.get("zip_code", ""),
-            country=address_info.get("country", ""),
-            gender=basic_info.get("gender", ""),
+            full_name=personal_info.get("full_name", ""),
+            email=personal_info.get("email", ""),
+            phone=personal_info.get("phone", ""),
+            address=personal_info.get("address", ""),
+            city=personal_info.get("city", ""),
+            state=personal_info.get("state", ""),
+            zip_code=personal_info.get("zip_code", ""),
+            country=personal_info.get("country", ""),
+            gender=personal_info.get("gender", ""),
             citizenship=personal_info.get("citizenship", ""),
             work_experience=profile_data.get("work_experience", []),
             education=profile_data.get("education", []),
