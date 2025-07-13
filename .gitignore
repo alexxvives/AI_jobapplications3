@@ -95,3 +95,16 @@ OLD_CODE/
 chrome-extracted/
 **/chrome
 **/chromium*
+
+# Backup and disabled files
+*.backup
+*_backup.*
+*.disabled
+*.old
+
+# Temporary automation files
+backend/storage/temp_automation/
+backend/services/*/temp_files/
+
+# Allow important database
+!backend/job_automation.db
