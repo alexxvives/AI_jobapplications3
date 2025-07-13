@@ -173,6 +173,33 @@ class JobParser:
                 return match.group()
         
         return None
+    
+    @staticmethod
+    def clean_job_data(job: Dict[str, Any]) -> Dict[str, Any]:
+        """Clean and standardize job data"""
+        cleaned = {}
+        
+        # Clean basic fields
+        cleaned['title'] = JobParser.clean_text(job.get('title', ''))
+        cleaned['company'] = JobParser.clean_text(job.get('company', ''))
+        cleaned['location'] = JobParser.clean_text(job.get('location', ''))
+        cleaned['description'] = JobParser.clean_text(job.get('description', ''))
+        
+        # Handle URL/link fields
+        cleaned['link'] = job.get('link', job.get('url', job.get('job_url', '')))
+        
+        # Handle optional fields
+        cleaned['department'] = JobParser.clean_text(job.get('department', ''))
+        cleaned['job_type'] = job.get('job_type', '')
+        cleaned['employment_type'] = job.get('employment_type', '')
+        
+        # Extract salary if present in description
+        if cleaned['description']:
+            salary = JobParser.extract_salary(cleaned['description'])
+            if salary:
+                cleaned['salary_range'] = salary
+        
+        return cleaned
 
 
 class RateLimiter:
