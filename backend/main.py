@@ -705,5 +705,168 @@ async def delete_user_profile(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to delete profile: {str(e)}")
 
+# Chrome Extension API Bridge Endpoints
+@app.post("/api/chrome-extension/analyze-form")
+async def analyze_form_fields(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Analyze form fields extracted by Chrome extension
+    Returns AI-generated field mappings
+    """
+    try:
+        data = await request.json()
+        form_fields = data.get('form_fields', [])
+        profile_id = data.get('profile_id')
+        
+        if not form_fields:
+            raise HTTPException(status_code=400, detail="No form fields provided")
+        
+        # Get user profile
+        db = SessionLocal()
+        try:
+            profile = db.query(Profile).filter(
+                Profile.id == profile_id,
+                Profile.user_id == current_user.id
+            ).first()
+            
+            if not profile:
+                raise HTTPException(status_code=404, detail="Profile not found")
+            
+            # Convert profile to dict for AI processing
+            profile_data = {
+                'personal_information': {
+                    'full_name': profile.full_name,
+                    'email': profile.email,
+                    'phone': profile.phone,
+                    'address': profile.address,
+                    'city': profile.city,
+                    'state': profile.state,
+                    'zip_code': profile.zip_code,
+                    'country': profile.country
+                },
+                'work_experience': profile.work_experience or [],
+                'education': profile.education or [],
+                'skills': profile.skills or [],
+                'languages': profile.languages or []
+            }
+            
+            # Generate field mappings using AI (placeholder for Ollama integration)
+            field_mappings = await generate_field_mappings(profile_data, form_fields)
+            
+            return {
+                "success": True,
+                "field_mappings": field_mappings,
+                "profile_id": profile_id
+            }
+            
+        finally:
+            db.close()
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Form analysis failed: {str(e)}")
+
+@app.post("/api/chrome-extension/submit-application")
+async def submit_application_status(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Record application submission status from Chrome extension
+    """
+    try:
+        data = await request.json()
+        job_url = data.get('job_url')
+        profile_id = data.get('profile_id')
+        status = data.get('status', 'applied')
+        
+        if not job_url:
+            raise HTTPException(status_code=400, detail="Job URL is required")
+        
+        # Find or create job record
+        job = db.query(Job).filter(Job.link == job_url).first()
+        if not job:
+            # Create basic job record
+            job = Job(
+                title=data.get('job_title', 'Unknown Position'),
+                company=data.get('company', 'Unknown Company'),
+                location=data.get('location', ''),
+                link=job_url,
+                source='chrome_extension'
+            )
+            db.add(job)
+            db.flush()
+        
+        # Create application record
+        application = Application(
+            user_id=current_user.id,
+            job_id=job.id,
+            profile_id=profile_id,
+            status=status,
+            applied_at=func.now() if status == 'applied' else None
+        )
+        
+        db.add(application)
+        db.commit()
+        
+        return {
+            "success": True,
+            "application_id": application.id,
+            "message": "Application status recorded"
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to record application: {str(e)}")
+
+async def generate_field_mappings(profile_data: dict, form_fields: list) -> dict:
+    """
+    Generate field mappings using AI
+    TODO: Integrate with Ollama for intelligent field mapping
+    """
+    # Simple rule-based mapping for now
+    # This will be replaced with Ollama integration
+    mappings = {}
+    
+    for field in form_fields:
+        field_id = field.get('id', '')
+        field_name = field.get('name', '')
+        field_label = field.get('label', '').lower()
+        field_type = field.get('type', 'text')
+        
+        # Simple mapping rules
+        if any(term in field_label for term in ['first name', 'fname', 'firstname']):
+            name_parts = profile_data['personal_information']['full_name'].split(' ', 1)
+            mappings[field_id] = name_parts[0] if name_parts else ''
+            
+        elif any(term in field_label for term in ['last name', 'lname', 'lastname', 'surname']):
+            name_parts = profile_data['personal_information']['full_name'].split(' ', 1)
+            mappings[field_id] = name_parts[1] if len(name_parts) > 1 else ''
+            
+        elif any(term in field_label for term in ['full name', 'name']):
+            mappings[field_id] = profile_data['personal_information']['full_name']
+            
+        elif 'email' in field_label:
+            mappings[field_id] = profile_data['personal_information']['email']
+            
+        elif 'phone' in field_label:
+            mappings[field_id] = profile_data['personal_information']['phone']
+            
+        elif any(term in field_label for term in ['address', 'street']):
+            mappings[field_id] = profile_data['personal_information']['address']
+            
+        elif 'city' in field_label:
+            mappings[field_id] = profile_data['personal_information']['city']
+            
+        elif 'state' in field_label:
+            mappings[field_id] = profile_data['personal_information']['state']
+            
+        elif any(term in field_label for term in ['zip', 'postal']):
+            mappings[field_id] = profile_data['personal_information']['zip_code']
+    
+    return mappings
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

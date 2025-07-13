@@ -11,13 +11,13 @@ from typing import Dict, List, Any
 
 # Add core scraping utilities to path
 sys.path.append(os.path.dirname(__file__))
-from shared_scraper_utils import BaseScraper, ScrapingResult, JobParser
+from shared_utils import BaseScraper, ScrapingResult, JobParser
 
 
 class LeverScraper(BaseScraper):
     """Specialized scraper for Lever platform"""
     
-    def __init__(self, db_file: str = "multi_platform_jobs.db"):
+    def __init__(self, db_file: str = None):
         super().__init__("lever", db_file)
         self.rate_limiter.default_delay = 2.0  # Lever-specific rate limiting
     

@@ -1,380 +1,248 @@
 #!/usr/bin/env python3
 """
-Shared Scraper Utilities
+Shared Scraper Utilities - UNIFIED VERSION
 Common functionality used by all platform-specific scrapers
+Uses unified database service for consistency
 """
 
-import sqlite3
 import urllib.request
 import urllib.error
 import json
 import html
 import re
+import sys
+import os
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 import time
 import csv
 import io
 
+# Add backend path to import the unified database service
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+from database_service import db_service
+
 
 class DatabaseManager:
-    """Handles all database operations for scrapers"""
+    """Handles all database operations for scrapers using unified database service"""
     
-    def __init__(self, db_file: str = "multi_platform_jobs.db"):
-        self.db_file = db_file
+    def __init__(self, db_file: str = None):
+        # Ignore db_file parameter and use unified service
+        self.db_service = db_service
         self.setup_database()
     
     def setup_database(self):
-        """Create database tables"""
-        conn = sqlite3.connect(self.db_file)
-        cursor = conn.cursor()
-        
-        # Companies table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS companies (
-                id INTEGER PRIMARY KEY,
-                name TEXT,
-                domain TEXT,
-                platform TEXT,
-                url TEXT,
-                status TEXT,
-                job_count INTEGER DEFAULT 0,
-                last_scraped TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        # Jobs table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS jobs (
-                id INTEGER PRIMARY KEY,
-                company_id INTEGER,
-                platform TEXT,
-                title TEXT,
-                department TEXT,
-                location TEXT,
-                job_type TEXT,
-                employment_type TEXT,
-                salary_min INTEGER,
-                salary_max INTEGER,
-                salary_currency TEXT,
-                description TEXT,
-                requirements TEXT,
-                job_url TEXT,
-                job_id TEXT,
-                posted_date TEXT,
-                scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (company_id) REFERENCES companies (id)
-            )
-        ''')
-        
-        conn.commit()
-        conn.close()
+        """Setup database using unified service"""
+        self.db_service.setup_database()
     
-    def save_company_result(self, company: Dict[str, Any], platform: str, url: str, 
-                           status: str, job_count: int) -> int:
-        """Save company scraping result and return company_id"""
-        conn = sqlite3.connect(self.db_file)
-        cursor = conn.cursor()
+    def save_jobs(self, company_id: int, platform: str, jobs: List[Dict[str, Any]]) -> List[int]:
+        """Save jobs using unified database service with proper schema"""
+        if not jobs:
+            return []
         
-        cursor.execute('''
-            INSERT OR REPLACE INTO companies (name, domain, platform, url, status, job_count, last_scraped)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (company['name'], company['domain'], platform, url, status, job_count, datetime.now()))
-        
-        company_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        return company_id
-    
-    def save_jobs(self, company_id: int, platform: str, jobs: List[Dict[str, Any]]):
-        """Save job listings to database"""
-        conn = sqlite3.connect(self.db_file)
-        cursor = conn.cursor()
-        
+        # Convert jobs to proper format for unified service
+        formatted_jobs = []
         for job in jobs:
-            cursor.execute('''
-                INSERT INTO jobs (company_id, platform, title, department, location, job_type, 
-                                employment_type, description, job_url, job_id, posted_date)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                company_id, platform, job['title'], job['department'], job['location'],
-                job['job_type'], job['employment_type'], job['description'], 
-                job['job_url'], job['job_id'], job['posted_date']
-            ))
+            formatted_job = {
+                'title': job.get('title', ''),
+                'company': job.get('company', ''),
+                'location': job.get('location', ''),
+                'description': job.get('description', ''),
+                'link': job.get('link', job.get('url', job.get('job_url', ''))),
+                'source': platform,  # Use platform as source
+                'job_type': job.get('job_type'),
+                'work_type': job.get('work_type'),
+                'experience_level': job.get('experience_level'),
+                'salary_range': job.get('salary_range'),
+                'remote_option': job.get('remote_option', False)
+            }
+            formatted_jobs.append(formatted_job)
         
-        conn.commit()
-        conn.close()
+        return self.db_service.save_scraped_jobs_batch(formatted_jobs)
+    
+    def save_company_result(self, company_name: str, domain: str, platform: str, 
+                          url: str, status: str, job_count: int = 0) -> int:
+        """Save company result using unified service"""
+        return self.db_service.save_company_result(
+            company_name, domain, platform, url, status, job_count
+        )
 
 
 class HTTPClient:
-    """Handles HTTP requests with proper headers and error handling"""
+    """HTTP client with rate limiting and retry logic"""
     
-    def __init__(self):
-        self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    def __init__(self, delay: float = 1.0):
+        self.delay = delay
+        self.last_request_time = 0
     
-    def fetch_page_content(self, url: str, timeout: int = 15) -> Tuple[Optional[str], int]:
-        """Fetch content from a URL with error handling"""
+    def get(self, url: str, headers: Dict[str, str] = None) -> Optional[str]:
+        """GET request with rate limiting"""
+        self._rate_limit()
+        
+        if headers is None:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        
         try:
-            req = urllib.request.Request(url)
-            req.add_header('User-Agent', self.user_agent)
-            req.add_header('Accept', 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')
-            
-            with urllib.request.urlopen(req, timeout=timeout) as response:
-                return response.read().decode('utf-8'), response.getcode()
-        except urllib.error.HTTPError as e:
-            return None, e.code
-        except urllib.error.URLError:
-            return None, 0
-        except Exception:
-            return None, -1
+            request = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return response.read().decode('utf-8')
+        except Exception as e:
+            print(f"HTTP request failed for {url}: {e}")
+            return None
     
-    def fetch_json(self, url: str, timeout: int = 15) -> Tuple[Optional[Dict], int]:
-        """Fetch JSON content from API"""
-        content, status_code = self.fetch_page_content(url, timeout)
-        
-        if status_code == 200 and content:
-            try:
-                return json.loads(content), status_code
-            except json.JSONDecodeError:
-                return None, status_code
-        
-        return None, status_code
+    def _rate_limit(self):
+        """Enforce rate limiting between requests"""
+        elapsed = time.time() - self.last_request_time
+        if elapsed < self.delay:
+            time.sleep(self.delay - elapsed)
+        self.last_request_time = time.time()
 
 
 class CompanyManager:
-    """Handles loading and processing company data"""
+    """Manages company data and domain mapping"""
     
-    @staticmethod
-    def load_companies_from_csv(csv_file: str) -> List[Dict[str, Any]]:
-        """Load companies from CSV file"""
-        companies = []
+    def __init__(self, companies_file: str = None):
+        if companies_file is None:
+            # Use the consolidated companies file
+            base_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data')
+            companies_file = os.path.join(base_dir, 'consolidated_companies.json')
         
+        self.companies_file = companies_file
+        self.companies = self.load_companies()
+    
+    def load_companies(self) -> List[Dict[str, Any]]:
+        """Load companies from JSON file"""
         try:
-            with open(csv_file, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-                
-                if len(lines) <= 1:
-                    return companies
-                
-                # Skip compliance notice, use second line as header
-                header_line = lines[1].strip()
-                data_lines = lines[2:]
-                
-                # Parse header
-                headers = [h.strip() for h in header_line.split(',')]
-                
-                # Find column indices
-                domain_idx = None
-                company_idx = None
-                
-                for i, header in enumerate(headers):
-                    if header.lower() == 'domain':
-                        domain_idx = i
-                    elif header.lower() == 'company':
-                        company_idx = i
-                
-                if domain_idx is None and company_idx is None:
-                    return companies
-                
-                # Parse data rows
-                for line in data_lines:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    
-                    # Parse CSV row
-                    csv_reader = csv.reader(io.StringIO(line))
-                    try:
-                        row = next(csv_reader)
-                        
-                        max_idx = max([i for i in [domain_idx, company_idx] if i is not None])
-                        if len(row) > max_idx:
-                            domain = row[domain_idx].strip().strip('"') if domain_idx is not None else ''
-                            company_name = row[company_idx].strip().strip('"') if company_idx is not None else ''
-                            
-                            if (domain or company_name) and domain != 'Domain' and company_name != 'Company':
-                                company_id = CompanyManager.extract_company_identifier(domain, company_name)
-                                
-                                if company_id:
-                                    companies.append({
-                                        'domain': domain,
-                                        'name': company_name or domain,
-                                        'company_id': company_id
-                                    })
-                    except:
-                        continue
+            with open(self.companies_file, 'r') as f:
+                data = json.load(f)
+                return data.get('companies', [])
         except Exception as e:
-            print(f"Error loading CSV {csv_file}: {e}")
-        
-        return companies
+            print(f"Error loading companies: {e}")
+            return []
     
-    @staticmethod
-    def extract_company_identifier(domain: str, company_name: str) -> Optional[str]:
-        """Extract company identifier for URL building"""
-        company_id = None
-        
-        # Try domain first
-        if domain:
-            domain_parts = domain.replace('www.', '').split('.')
-            company_id = domain_parts[0] if domain_parts else domain
-        
-        # Use company name as fallback
-        if not company_id or company_id == domain:
-            if company_name:
-                # Convert company name to URL-friendly format
-                company_id = company_name.lower().replace(' ', '-').replace('&', 'and')
-                # Remove common corporate suffixes
-                company_id = re.sub(r'\b(inc|corp|ltd|llc|company|co)\b', '', company_id)
-                company_id = re.sub(r'[^a-z0-9\-]', '', company_id)
-                company_id = re.sub(r'\-+', '-', company_id).strip('-')
-        
-        return company_id if company_id else None
+    def get_companies_by_platform(self, platform: str) -> List[Dict[str, Any]]:
+        """Get companies that use a specific platform"""
+        return [
+            company for company in self.companies
+            if platform.lower() in [p.lower() for p in company.get('platforms', [])]
+        ]
     
-    @staticmethod
-    def add_shared_companies(companies: List[Dict[str, Any]], shared_companies: List[str]) -> List[Dict[str, Any]]:
-        """Add shared companies to the list"""
-        for shared_company in shared_companies:
-            companies.append({
-                'domain': f'{shared_company}.com',
-                'name': shared_company.title(),
-                'company_id': shared_company
-            })
-        return companies
+    def get_company_domain(self, company_name: str) -> Optional[str]:
+        """Get domain for a company"""
+        for company in self.companies:
+            if company['name'].lower() == company_name.lower():
+                return company.get('domain')
+        return None
 
 
 class JobParser:
     """Common job parsing utilities"""
     
     @staticmethod
-    def parse_generic_jobs(content: str) -> List[Dict[str, Any]]:
-        """Parse job data from generic HTML content"""
-        jobs = []
+    def clean_text(text: str) -> str:
+        """Clean and normalize text"""
+        if not text:
+            return ""
         
-        # Common job-related patterns
-        job_patterns = [
-            r'<h[1-6][^>]*>([^<]*(?:Engineer|Manager|Director|Lead|Analyst|Coordinator|Specialist|Developer|Designer|Sales|Marketing)[^<]*)</h[1-6]>',
-            r'<a[^>]*href=\"[^\"]*job[^\"]*\"[^>]*>([^<]+)</a>',
-            r'<div[^>]*class=\"[^\"]*job[^\"]*\"[^>]*>.*?<.*?>([^<]+)</.*?></div>'
-        ]
+        # Remove HTML tags
+        text = re.sub(r'<[^>]+>', '', text)
+        # Decode HTML entities
+        text = html.unescape(text)
+        # Normalize whitespace
+        text = re.sub(r'\s+', ' ', text).strip()
         
-        for pattern in job_patterns:
-            matches = re.findall(pattern, content, re.IGNORECASE | re.DOTALL)
-            for match in matches:
-                title = html.unescape(match.strip())
-                if title and len(title) > 5:  # Filter out very short matches
-                    jobs.append({
-                        'title': title,
-                        'department': '',
-                        'location': '',
-                        'job_type': '',
-                        'employment_type': '',
-                        'description': '',
-                        'job_url': '',
-                        'job_id': '',
-                        'posted_date': ''
-                    })
-            
-            if jobs:  # If we found jobs with this pattern, don't try others
-                break
-        
-        return jobs
+        return text
     
     @staticmethod
-    def clean_job_data(job: Dict[str, Any]) -> Dict[str, Any]:
-        """Clean and normalize job data"""
-        cleaned = {}
+    def extract_salary(text: str) -> Optional[str]:
+        """Extract salary information from text"""
+        if not text:
+            return None
         
-        for key, value in job.items():
-            if value is None:
-                cleaned[key] = ''
-            elif isinstance(value, str):
-                # Remove HTML tags and normalize whitespace
-                cleaned_value = re.sub(r'<[^>]+>', '', value)
-                cleaned_value = re.sub(r'\s+', ' ', cleaned_value).strip()
-                cleaned[key] = cleaned_value
-            else:
-                cleaned[key] = value
+        # Look for salary patterns
+        salary_patterns = [
+            r'\$[\d,]+(?:\.\d{2})?\s*-\s*\$[\d,]+(?:\.\d{2})?',
+            r'\$[\d,]+(?:\.\d{2})?(?:\s*k)?(?:\s*per\s+year)?',
+        ]
         
-        return cleaned
+        for pattern in salary_patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                return match.group()
+        
+        return None
 
 
 class RateLimiter:
-    """Handles rate limiting between requests"""
+    """Rate limiting utility"""
     
-    def __init__(self, default_delay: float = 1.0):
-        self.default_delay = default_delay
+    def __init__(self, requests_per_minute: int = 30):
+        self.requests_per_minute = requests_per_minute
+        self.min_delay = 60.0 / requests_per_minute
         self.last_request_time = 0
-        self.current_delay = default_delay
     
     def wait(self):
-        """Wait appropriate time before next request"""
-        current_time = time.time()
-        time_since_last = current_time - self.last_request_time
-        
-        if time_since_last < self.current_delay:
-            time.sleep(self.current_delay - time_since_last)
-        
+        """Wait if necessary to maintain rate limit"""
+        elapsed = time.time() - self.last_request_time
+        if elapsed < self.min_delay:
+            time.sleep(self.min_delay - elapsed)
         self.last_request_time = time.time()
-    
-    def handle_rate_limit(self):
-        """Increase delay when rate limited"""
-        self.current_delay = min(self.current_delay * 2, 10.0)  # Cap at 10 seconds
-        print(f"  ⚠️ Rate limited, increasing delay to {self.current_delay}s")
-        time.sleep(self.current_delay)
-    
-    def reset_delay(self):
-        """Reset delay on successful request"""
-        self.current_delay = self.default_delay
 
 
 class BaseScraper:
     """Base class for all platform scrapers"""
     
-    def __init__(self, platform_name: str, db_file: str = "multi_platform_jobs.db"):
+    def __init__(self, platform_name: str, db_file: str = None):
         self.platform_name = platform_name
         self.db = DatabaseManager(db_file)
-        self.http = HTTPClient()
+        self.http_client = HTTPClient()
+        self.company_manager = CompanyManager()
         self.rate_limiter = RateLimiter()
-        
-    def scrape_company(self, company: Dict[str, Any]) -> Dict[str, Any]:
-        """Override this method in each platform scraper"""
-        raise NotImplementedError("Each scraper must implement scrape_company method")
     
-    def generate_urls(self, company: Dict[str, Any]) -> List[str]:
-        """Override this method in each platform scraper"""
-        raise NotImplementedError("Each scraper must implement generate_urls method")
-    
-    def parse_jobs(self, content: str, is_api: bool = False) -> List[Dict[str, Any]]:
-        """Override this method in each platform scraper"""
-        raise NotImplementedError("Each scraper must implement parse_jobs method")
-    
-    def get_platform_config(self) -> Dict[str, Any]:
-        """Override this method in each platform scraper"""
-        raise NotImplementedError("Each scraper must implement get_platform_config method")
+    def scrape_companies(self, companies: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Override this method in subclasses"""
+        raise NotImplementedError("Subclasses must implement scrape_companies method")
 
 
 class ScrapingResult:
-    """Standard result format for all scrapers"""
+    """Data class for scraping results"""
     
-    def __init__(self, company: Dict[str, Any], platform: str, url: str, 
-                 status: str, job_count: int, method: str):
-        self.company = company['name']
-        self.domain = company['domain']
-        self.platform = platform
-        self.url = url
-        self.status = status
-        self.job_count = job_count
-        self.method = method
+    def __init__(self):
+        self.companies_attempted = 0
+        self.companies_successful = 0
+        self.total_jobs_found = 0
+        self.errors = []
+        self.start_time = datetime.now()
+        self.end_time = None
     
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary format"""
+    def add_company_result(self, success: bool, job_count: int = 0):
+        """Add result for a company"""
+        self.companies_attempted += 1
+        if success:
+            self.companies_successful += 1
+            self.total_jobs_found += job_count
+    
+    def add_error(self, error: str):
+        """Add an error message"""
+        self.errors.append(error)
+    
+    def finalize(self):
+        """Mark scraping as complete"""
+        self.end_time = datetime.now()
+    
+    def get_summary(self) -> Dict[str, Any]:
+        """Get summary of results"""
+        duration = None
+        if self.end_time:
+            duration = (self.end_time - self.start_time).total_seconds()
+        
         return {
-            'company': self.company,
-            'domain': self.domain,
-            'platform': self.platform,
-            'url': self.url,
-            'status': self.status,
-            'job_count': self.job_count,
-            'method': self.method
+            'companies_attempted': self.companies_attempted,
+            'companies_successful': self.companies_successful,
+            'success_rate': self.companies_successful / max(1, self.companies_attempted),
+            'total_jobs_found': self.total_jobs_found,
+            'duration_seconds': duration,
+            'errors': self.errors
         }

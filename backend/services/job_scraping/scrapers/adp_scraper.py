@@ -34,7 +34,7 @@ from typing import Dict, List, Any
 
 # Add core scraping utilities to path
 sys.path.append(os.path.dirname(__file__))
-from shared_scraper_utils import BaseScraper, ScrapingResult, JobParser
+from shared_utils import BaseScraper, ScrapingResult, JobParser
 
 # Try to import Selenium (headless browser support)
 try:
@@ -52,7 +52,7 @@ except ImportError:
 class ADPScraper(BaseScraper):
     """Specialized scraper for ADP platform"""
     
-    def __init__(self, db_file: str = "multi_platform_jobs.db"):
+    def __init__(self, db_file: str = None):
         super().__init__("adp", db_file)
         self.rate_limiter.default_delay = 1.5  # ADP-specific rate limiting
         self.driver = None

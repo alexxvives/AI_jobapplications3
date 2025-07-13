@@ -16,12 +16,12 @@ except ImportError:
     Session = None
     Job = None
 
-# Define the scraping database path in a cross-platform way
-SCRAPING_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'core', 'scraping', 'multi_platform_jobs.db')
+# Use unified database path
+from database_service import db_service
 
 def load_consolidated_companies():
     """Load consolidated companies data"""
-    json_file = os.path.join(os.path.dirname(__file__), '..', 'core', 'scraping', 'consolidated_companies.json')
+    json_file = os.path.join(os.path.dirname(__file__), 'data', 'consolidated_companies.json')
     
     try:
         with open(json_file, 'r') as f:
@@ -64,7 +64,7 @@ def get_job_stats_by_company(db=None):
     
     try:
         # Connect to the scraping database
-        scraping_db_path = SCRAPING_DB_PATH
+        scraping_db_path = db_service.db_path
         conn = sqlite3.connect(scraping_db_path)
         cursor = conn.cursor()
         
@@ -103,7 +103,7 @@ def get_job_stats_by_platform(db=None):
     
     try:
         # Connect to the scraping database
-        scraping_db_path = SCRAPING_DB_PATH
+        scraping_db_path = db_service.db_path
         conn = sqlite3.connect(scraping_db_path)
         cursor = conn.cursor()
         
@@ -140,7 +140,7 @@ def get_simple_job_stats_by_source():
     import sqlite3
     
     try:
-        scraping_db_path = SCRAPING_DB_PATH
+        scraping_db_path = db_service.db_path
         conn = sqlite3.connect(scraping_db_path)
         cursor = conn.cursor()
         
@@ -181,7 +181,7 @@ def get_comprehensive_stats(db):
     # Get total job count from scraping database
     import sqlite3
     try:
-        scraping_db_path = SCRAPING_DB_PATH
+        scraping_db_path = db_service.db_path
         conn = sqlite3.connect(scraping_db_path)
         cursor = conn.cursor()
         
