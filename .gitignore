@@ -109,3 +109,18 @@ backend/services/*/temp_files/
 # Database files (exclude duplicates)
 **/job_automation.db
 !backend/job_automation.db
+
+# Node.js frontend dependencies
+frontend/node_modules/
+**/node_modules/
+
+# Large binaries and executables
+bin/ollama
+**/esbuild
+
+# Resume uploads and user data
+backend/storage/resumes/
+backend/storage/temp_automation/
+
+# Ollama directory
+ollama/
