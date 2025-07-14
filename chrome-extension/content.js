@@ -1727,7 +1727,6 @@ class JobApplicationAssistant {
             // Check if user has a resume file path in their profile
             if (!this.userProfile.resume_path && !this.userProfile.has_resume) {
                 console.log(`⚠️ No resume file found in user profile, skipping upload`);
-                this.addResumeUploadNotification(element, 'No resume found in profile');
                 return false;
             }
             
@@ -1742,13 +1741,11 @@ class JobApplicationAssistant {
                 console.log(`✅ Resume uploaded successfully!`);
                 return true;
             } else {
-                console.log(`⚠️ Automatic upload failed, showing manual upload notification`);
-                this.addResumeUploadNotification(element, 'Auto-upload failed, please upload manually');
+                console.log(`⚠️ Automatic upload failed`);
                 return true; // Still return true so we don't mark it as completely failed
             }
         } catch (error) {
             console.error('❌ Error handling resume upload:', error);
-            this.addResumeUploadNotification(element, 'Upload error, please upload manually');
             return false;
         }
     }
@@ -1803,7 +1800,6 @@ class JobApplicationAssistant {
             element.dispatchEvent(new Event('input', { bubbles: true }));
             
             console.log(`✅ TEST_ID: RESUME_ACTUAL_v6 - Actual resume file uploaded: ${fileName}`);
-            this.addResumeUploadNotification(element, `Actual resume uploaded: ${fileName}`, 'success');
             
             return true;
         } catch (error) {
@@ -1845,9 +1841,6 @@ class JobApplicationAssistant {
             element.dispatchEvent(inputEvent);
             
             console.log(`✅ TEST_ID: RESUME_FIX_v5 - Resume file uploaded successfully: ${fileName}`);
-            
-            // Add success notification
-            this.addResumeUploadNotification(element, `Resume uploaded: ${fileName}`, 'success');
             
             return true;
         } catch (error) {
@@ -2016,9 +2009,6 @@ class JobApplicationAssistant {
             
             console.log(`✅ Resume file set to input: ${fileName}`);
             
-            // Add success notification
-            this.addResumeUploadNotification(element, `Resume uploaded: ${fileName}`, 'success');
-            
             return true;
         } catch (error) {
             console.error('❌ Error in downloadAndUploadResume:', error);
@@ -2026,69 +2016,8 @@ class JobApplicationAssistant {
         }
     }
     
-    addResumeUploadNotification(element, message = 'Please manually upload your resume to this field', type = 'info') {
-        // Remove any existing notifications
-        const existingNotification = document.querySelector('.resume-upload-notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
-        
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = 'resume-upload-notification';
-        
-        // Different colors for different types
-        const colors = {
-            info: { bg: '#007bff', border: '#0056b3' },
-            success: { bg: '#28a745', border: '#1e7e34' },
-            error: { bg: '#dc3545', border: '#c82333' }
-        };
-        const color = colors[type] || colors.info;
-        
-        notification.style.cssText = `
-            position: absolute;
-            background: ${color.bg};
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 10000;
-            max-width: 250px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            border: 2px solid ${color.border};
-        `;
-        
-        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '📎';
-        const title = type === 'success' ? 'Resume Uploaded!' : type === 'error' ? 'Upload Failed' : 'Resume Upload Required';
-        
-        notification.innerHTML = `
-            <strong>${icon} ${title}</strong><br>
-            <small>${message}</small>
-        `;
-        
-        // Position near the file input
-        const rect = element.getBoundingClientRect();
-        notification.style.position = 'fixed';
-        notification.style.left = (rect.left + window.scrollX) + 'px';
-        notification.style.top = (rect.bottom + window.scrollY + 5) + 'px';
-        
-        // Add to page
-        document.body.appendChild(notification);
-        
-        // Style the input to highlight it
-        element.style.border = '2px solid #007bff';
-        element.style.backgroundColor = '#f8f9fa';
-        
-        // Remove notification after 10 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-            // Reset input styling
-            element.style.border = '';
-            element.style.backgroundColor = '';
-        }, 10000);
-    }
+    // Resume upload notification function REMOVED - TEST_ID: NO_NOTIFICATIONS_v16
+    // Visual notifications disabled per user request
     
     triggerRadioEvents(radio) {
         // Trigger events to notify the form
