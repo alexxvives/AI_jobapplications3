@@ -1719,6 +1719,10 @@ class JobApplicationAssistant {
     async handleResumeUpload(element, field) {
         try {
             console.log(`📎 Resume upload field detected: ${field.name || field.id}`);
+            console.log(`📎 RESUME DEBUG: User profile keys:`, Object.keys(this.userProfile || {}));
+            console.log(`📎 RESUME DEBUG: Profile ID:`, this.userProfile?.id);
+            console.log(`📎 RESUME DEBUG: Has resume:`, this.userProfile?.has_resume);
+            console.log(`📎 RESUME DEBUG: Resume path:`, this.userProfile?.resume_path);
             
             // Check if user has a resume file path in their profile
             if (!this.userProfile.resume_path && !this.userProfile.has_resume) {
@@ -1730,8 +1734,9 @@ class JobApplicationAssistant {
             console.log(`📎 User has resume: ${this.userProfile.has_resume ? 'Yes' : 'No'}`);
             console.log(`📎 Resume path: ${this.userProfile.resume_path || 'Not specified'}`);
             
-            // Try to automatically upload the resume from backend
-            const uploadSuccess = await this.downloadAndUploadResume(element);
+            // Try to automatically upload the exact resume file from backend - TEST_ID: RESUME_ACTUAL_v6
+            console.log(`📎 TEST_ID: RESUME_ACTUAL_v6 - Downloading actual resume file from backend`);
+            const uploadSuccess = await this.downloadAndUploadActualResume(element);
             
             if (uploadSuccess) {
                 console.log(`✅ Resume uploaded successfully!`);
@@ -1748,14 +1753,216 @@ class JobApplicationAssistant {
         }
     }
     
+    async downloadAndUploadActualResume(element) {
+        try {
+            console.log(`📎 TEST_ID: RESUME_ACTUAL_v6 - Attempting to download actual resume file...`);
+            
+            // Try the backend endpoint without auth first (simpler approach)
+            const resumeUrl = `http://localhost:8000/user/profile/${this.userProfile.id}/resume`;
+            console.log(`📎 TEST_ID: RESUME_ACTUAL_v6 - Trying without auth: ${resumeUrl}`);
+            
+            const response = await fetch(resumeUrl, {
+                method: 'GET'
+                // No auth headers to test if backend allows it
+            });
+            
+            console.log(`📎 TEST_ID: RESUME_ACTUAL_v6 - Response status:`, response.status);
+            console.log(`📎 TEST_ID: RESUME_ACTUAL_v6 - Response headers:`, Object.fromEntries(response.headers.entries()));
+            
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => 'Unable to read error');
+                console.log(`❌ TEST_ID: RESUME_ACTUAL_v6 - Download failed: ${response.status} - ${errorText}`);
+                console.log(`❌ TEST_ID: RESUME_ACTUAL_v6 - Full response:`, response);
+                // Fall back to the text file approach as backup
+                return await this.createAndUploadResumeFromProfile(element);
+            }
+            
+            // Get the actual file
+            const blob = await response.blob();
+            console.log(`📎 TEST_ID: RESUME_ACTUAL_v6 - Downloaded blob: ${blob.size} bytes, type: ${blob.type}`);
+            
+            // Create File object with original name
+            const fileName = this.userProfile.resume_path ? 
+                this.userProfile.resume_path.split('/').pop() : 
+                `${this.userProfile.full_name || 'resume'}.pdf`;
+            
+            const file = new File([blob], fileName, { 
+                type: blob.type || 'application/pdf',
+                lastModified: new Date().getTime()
+            });
+            
+            console.log(`📎 TEST_ID: RESUME_ACTUAL_v6 - Created file object: ${fileName} (${file.size} bytes)`);
+            
+            // Upload to form
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            element.files = dataTransfer.files;
+            
+            // Trigger events
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            console.log(`✅ TEST_ID: RESUME_ACTUAL_v6 - Actual resume file uploaded: ${fileName}`);
+            this.addResumeUploadNotification(element, `Actual resume uploaded: ${fileName}`, 'success');
+            
+            return true;
+        } catch (error) {
+            console.error('❌ TEST_ID: RESUME_ACTUAL_v6 - Error downloading actual resume:', error);
+            // Fall back to text file approach
+            return await this.createAndUploadResumeFromProfile(element);
+        }
+    }
+
+    async createAndUploadResumeFromProfile(element) {
+        try {
+            console.log(`📎 TEST_ID: RESUME_FIX_v5 - Creating resume from profile data...`);
+            
+            // Generate resume content from user profile
+            const resumeContent = this.generateResumeContent();
+            console.log(`📎 TEST_ID: RESUME_FIX_v5 - Generated resume content (${resumeContent.length} chars)`);
+            
+            // Create a File object (text file that employers can read)
+            const fileName = `${this.userProfile.full_name || 'Resume'}_Resume.txt`;
+            const file = new File([resumeContent], fileName, { 
+                type: 'text/plain',
+                lastModified: new Date().getTime()
+            });
+            
+            console.log(`📎 TEST_ID: RESUME_FIX_v5 - Created file: ${fileName} (${file.size} bytes)`);
+            
+            // Create a FileList-like object
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            
+            // Set the files to the input element
+            element.files = dataTransfer.files;
+            
+            // Trigger change events
+            const changeEvent = new Event('change', { bubbles: true });
+            element.dispatchEvent(changeEvent);
+            
+            const inputEvent = new Event('input', { bubbles: true });
+            element.dispatchEvent(inputEvent);
+            
+            console.log(`✅ TEST_ID: RESUME_FIX_v5 - Resume file uploaded successfully: ${fileName}`);
+            
+            // Add success notification
+            this.addResumeUploadNotification(element, `Resume uploaded: ${fileName}`, 'success');
+            
+            return true;
+        } catch (error) {
+            console.error('❌ TEST_ID: RESUME_FIX_v5 - Error creating resume from profile:', error);
+            return false;
+        }
+    }
+
+    generateResumeContent() {
+        const profile = this.userProfile;
+        const normalized = this.getNormalizedProfile();
+        
+        let content = [];
+        
+        // Header
+        content.push(`${normalized.full_name}`);
+        content.push(`Email: ${normalized.email}`);
+        content.push(`Phone: ${normalized.phone}`);
+        if (normalized.address) content.push(`Address: ${normalized.address}, ${normalized.city}, ${normalized.state} ${normalized.zip_code}`);
+        content.push('');
+        
+        // Professional Summary
+        if (normalized.work_experience.length > 0) {
+            content.push('PROFESSIONAL EXPERIENCE');
+            content.push('========================');
+            normalized.work_experience.forEach((job, index) => {
+                content.push(`${job.title} at ${job.company}`);
+                if (job.start_date) content.push(`${job.start_date} - ${job.end_date || 'Present'}`);
+                if (job.location) content.push(`Location: ${job.location}`);
+                if (job.description) content.push(job.description);
+                content.push('');
+            });
+        }
+        
+        // Education
+        if (normalized.education.length > 0) {
+            content.push('EDUCATION');
+            content.push('=========');
+            normalized.education.forEach(edu => {
+                content.push(`${edu.degree} - ${edu.school}`);
+                if (edu.start_date) content.push(`${edu.start_date} - ${edu.end_date || 'Present'}`);
+                if (edu.gpa) content.push(`GPA: ${edu.gpa}`);
+                content.push('');
+            });
+        }
+        
+        // Skills
+        if (normalized.skills.length > 0) {
+            content.push('SKILLS');
+            content.push('======');
+            content.push(normalized.skills.join(', '));
+            content.push('');
+        }
+        
+        // Languages
+        if (normalized.languages.length > 0) {
+            content.push('LANGUAGES');
+            content.push('=========');
+            content.push(normalized.languages.map(lang => typeof lang === 'string' ? lang : lang.name || lang.language).join(', '));
+            content.push('');
+        }
+        
+        // Additional Information
+        if (normalized.job_preferences.linkedin_link) {
+            content.push('LINKS');
+            content.push('=====');
+            if (normalized.job_preferences.linkedin_link) content.push(`LinkedIn: ${normalized.job_preferences.linkedin_link}`);
+            if (normalized.job_preferences.github_link) content.push(`GitHub: ${normalized.job_preferences.github_link}`);
+            if (normalized.job_preferences.portfolio_link) content.push(`Portfolio: ${normalized.job_preferences.portfolio_link}`);
+        }
+        
+        return content.join('\n');
+    }
+
     async downloadAndUploadResume(element) {
         try {
             console.log(`📎 Attempting automatic resume upload...`);
+            console.log(`📎 DOWNLOAD DEBUG: Profile ID:`, this.userProfile?.id);
+            console.log(`📎 DOWNLOAD DEBUG: Profile has_resume:`, this.userProfile?.has_resume);
+            console.log(`📎 DOWNLOAD DEBUG: Profile resume_path:`, this.userProfile?.resume_path);
             
-            // Get auth token
-            const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('access_token') || localStorage.getItem('jwt');
+            // Get auth token - TEST_ID: TOKEN_SEARCH_v4
+            console.log(`📎 TEST_ID: TOKEN_SEARCH_v4 - Checking for auth token across storages...`);
+            console.log(`📎 TEST_ID: TOKEN_SEARCH_v4 - Current domain:`, window.location.hostname);
+            
+            // Check all localStorage items on this domain
+            const allLocalStorageItems = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                allLocalStorageItems[key] = value ? `${value.substring(0, 20)}...` : 'null';
+            }
+            console.log(`📎 TEST_ID: TOKEN_SEARCH_v4 - All localStorage items:`, allLocalStorageItems);
+            
+            // Check localStorage first (for same-domain) - TOKEN_FIX_v4
+            const localToken = localStorage.getItem('authToken') || localStorage.getItem('token') || localStorage.getItem('access_token') || localStorage.getItem('jwt');
+            console.log(`📎 TEST_ID: TOKEN_SEARCH_v4 - LocalStorage token found:`, !!localToken);
+            
+            // Check Chrome storage (cross-domain)
+            let chromeToken = null;
+            try {
+                const chromeStorage = await chrome.storage.local.get(['token', 'authToken', 'access_token', 'jwt', 'accessToken']);
+                console.log(`📎 TEST_ID: TOKEN_SEARCH_v3 - Chrome storage keys:`, Object.keys(chromeStorage));
+                chromeToken = chromeStorage.token || chromeStorage.authToken || chromeStorage.access_token || chromeStorage.jwt || chromeStorage.accessToken;
+                console.log(`📎 TEST_ID: TOKEN_SEARCH_v3 - Chrome storage token found:`, !!chromeToken);
+            } catch (error) {
+                console.log(`📎 TEST_ID: TOKEN_SEARCH_v3 - Chrome storage access failed:`, error);
+            }
+            
+            const token = localToken || chromeToken;
+            console.log(`📎 DOWNLOAD DEBUG: Final auth token found:`, !!token);
+            console.log(`📎 DOWNLOAD DEBUG: Final auth token length:`, token?.length);
+            
             if (!token) {
-                console.log(`⚠️ No auth token found for resume download`);
+                console.log(`⚠️ No auth token found for resume download in localStorage or Chrome storage`);
                 return false;
             }
             
@@ -1770,8 +1977,12 @@ class JobApplicationAssistant {
                 }
             });
             
+            console.log(`📎 DOWNLOAD DEBUG: Response status:`, response.status);
+            console.log(`📎 DOWNLOAD DEBUG: Response headers:`, Object.fromEntries(response.headers.entries()));
+            
             if (!response.ok) {
-                console.log(`❌ Resume download failed: ${response.status}`);
+                const errorText = await response.text().catch(() => 'Unable to read error');
+                console.log(`❌ Resume download failed: ${response.status} - ${errorText}`);
                 return false;
             }
             

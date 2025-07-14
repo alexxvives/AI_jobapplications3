@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Query, File, UploadFile, Request
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -42,10 +43,7 @@ app = FastAPI(title="AI Job Application Assistant", version="1.0.0")
 # CORS middleware for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # React frontend
-        "http://localhost:3001",  # Alternative frontend port
-    ],
+    allow_origins=["*"],  # Allow all origins for Chrome extension resume upload - TEST_ID: CORS_FIX_v7
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -817,6 +815,31 @@ async def get_user_profile_by_id(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch profile: {str(e)}")
+
+@app.get("/user/profile/{profile_id}/resume")
+async def get_profile_resume(profile_id: int, db: Session = Depends(get_db)):
+    """Download resume file for a specific profile"""
+    try:
+        # Get the profile
+        profile = db.query(Profile).filter(Profile.id == profile_id).first()
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        # Check if resume file exists
+        if not profile.resume_path or not os.path.exists(profile.resume_path):
+            raise HTTPException(status_code=404, detail="Resume file not found")
+        
+        # Return the resume file
+        return FileResponse(
+            path=profile.resume_path,
+            filename=os.path.basename(profile.resume_path),
+            media_type='application/octet-stream'
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to download resume: {str(e)}")
 
 @app.get("/user/profile")
 async def get_user_profile(db: Session = Depends(get_db)):

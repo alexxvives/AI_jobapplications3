@@ -92,6 +92,19 @@ function AutomationModal({
         throw new Error('No authentication token found. Please refresh and log in again.')
       }
       
+      // Sync token to Chrome storage for cross-domain access - TEST_ID: TOKEN_SYNC_v1
+      console.log('📎 TEST_ID: TOKEN_SYNC_v1 - Syncing auth token to Chrome storage...')
+      if (chrome && chrome.storage) {
+        try {
+          await chrome.storage.local.set({ authToken: actualToken })
+          console.log('📎 TEST_ID: TOKEN_SYNC_v1 - Token successfully synced to Chrome storage')
+        } catch (error) {
+          console.warn('📎 TEST_ID: TOKEN_SYNC_v1 - Failed to sync token to Chrome storage:', error)
+        }
+      } else {
+        console.warn('📎 TEST_ID: TOKEN_SYNC_v1 - Chrome storage not available')
+      }
+      
       // Create automation session with new API
       const response = await fetch('http://localhost:8000/automation/sessions/create', {
         method: 'POST',
