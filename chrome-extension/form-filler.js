@@ -555,11 +555,11 @@ class SmartFormFiller {
     }
 
     async fillFileField(element, value, fieldInfo) {
-        // Handle resume upload using legacy handleResumeUpload function - TEST_ID: RESUME_MODERN_v16
+        // Handle resume upload - TEST_ID: RESUME_MODERN_v16
         try {
             console.log(`📎 TEST_ID: RESUME_MODERN_v16 - File field detected in modern system: ${fieldInfo.name || fieldInfo.id}`);
             
-            // Get the legacy resume upload function from content script
+            // Method 1: Try accessing the legacy function
             if (window.jobApplicationAssistant && window.jobApplicationAssistant.handleResumeUpload) {
                 console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Using legacy resume upload function`);
                 const success = await window.jobApplicationAssistant.handleResumeUpload(element, {
@@ -574,15 +574,18 @@ class SmartFormFiller {
                     value: success ? 'Resume uploaded' : 'Upload failed',
                     error: success ? null : 'Resume upload failed'
                 };
-            } else {
-                console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Legacy resume upload function not available`);
-                return {
-                    field: fieldInfo.label || fieldInfo.name,
-                    success: false,
-                    value: '',
-                    error: 'Resume upload function not available'
-                };
             }
+            
+            // Method 2: Fallback - try to call the resume upload directly
+            console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Fallback: trying direct resume upload`);
+            const success = await this.uploadResumeFile(element);
+            
+            return {
+                field: fieldInfo.label || fieldInfo.name,
+                success: success,
+                value: success ? 'Resume uploaded' : 'Upload failed',
+                error: success ? null : 'Resume upload failed'
+            };
         } catch (error) {
             console.error('📎 TEST_ID: RESUME_MODERN_v16 - Error in file field handling:', error);
             return {
@@ -591,6 +594,56 @@ class SmartFormFiller {
                 value: '',
                 error: error.message
             };
+        }
+    }
+
+    async uploadResumeFile(element) {
+        // Fallback resume upload method - TEST_ID: RESUME_MODERN_v16
+        try {
+            console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Fallback resume upload starting`);
+            
+            // Get profile from current profile data
+            if (!this.currentProfile || !this.currentProfile.id) {
+                console.log(`📎 TEST_ID: RESUME_MODERN_v16 - No profile available for resume upload`);
+                return false;
+            }
+            
+            // Try to download resume from backend
+            const resumeUrl = `http://localhost:8000/user/profile/${this.currentProfile.id}/resume`;
+            console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Downloading from: ${resumeUrl}`);
+            
+            const response = await fetch(resumeUrl, { method: 'GET' });
+            
+            if (!response.ok) {
+                console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Download failed: ${response.status}`);
+                return false;
+            }
+            
+            const blob = await response.blob();
+            console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Downloaded: ${blob.size} bytes`);
+            
+            // Create file object
+            const fileName = `resume_${this.currentProfile.full_name || 'user'}.pdf`;
+            const file = new File([blob], fileName, { 
+                type: blob.type || 'application/pdf',
+                lastModified: new Date().getTime()
+            });
+            
+            // Upload to form
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            element.files = dataTransfer.files;
+            
+            // Trigger events
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Fallback upload successful: ${fileName}`);
+            return true;
+            
+        } catch (error) {
+            console.error('📎 TEST_ID: RESUME_MODERN_v16 - Fallback upload failed:', error);
+            return false;
         }
     }
 
