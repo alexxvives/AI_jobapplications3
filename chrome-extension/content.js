@@ -271,10 +271,8 @@ class JobApplicationAssistant {
                 console.log('🔍 Profile loaded:', this.userProfile.full_name || this.userProfile.email);
                 
                 // 🚀 AUTO-START FORM FILLING
-                console.log('🚀 Starting automatic form filling in 2 seconds...');
-                setTimeout(() => {
-                    this.fillFormFields();
-                }, 2000);
+                console.log('🚀 Form filling handled by modern system - legacy disabled - TEST_ID: DISABLE_LEGACY_v16');
+                // Legacy fillFormFields() call DISABLED to prevent duplicates
                 
                 return; // Early return if we found data
             } else {
@@ -478,7 +476,9 @@ class JobApplicationAssistant {
         const fillBtn = document.getElementById('fill-form-btn');
         if (fillBtn) {
             fillBtn.addEventListener('click', () => {
-                this.fillFormFields();
+                // Use modern system instead of legacy - TEST_ID: DISABLE_LEGACY_v16
+                console.log('🔄 Manual button clicked - using modern system');
+                this.startAutomatedFormFilling();
             });
         }
         

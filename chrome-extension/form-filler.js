@@ -329,16 +329,34 @@ class SmartFormFiller {
             fields: []
         };
 
-        for (const fieldInfo of this.detectedFields) {
+        // Sort fields by position (top to bottom) - TEST_ID: SEQUENTIAL_FILL_v16
+        const sortedFields = this.detectedFields.slice().sort((a, b) => {
+            const rectA = a.element.getBoundingClientRect();
+            const rectB = b.element.getBoundingClientRect();
+            
+            // If fields are on roughly the same row (within 10px), sort left to right
+            if (Math.abs(rectA.top - rectB.top) < 10) {
+                return rectA.left - rectB.left;
+            }
+            return rectA.top - rectB.top; // Top to bottom
+        });
+        
+        console.log(`🔄 TEST_ID: SEQUENTIAL_FILL_v16 - Processing ${sortedFields.length} fields sequentially`);
+
+        for (const fieldInfo of sortedFields) {
             try {
+                console.log(`🔄 TEST_ID: SEQUENTIAL_FILL_v16 - Processing field: ${fieldInfo.label || fieldInfo.name}`);
+                
                 const result = await this.fillField(fieldInfo);
                 fillResults.fields.push(result);
                 
                 if (result.success) {
                     fillResults.filled++;
                     this.filledFields++;
+                    console.log(`✅ TEST_ID: SEQUENTIAL_FILL_v16 - Successfully filled: ${fieldInfo.label || fieldInfo.name}`);
                 } else {
                     fillResults.skipped++;
+                    console.log(`⚠️ TEST_ID: SEQUENTIAL_FILL_v16 - Skipped: ${fieldInfo.label || fieldInfo.name}`);
                 }
 
                 // Update progress
@@ -351,8 +369,9 @@ class SmartFormFiller {
                     });
                 }
 
-                // Small delay between fills to appear more natural
-                await this.delay(100);
+                // Sequential delay between fields (1.5x slower) - TEST_ID: SEQUENTIAL_FILL_v16
+                console.log(`⏱️ TEST_ID: SEQUENTIAL_FILL_v16 - Waiting 500ms before next field...`);
+                await this.delay(500);
 
             } catch (error) {
                 console.error('Error filling field:', fieldInfo.label, error);
