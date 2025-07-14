@@ -106,5 +106,6 @@ chrome-extracted/
 backend/storage/temp_automation/
 backend/services/*/temp_files/
 
-# Allow important database
+# Database files (exclude duplicates)
+**/job_automation.db
 !backend/job_automation.db

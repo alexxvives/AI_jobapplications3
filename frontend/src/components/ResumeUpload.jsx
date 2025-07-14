@@ -198,11 +198,7 @@ function ResumeUpload() {
                   <p className="text-gray-900">{result.personal_information?.contact_information?.email || 'Not provided'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Country Code</label>
-                  <p className="text-gray-900">{result.personal_information?.contact_information?.country_code || 'Not provided'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Telephone</label>
+                  <label className="block text-sm font-medium text-gray-700">Phone Number</label>
                   <p className="text-gray-900">{result.personal_information?.contact_information?.telephone || 'Not provided'}</p>
                 </div>
               </div>

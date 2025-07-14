@@ -17,8 +17,6 @@ function Dashboard() {
         
         // Get job statistics
         const statsData = await getJobStats()
-        console.log('Stats data received:', statsData)
-        console.log('Simple sources:', statsData?.job_database?.simple_sources)
         setStats(statsData)
         
       } catch (error) {

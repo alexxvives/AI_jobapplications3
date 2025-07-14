@@ -49,7 +49,7 @@ class DatabaseManager:
                 'location': job.get('location', ''),
                 'description': job.get('description', ''),
                 'link': job.get('link', job.get('url', job.get('job_url', ''))),
-                'source': platform,  # Use platform as source
+                'platform': platform,  # Use platform field
                 'job_type': job.get('job_type'),
                 'work_type': job.get('work_type'),
                 'experience_level': job.get('experience_level'),
@@ -60,11 +60,10 @@ class DatabaseManager:
         
         return self.db_service.save_scraped_jobs_batch(formatted_jobs)
     
-    def save_company_result(self, company_name: str, domain: str, platform: str, 
-                          url: str, status: str, job_count: int = 0) -> int:
-        """Save company result using unified service"""
+    def save_company_result(self, company_name: str, url: str = None, job_count: int = 0) -> int:
+        """Save company result using simplified schema"""
         return self.db_service.save_company_result(
-            company_name, domain, platform, url, status, job_count
+            company_name, url, job_count
         )
 
 
@@ -175,6 +174,77 @@ class JobParser:
         return None
     
     @staticmethod
+    def parse_generic_jobs(content: str) -> List[Dict[str, Any]]:
+        """Parse jobs from generic HTML content (for ADP and other scrapers)"""
+        if not content:
+            return []
+        
+        jobs = []
+        
+        # Look for common job listing patterns in HTML
+        import re
+        
+        # Pattern 1: Look for job titles in common HTML structures
+        title_patterns = [
+            r'<h[1-4][^>]*>([^<]*(?:engineer|developer|manager|analyst|specialist|coordinator|director|senior|junior|intern)[^<]*)</h[1-4]>',
+            r'<a[^>]*href[^>]*>([^<]*(?:engineer|developer|manager|analyst|specialist|coordinator|director|senior|junior|intern)[^<]*)</a>',
+            r'<div[^>]*class[^>]*job[^>]*>.*?<.*?>([^<]*(?:engineer|developer|manager|analyst|specialist|coordinator|director)[^<]*)</.*?>',
+        ]
+        
+        # Pattern 2: Look for structured job data
+        job_patterns = [
+            r'<div[^>]*class[^>]*(?:job|position|opening)[^>]*>.*?</div>',
+            r'<li[^>]*class[^>]*(?:job|position|opening)[^>]*>.*?</li>',
+            r'<tr[^>]*class[^>]*(?:job|position|opening)[^>]*>.*?</tr>',
+        ]
+        
+        # Try to extract job titles
+        found_titles = set()
+        for pattern in title_patterns:
+            matches = re.findall(pattern, content, re.IGNORECASE | re.DOTALL)
+            for match in matches:
+                title = JobParser.clean_text(match.strip())
+                if len(title) > 5 and len(title) < 100 and title not in found_titles:
+                    found_titles.add(title)
+                    jobs.append({
+                        'title': title,
+                        'company': '',  # Will be filled by caller
+                        'location': '',
+                        'description': '',
+                        'link': '',
+                        'department': '',
+                        'job_type': '',
+                        'employment_type': ''
+                    })
+        
+        # If no titles found, try simpler patterns
+        if not jobs:
+            # Look for any text that might be job titles
+            simple_patterns = [
+                r'>([^<]*(?:software|engineer|developer|manager|director|analyst)[^<]*)<',
+                r'>([^<]*(?:intern|junior|senior|lead|principal)[^<]*)<',
+            ]
+            
+            for pattern in simple_patterns:
+                matches = re.findall(pattern, content, re.IGNORECASE)
+                for match in matches[:10]:  # Limit to prevent spam
+                    title = JobParser.clean_text(match.strip())
+                    if len(title) > 5 and len(title) < 100 and title not in found_titles:
+                        found_titles.add(title)
+                        jobs.append({
+                            'title': title,
+                            'company': '',
+                            'location': '',
+                            'description': '',
+                            'link': '',
+                            'department': '',
+                            'job_type': '',
+                            'employment_type': ''
+                        })
+        
+        return jobs[:20]  # Limit to 20 jobs max to prevent spam
+
+    @staticmethod
     def clean_job_data(job: Dict[str, Any]) -> Dict[str, Any]:
         """Clean and standardize job data"""
         cleaned = {}
@@ -190,8 +260,12 @@ class JobParser:
         
         # Handle optional fields
         cleaned['department'] = JobParser.clean_text(job.get('department', ''))
-        cleaned['job_type'] = job.get('job_type', '')
-        cleaned['employment_type'] = job.get('employment_type', '')
+        cleaned['job_type'] = JobParser.clean_text(job.get('job_type', ''))
+        cleaned['employment_type'] = JobParser.clean_text(job.get('employment_type', ''))
+        cleaned['work_type'] = JobParser.clean_text(job.get('work_type', ''))
+        cleaned['experience_level'] = JobParser.clean_text(job.get('experience_level', ''))
+        cleaned['salary_range'] = JobParser.clean_text(job.get('salary_range', ''))
+        cleaned['remote_option'] = job.get('remote_option', False)
         
         # Extract salary if present in description
         if cleaned['description']:

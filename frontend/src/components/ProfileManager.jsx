@@ -339,11 +339,7 @@ function ProfileManager() {
                   <p className="text-gray-900">{viewingProfile.personal_information?.contact_information?.email || 'Not provided'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Country Code</label>
-                  <p className="text-gray-900">{viewingProfile.personal_information?.contact_information?.country_code || 'Not provided'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Telephone</label>
+                  <label className="block text-sm font-medium text-gray-700">Phone Number</label>
                   <p className="text-gray-900">{viewingProfile.personal_information?.contact_information?.telephone || 'Not provided'}</p>
                 </div>
               </div>
@@ -512,6 +508,30 @@ function ProfileManager() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Notice Period</label>
                 <p className="text-gray-900">{viewingProfile.job_preferences?.notice_period || 'Not provided'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Current Salary</label>
+                <p className="text-gray-900">{viewingProfile.job_preferences?.current_salary || 'Not provided'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Expected Salary</label>
+                <p className="text-gray-900">{viewingProfile.job_preferences?.expected_salary || 'Not provided'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Willing to Relocate</label>
+                <p className="text-gray-900">{viewingProfile.job_preferences?.willing_to_relocate || 'Not provided'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Driving License</label>
+                <p className="text-gray-900">{viewingProfile.job_preferences?.driving_license || 'Not provided'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Visa Requirement</label>
+                <p className="text-gray-900">{viewingProfile.job_preferences?.visa_requirement || 'Not provided'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Other URL</label>
+                <p className="text-gray-900 break-all">{viewingProfile.job_preferences?.other_url || 'Not provided'}</p>
               </div>
             </div>
           </div>

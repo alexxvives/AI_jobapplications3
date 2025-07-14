@@ -9,6 +9,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
@@ -27,7 +28,6 @@ class Profile(Base):
     full_name = Column(String)
     email = Column(String)
     phone = Column(String)
-    image_url = Column(String)
     gender = Column(String)
     address = Column(String)
     city = Column(String)
@@ -63,7 +63,7 @@ class Job(Base):
     location = Column(String)
     description = Column(Text)
     link = Column(String, unique=True, nullable=False)
-    source = Column(String, index=True)  # "Ashby", "Greenhouse", "Lever", etc.
+    platform = Column(String, index=True)  # "Ashby", "Greenhouse", "Lever", etc.
     
     # Additional metadata
     job_type = Column(String)  # "full-time", "part-time", "contract", "internship"
@@ -104,3 +104,13 @@ class Application(Base):
     user = relationship("User", back_populates="applications")
     job = relationship("Job", back_populates="applications")
     profile = relationship("Profile")
+
+class Company(Base):
+    __tablename__ = "companies"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, index=True, unique=True)
+    url = Column(String)
+    job_count = Column(Integer, default=0)
+    last_scraped = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

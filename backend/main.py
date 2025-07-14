@@ -16,6 +16,7 @@ from schemas import JobResult, UserCreate, UserResponse, ProfileResponse
 from agent_orchestrator import AgentOrchestrator
 from company_stats import get_comprehensive_stats, get_simple_job_stats_by_source
 from automation_service import automator
+from job_automation_service import automation_service
 from auth import (
     authenticate_user, create_access_token, get_password_hash, 
     get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
@@ -165,21 +166,83 @@ def search_jobs(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Search for jobs in the database (cached results from background scraper)"""
-    return job_scraper.search_jobs_db(db, title, location, limit)
+    """Search for jobs in the database"""
+    try:
+        # Build query
+        query = db.query(Job)
+        
+        # Filter by title if provided
+        if title:
+            query = query.filter(Job.title.ilike(f"%{title}%"))
+        
+        # Filter by location if provided
+        if location:
+            query = query.filter(Job.location.ilike(f"%{location}%"))
+        
+        # Order by most recent and limit results
+        jobs = query.order_by(Job.fetched_at.desc()).limit(limit).all()
+        
+        # Convert to response format
+        job_results = []
+        for job in jobs:
+            job_results.append(JobResult(
+                id=job.id,
+                title=job.title,
+                company=job.company,
+                location=job.location or "",
+                description=job.description or "",
+                link=job.link,
+                platform=job.platform or "",
+                job_type=job.job_type or "",
+                work_type=job.work_type or "",
+                experience_level=job.experience_level or "",
+                salary_range=job.salary_range or "",
+                remote_option=job.remote_option or False,
+                scraped_at=job.fetched_at
+            ))
+        
+        return job_results
+        
+    except Exception as e:
+        print(f"Error searching jobs: {e}")
+        raise HTTPException(status_code=500, detail=f"Job search failed: {str(e)}")
 
 @app.post("/jobs/fetch")
-def fetch_jobs_manual():
+def fetch_jobs_manual(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Manually trigger job fetching from all sources"""
     try:
-        result = job_scraper.fetch_all_jobs()
+        # For now, return current database stats since scraper is not implemented
+        total_jobs = db.query(Job).count()
+        
         return {
-            "message": "Job fetching completed",
-            "total_jobs": result.get("total_jobs", 0),
-            "sources": result.get("sources", {})
+            "message": "Job fetching endpoint - scraper not yet implemented",
+            "total_jobs": total_jobs,
+            "sources": {"database": total_jobs},
+            "note": "Currently showing existing jobs from database. Job scraping will be implemented in future version."
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Job fetching failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Job fetch check failed: {str(e)}")
+
+@app.get("/jobs/test")
+def test_jobs(db: Session = Depends(get_db)):
+    """Test endpoint to check if jobs are available (no auth required)"""
+    try:
+        total_jobs = db.query(Job).count()
+        sample_jobs = db.query(Job).limit(3).all()
+        
+        return {
+            "total_jobs": total_jobs,
+            "sample_jobs": [
+                {
+                    "id": job.id,
+                    "title": job.title,
+                    "company": job.company,
+                    "location": job.location
+                } for job in sample_jobs
+            ]
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/jobs/stats")
 def get_job_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -267,13 +330,33 @@ async def save_profile_to_database(profile_data: dict, title: str, resume_file_p
         # Extract data from parsed profile (using correct structure)
         personal_info = profile_data.get("personal_information", {})
         
+        # Handle both flat and nested structures for frontend compatibility
+        if "address" in personal_info:
+            # Nested structure from frontend forms
+            basic_info = personal_info.get("basic_information", {})
+            contact_info = personal_info.get("contact_information", {})
+            address_info = personal_info.get("address", {})
+            
+            # Merge all personal info into flat structure
+            personal_info = {
+                **basic_info,
+                **contact_info, 
+                **address_info,
+                **personal_info  # Keep any other fields at root level
+            }
+        
+        # Handle full_name construction
+        full_name = personal_info.get("full_name", "")
+        if not full_name and personal_info.get("first_name") and personal_info.get("last_name"):
+            full_name = f"{personal_info['first_name']} {personal_info['last_name']}".strip()
+        
         # Create new profile using the flat structure from parse_resume
         new_profile = Profile(
             user_id=user_id,  # Associate profile with user
             title=title,
-            full_name=personal_info.get("full_name", ""),
+            full_name=full_name,
             email=personal_info.get("email", ""),
-            phone=personal_info.get("phone", ""),
+            phone=personal_info.get("phone", "") or personal_info.get("telephone", ""),
             address=personal_info.get("address", ""),
             city=personal_info.get("city", ""),
             state=personal_info.get("state", ""),
@@ -505,6 +588,151 @@ async def mark_job_submitted(session_id: str):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to mark job as submitted: {str(e)}")
+
+# New Automation Service Endpoints for Chrome Extension Integration
+@app.post("/automation/sessions/create")
+async def create_automation_session(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new automation session for Chrome extension"""
+    try:
+        print("🔥 NEW AUTOMATION ENDPOINT CALLED")
+        data = await request.json()
+        print(f"🔥 Request data: {data}")
+        
+        profile_id = data.get("profile_id")
+        selected_jobs = data.get("selected_jobs", [])
+        
+        print(f"🔥 Profile ID: {profile_id}")
+        print(f"🔥 Selected jobs count: {len(selected_jobs)}")
+        print(f"🔥 Current user: {current_user.email}")
+        
+        if not profile_id:
+            print("❌ Missing profile_id")
+            raise HTTPException(status_code=400, detail="profile_id is required")
+        
+        if not selected_jobs:
+            print("❌ Missing selected_jobs")
+            raise HTTPException(status_code=400, detail="selected_jobs is required")
+        
+        # Verify profile belongs to user
+        profile = db.query(Profile).filter(
+            Profile.id == profile_id,
+            Profile.user_id == current_user.id
+        ).first()
+        
+        print(f"🔥 Profile found: {profile is not None}")
+        
+        if not profile:
+            print("❌ Profile not found")
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        # Create automation session
+        print("🔥 Creating automation session...")
+        session_id = automation_service.create_session(
+            user_id=current_user.id,
+            profile_id=profile_id,
+            selected_jobs=selected_jobs
+        )
+        
+        print(f"✅ Session created: {session_id}")
+        return {"success": True, "sessionId": session_id}
+        
+    except HTTPException as e:
+        print(f"❌ HTTP Exception: {e.detail}")
+        raise
+    except Exception as e:
+        print(f"❌ Unexpected error: {str(e)}")
+        print(f"❌ Error type: {type(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to create automation session: {str(e)}")
+
+@app.post("/automation/sessions/{session_id}/start")
+async def start_automation_session_new(session_id: str):
+    """Start the automation session - returns first job to process"""
+    try:
+        result = automation_service.start_session(session_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start session: {str(e)}")
+
+@app.get("/automation/sessions/{session_id}/current-job")
+async def get_current_job(session_id: str):
+    """Get current job being processed in session"""
+    try:
+        result = automation_service.get_current_job(session_id)
+        if result is None:
+            raise HTTPException(status_code=404, detail="Session not found or completed")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get current job: {str(e)}")
+
+@app.post("/automation/sessions/{session_id}/form-filled")
+async def mark_form_filled(session_id: str, request: Request):
+    """Mark current job form as filled, waiting for user submission"""
+    try:
+        data = await request.json()
+        form_data = data.get("form_data", {})
+        
+        result = automation_service.mark_job_form_filled(session_id, form_data)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to mark form filled: {str(e)}")
+
+@app.post("/automation/sessions/{session_id}/submit")
+async def submit_job_application(session_id: str, request: Request):
+    """Mark current job as submitted and move to next job"""
+    try:
+        data = await request.json()
+        success = data.get("success", True)
+        error_message = data.get("error_message")
+        
+        result = automation_service.mark_job_submitted(session_id, success, error_message)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to submit job application: {str(e)}")
+
+@app.get("/automation/sessions/{session_id}/status")
+async def get_session_status(session_id: str):
+    """Get full automation session status"""
+    try:
+        result = automation_service.get_session_status(session_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get session status: {str(e)}")
+
+@app.post("/automation/sessions/{session_id}/cancel")
+async def cancel_automation_session(session_id: str):
+    """Cancel an active automation session"""
+    try:
+        result = automation_service.cancel_session(session_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to cancel session: {str(e)}")
+
+@app.post("/automation/sessions/{session_id}/recover")
+async def recover_automation_session(session_id: str):
+    """Recover a failed automation session"""
+    try:
+        result = automation_service.recover_session(session_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to recover session: {str(e)}")
+
+@app.post("/automation/sessions/{session_id}/skip")
+async def skip_current_job(session_id: str, request: Request):
+    """Skip the current job and move to the next one"""
+    try:
+        data = await request.json()
+        reason = data.get("reason", "User skipped")
+        
+        result = automation_service.skip_current_job(session_id, reason)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to skip job: {str(e)}")
 
 @app.get("/user/profiles")
 async def get_all_user_profiles(

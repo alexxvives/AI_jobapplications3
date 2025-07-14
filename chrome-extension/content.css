@@ -13,6 +13,27 @@
   border: 1px solid #e1e5e9;
   overflow: hidden;
   transform: translate(0, 0);
+  transition: all 0.3s ease;
+}
+
+/* Minimized state - Simplify style */
+#job-assistant-ui.minimized {
+  width: auto;
+  min-width: 140px;
+}
+
+.assistant-header.minimized {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 8px 12px !important;
+  border-radius: 20px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.assistant-header.minimized:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6b4190 100%);
+  transform: scale(1.02);
 }
 
 .assistant-header {
@@ -36,9 +57,17 @@
   font-size: 14px;
 }
 
-.assistant-close {
+.assistant-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.assistant-close,
+.assistant-minimize,
+.assistant-maximize {
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
   width: 24px;
   height: 24px;
   display: flex;
@@ -48,7 +77,9 @@
   transition: background-color 0.2s;
 }
 
-.assistant-close:hover {
+.assistant-close:hover,
+.assistant-minimize:hover,
+.assistant-maximize:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
 

@@ -19,12 +19,10 @@ function ProfileSelector({ selectedProfile, onProfileSelect }) {
       const userProfiles = response.profiles || []
       setProfiles(userProfiles)
       
-      // Auto-select first profile if none selected
+      // Auto-select first profile if none selected  
       if (!selectedProfile && userProfiles.length > 0) {
-        console.log('Auto-selecting first profile:', userProfiles[0])
+        console.log('🔥🔥🔥 PROFILE SELECTOR v2.0 UPDATED - NO MORE SPAM 🔥🔥🔥')
         onProfileSelect(userProfiles[0])
-      } else {
-        console.log('Profile selection state:', { selectedProfile, profileCount: userProfiles.length })
       }
     } catch (err) {
       setError('Failed to load profiles')

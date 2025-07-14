@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Chrome Extension Storage</title>
+</head>
+<body>
+    <h1>Test Chrome Extension Storage</h1>
+    <button onclick="testStorage()">Store Test Profile Data</button>
+    <button onclick="checkStorage()">Check Stored Data</button>
+    <button onclick="clearStorage()">Clear Storage</button>
+    <div id="results"></div>
+
+    <script>
+        function log(message) {
+            console.log(message);
+            document.getElementById('results').innerHTML += '<p>' + message + '</p>';
+        }
+
+        async function testStorage() {
+            log('🧪 TESTING: Storing test profile data...');
+            
+            // Real profile data from your database
+            const testProfileData = {
+                userProfile: {
+                    id: 2,
+                    full_name: "John Doe",
+                    email: "john.doe@email.com",
+                    phone: "555-123-4567",
+                    city: "",
+                    state: "",
+                    work_experience: [],
+                    education: [],
+                    skills: [],
+                    job_preferences: {}
+                },
+                currentSessionId: "test-session-real-" + Date.now(),
+                automationActive: true,
+                currentJob: {
+                    title: "Software Engineer",
+                    company: "Test Company",
+                    url: "https://jobs.lever.co/activecampaign/b3b62c66-6b94-4fc1-a651-08ed9a31aeb5/apply"
+                }
+            };
+
+            try {
+                // Check if Chrome APIs are available
+                log('🔍 Chrome APIs available: ' + (typeof chrome !== 'undefined'));
+                log('🔍 Chrome storage available: ' + (typeof chrome !== 'undefined' && !!chrome.storage));
+                log('🔍 Chrome storage.local available: ' + (typeof chrome !== 'undefined' && !!chrome.storage?.local));
+
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    // Store the data
+                    await chrome.storage.local.set(testProfileData);
+                    log('✅ Test data stored successfully!');
+                    
+                    // Verify it was stored
+                    const verification = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive']);
+                    log('🔍 Verification result: ' + JSON.stringify({
+                        hasProfile: !!verification.userProfile,
+                        profileName: verification.userProfile?.full_name,
+                        hasSession: !!verification.currentSessionId,
+                        isActive: verification.automationActive
+                    }));
+                    
+                    // Also send via runtime message to background
+                    if (chrome.runtime && chrome.runtime.sendMessage) {
+                        chrome.runtime.sendMessage({
+                            action: 'STORE_AUTOMATION_DATA',
+                            data: testProfileData
+                        }, (response) => {
+                            if (chrome.runtime.lastError) {
+                                log('⚠️ Runtime message error: ' + chrome.runtime.lastError.message);
+                            } else {
+                                log('✅ Runtime message sent successfully: ' + JSON.stringify(response));
+                            }
+                        });
+                    }
+                    
+                } else {
+                    log('❌ Chrome storage not available - are you running this in a Chrome extension context?');
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+            }
+        }
+
+        async function checkStorage() {
+            log('🔍 CHECKING: Current storage contents...');
+            
+            try {
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    const result = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive', 'currentJob']);
+                    log('📋 Storage contents: ' + JSON.stringify({
+                        hasProfile: !!result.userProfile,
+                        profileName: result.userProfile?.full_name || result.userProfile?.email,
+                        hasSession: !!result.currentSessionId,
+                        sessionId: result.currentSessionId,
+                        isActive: result.automationActive,
+                        hasJob: !!result.currentJob,
+                        jobTitle: result.currentJob?.title
+                    }, null, 2));
+                } else {
+                    log('❌ Chrome storage not available');
+                }
+            } catch (error) {
+                log('❌ Error checking storage: ' + error.message);
+            }
+        }
+
+        async function clearStorage() {
+            log('🧹 CLEARING: All storage data...');
+            
+            try {
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    await chrome.storage.local.clear();
+                    log('✅ Storage cleared successfully!');
+                } else {
+                    log('❌ Chrome storage not available');
+                }
+            } catch (error) {
+                log('❌ Error clearing storage: ' + error.message);
+            }
+        }
+
+        // Auto-check storage on page load
+        window.addEventListener('load', () => {
+            log('🔄 Page loaded, checking initial storage state...');
+            checkStorage();
+        });
+    </script>
+</body>
+</html>

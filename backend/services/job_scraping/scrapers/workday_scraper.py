@@ -401,8 +401,7 @@ class WorkdayScraper(BaseScraper):
             
             if job_count > 0:
                 company_id = self.db.save_company_result(
-                    company, self.platform_name, result['url'], 
-                    "success_with_jobs", job_count
+                    company, result['url'], job_count
                 )
                 self.db.save_jobs(company_id, self.platform_name, jobs)
                 
@@ -412,8 +411,7 @@ class WorkdayScraper(BaseScraper):
                 )
             else:
                 self.db.save_company_result(
-                    company, self.platform_name, result['url'], 
-                    "success_no_jobs", 0
+                    company, result['url'], 0
                 )
                 
                 return ScrapingResult(
@@ -432,8 +430,7 @@ class WorkdayScraper(BaseScraper):
             
             if job_count > 0:
                 company_id = self.db.save_company_result(
-                    company, self.platform_name, result['url'], 
-                    "success_with_jobs_fallback", job_count
+                    company, result['url'], job_count
                 )
                 self.db.save_jobs(company_id, self.platform_name, jobs)
                 
@@ -443,8 +440,7 @@ class WorkdayScraper(BaseScraper):
                 )
             else:
                 self.db.save_company_result(
-                    company, self.platform_name, result['url'], 
-                    "success_no_jobs_fallback", 0
+                    company, result['url'], 0
                 )
                 
                 return ScrapingResult(
@@ -455,7 +451,7 @@ class WorkdayScraper(BaseScraper):
         # All methods failed
         error_status = "error_no_access"
         self.db.save_company_result(
-            company, self.platform_name, 'N/A', error_status, 0
+            company, None, 0
         )
         
         return ScrapingResult(

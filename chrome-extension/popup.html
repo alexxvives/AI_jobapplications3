@@ -13,198 +13,45 @@
             <div class="logo">🤖</div>
             <div class="title">
                 <h1>AI Job Assistant</h1>
-                <p>Automate your job applications</p>
+                <p>Status Dashboard</p>
             </div>
         </div>
 
         <!-- Profile Status -->
         <div class="profile-status" id="profile-status">
             <div class="status-indicator" id="status-indicator">❌</div>
-            <div class="status-text" id="status-text">No profile configured</div>
+            <div class="status-text" id="status-text">No Active Profile</div>
+        </div>
+
+        <!-- Profile Information -->
+        <div class="profile-info" id="profile-info" style="display: none;">
+            <!-- Profile details will be displayed here -->
+        </div>
+
+        <!-- Session Information -->
+        <div class="session-info" id="session-info" style="display: none;">
+            <!-- Session details will be displayed here -->
         </div>
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-            <button id="setup-profile-btn" class="primary-btn">
-                Setup Profile
+            <button id="frontend-btn" class="primary-btn">
+                🚀 Open Frontend
             </button>
-            <button id="import-profile-btn" class="secondary-btn">
-                Import from Backend
+            <button id="clear-data-btn" class="danger-btn">
+                🗑️ Clear Data
             </button>
         </div>
 
-        <!-- Profile Form (Hidden by default) -->
-        <div class="profile-form" id="profile-form" style="display: none;">
-            <h3>Setup Your Profile</h3>
-            
-            <!-- Personal Information -->
-            <div class="form-section">
-                <h4>Personal Information</h4>
-                <div class="form-group">
-                    <label for="first-name">First Name*</label>
-                    <input type="text" id="first-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="last-name">Last Name*</label>
-                    <input type="text" id="last-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email*</label>
-                    <input type="email" id="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="phone">Phone</label>
-                    <input type="tel" id="phone">
-                </div>
-                <div class="form-group">
-                    <label for="address">Address</label>
-                    <input type="text" id="address">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="city">City</label>
-                        <input type="text" id="city">
-                    </div>
-                    <div class="form-group">
-                        <label for="state">State</label>
-                        <input type="text" id="state">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="zip-code">Zip Code</label>
-                        <input type="text" id="zip-code">
-                    </div>
-                    <div class="form-group">
-                        <label for="country">Country</label>
-                        <input type="text" id="country" value="United States">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Work Experience -->
-            <div class="form-section">
-                <h4>Current Work</h4>
-                <div class="form-group">
-                    <label for="current-title">Current Job Title</label>
-                    <input type="text" id="current-title">
-                </div>
-                <div class="form-group">
-                    <label for="current-company">Current Company</label>
-                    <input type="text" id="current-company">
-                </div>
-                <div class="form-group">
-                    <label for="experience-years">Years of Experience</label>
-                    <input type="number" id="experience-years" min="0" max="50">
-                </div>
-            </div>
-
-            <!-- Education -->
-            <div class="form-section">
-                <h4>Education</h4>
-                <div class="form-group">
-                    <label for="degree">Highest Degree</label>
-                    <select id="degree">
-                        <option value="">Select degree</option>
-                        <option value="High School">High School</option>
-                        <option value="Associate">Associate Degree</option>
-                        <option value="Bachelor">Bachelor's Degree</option>
-                        <option value="Master">Master's Degree</option>
-                        <option value="PhD">PhD</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="school">School/University</label>
-                    <input type="text" id="school">
-                </div>
-            </div>
-
-            <!-- Professional Links -->
-            <div class="form-section">
-                <h4>Professional Links</h4>
-                <div class="form-group">
-                    <label for="linkedin">LinkedIn Profile</label>
-                    <input type="url" id="linkedin" placeholder="https://linkedin.com/in/yourprofile">
-                </div>
-                <div class="form-group">
-                    <label for="github">GitHub Profile</label>
-                    <input type="url" id="github" placeholder="https://github.com/yourusername">
-                </div>
-                <div class="form-group">
-                    <label for="portfolio">Portfolio Website</label>
-                    <input type="url" id="portfolio" placeholder="https://yourportfolio.com">
-                </div>
-            </div>
-
-            <!-- Preferences -->
-            <div class="form-section">
-                <h4>Job Preferences</h4>
-                <div class="form-group">
-                    <label for="notice-period">Notice Period</label>
-                    <select id="notice-period">
-                        <option value="">Select notice period</option>
-                        <option value="Immediate">Immediate</option>
-                        <option value="2 weeks">2 weeks</option>
-                        <option value="1 month">1 month</option>
-                        <option value="2 months">2 months</option>
-                        <option value="3 months">3 months</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="willing-relocate">Willing to Relocate?</label>
-                    <select id="willing-relocate">
-                        <option value="No">No</option>
-                        <option value="Yes">Yes</option>
-                        <option value="Remote only">Remote only</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="visa-status">Visa Status</label>
-                    <select id="visa-status">
-                        <option value="">Select status</option>
-                        <option value="US Citizen">US Citizen</option>
-                        <option value="Green Card">Green Card</option>
-                        <option value="H1B">H1B</option>
-                        <option value="Need Sponsorship">Need Sponsorship</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Form Actions -->
-            <div class="form-actions">
-                <button id="save-profile-btn" class="primary-btn">Save Profile</button>
-                <button id="cancel-profile-btn" class="secondary-btn">Cancel</button>
-            </div>
-        </div>
-
-        <!-- Import Form (Hidden by default) -->
-        <div class="import-form" id="import-form" style="display: none;">
-            <h3>Import Profile from Backend</h3>
-            <div class="form-group">
-                <label for="backend-url">Backend URL</label>
-                <input type="url" id="backend-url" placeholder="http://localhost:8000" value="http://localhost:8000">
-            </div>
-            <div class="form-group">
-                <label for="user-id">User ID</label>
-                <input type="number" id="user-id" placeholder="Enter your user ID">
-            </div>
-            <div class="import-actions">
-                <button id="import-btn" class="primary-btn">Import Profile</button>
-                <button id="cancel-import-btn" class="secondary-btn">Cancel</button>
-            </div>
-        </div>
-
-        <!-- Current Profile Display -->
-        <div class="current-profile" id="current-profile" style="display: none;">
-            <h3>Current Profile</h3>
-            <div class="profile-summary" id="profile-summary">
-                <!-- Profile details will be displayed here -->
-            </div>
-            <div class="profile-actions">
-                <button id="edit-profile-btn" class="secondary-btn">Edit Profile</button>
-                <button id="clear-profile-btn" class="danger-btn">Clear Profile</button>
-            </div>
+        <!-- Instructions -->
+        <div class="instructions">
+            <h4>How to Use:</h4>
+            <ol>
+                <li>Open the frontend (localhost:3000)</li>
+                <li>Upload your resume to create a profile</li>
+                <li>Select jobs and start automation</li>
+                <li>Extension auto-fills forms on job pages</li>
+            </ol>
         </div>
 
         <!-- Footer -->
@@ -217,12 +64,6 @@
                 <a href="#" id="feedback-link">Feedback</a>
             </div>
         </div>
-    </div>
-
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loading-overlay" style="display: none;">
-        <div class="spinner"></div>
-        <p>Loading...</p>
     </div>
 
     <script src="popup.js"></script>

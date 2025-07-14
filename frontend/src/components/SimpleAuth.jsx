@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { loginUser, signupUser, getCurrentUser } from '../utils/apiWithAuth';
 
 const SimpleAuth = ({ onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,20 +18,8 @@ const SimpleAuth = ({ onAuthSuccess }) => {
 
   const verifyToken = async () => {
     try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        onAuthSuccess(userData, token);
-      } else {
-        // Token expired or invalid
-        localStorage.removeItem('authToken');
-        setToken(null);
-      }
+      const userData = await getCurrentUser();
+      onAuthSuccess(userData, token);
     } catch (error) {
       console.error('Token verification failed:', error);
       localStorage.removeItem('authToken');
@@ -43,43 +32,27 @@ const SimpleAuth = ({ onAuthSuccess }) => {
     setLoading(true);
     setError('');
 
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-    const userData = { email, password };
-
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const newToken = data.access_token;
-        
-        // Save token to localStorage for persistence
-        localStorage.setItem('authToken', newToken);
-        setToken(newToken);
-        
-        // Get user info
-        const userResponse = await fetch('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${newToken}`
-          }
-        });
-        
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          onAuthSuccess(userData, newToken);
-        }
+      let data;
+      if (isLogin) {
+        data = await loginUser(email, password);
       } else {
-        const errorData = await response.json();
-        setError(errorData.detail || 'Authentication failed');
+        data = await signupUser(email, password);
       }
+      
+      const newToken = data.access_token;
+      
+      // Save token to localStorage for persistence
+      localStorage.setItem('authToken', newToken);
+      setToken(newToken);
+      
+      // Get user info
+      const userData = await getCurrentUser();
+      onAuthSuccess(userData, newToken);
+      
     } catch (error) {
-      setError('Network error. Make sure the backend is running.');
+      const errorMessage = error.response?.data?.detail || error.message || 'Authentication failed';
+      setError(errorMessage);
       console.error('Auth error:', error);
     } finally {
       setLoading(false);

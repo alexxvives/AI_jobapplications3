@@ -216,7 +216,8 @@ class ADPScraper(BaseScraper):
         for page_url in career_urls:
             print(f"    Trying direct career page: {page_url}")
             
-            content, status_code = self.http.fetch_page_content(page_url)
+            content = self.http_client.get(page_url)
+            status_code = 200 if content else 404
             
             if status_code == 200 and content and len(content) > 5000:
                 jobs = self.parse_jobs(content, is_api=False)
@@ -279,7 +280,8 @@ class ADPScraper(BaseScraper):
         
         # Fall back to urllib if Selenium fails
         print(f"      Falling back to urllib...")
-        content, status_code = self.http.fetch_page_content(page_url)
+        content = self.http_client.get(page_url)
+        status_code = 200 if content else 404
         
         if status_code == 200 and content:
             jobs = self.parse_jobs(content, is_api=False)
@@ -309,7 +311,8 @@ class ADPScraper(BaseScraper):
         for url in variant_urls:
             print(f"    Trying ADP variant: {url}")
             
-            content, status_code = self.http.fetch_page_content(url)
+            content = self.http_client.get(url)
+            status_code = 200 if content else 404
             
             if status_code == 200 and content:
                 jobs = self.parse_jobs(content, is_api=False)
@@ -347,7 +350,8 @@ class ADPScraper(BaseScraper):
         for url in search_urls:
             print(f"    Trying search result: {url}")
             
-            content, status_code = self.http.fetch_page_content(url)
+            content = self.http_client.get(url)
+            status_code = 200 if content else 404
             
             if status_code == 200 and content:
                 jobs = self.parse_jobs(content, is_api=False)
@@ -384,8 +388,7 @@ class ADPScraper(BaseScraper):
             job_count = len(jobs)
             
             company_id = self.db.save_company_result(
-                company, self.platform_name, result['url'], 
-                "success_with_jobs", job_count
+                company, result['url'], job_count
             )
             self.db.save_jobs(company_id, self.platform_name, jobs)
             
@@ -414,8 +417,7 @@ class ADPScraper(BaseScraper):
                 )
             else:
                 self.db.save_company_result(
-                    company, self.platform_name, result['url'], 
-                    "success_no_jobs", 0
+                    company, result['url'], 0
                 )
                 
                 return ScrapingResult(
@@ -431,8 +433,7 @@ class ADPScraper(BaseScraper):
             job_count = len(jobs)
             
             company_id = self.db.save_company_result(
-                company, self.platform_name, result['url'], 
-                "success_with_jobs", job_count
+                company, result['url'], job_count
             )
             self.db.save_jobs(company_id, self.platform_name, jobs)
             
@@ -451,8 +452,7 @@ class ADPScraper(BaseScraper):
             job_count = len(jobs)
             
             company_id = self.db.save_company_result(
-                company, self.platform_name, result['url'], 
-                "success_with_jobs_search", job_count
+                company, result['url'], job_count
             )
             self.db.save_jobs(company_id, self.platform_name, jobs)
             
@@ -464,7 +464,7 @@ class ADPScraper(BaseScraper):
         # All methods failed
         error_status = "error_no_jobs"
         self.db.save_company_result(
-            company, self.platform_name, 'N/A', error_status, 0
+            company, None, 0
         )
         
         # Clean up driver

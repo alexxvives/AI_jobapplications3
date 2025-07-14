@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { startJobAutomation, checkUserProfile, markJobComplete, getBrowserStatus, processNextJobInSession } from '../utils/apiWithAuth'
+// Legacy imports removed - now using Chrome Extension automation only
+import AutomationProgress from './AutomationProgress'
 
 function AutomationModal({ 
   isOpen, 
@@ -9,15 +10,12 @@ function AutomationModal({
   selectedProfile,
   onComplete 
 }) {
-  const [currentJobIndex, setCurrentJobIndex] = useState(0)
-  const [automationStatus, setAutomationStatus] = useState('setup') // setup, running, waiting_for_submit, completed, error
+  const [automationStatus, setAutomationStatus] = useState('setup') // setup, running, completed, error
   const [applicationResults, setApplicationResults] = useState([])
   const [userProfile, setUserProfile] = useState(null)
   const [error, setError] = useState(null)
-  const [currentInstructions, setCurrentInstructions] = useState([])
-  const [currentSessionId, setCurrentSessionId] = useState(null)
-  const [fieldsFilled, setFieldsFilled] = useState([])
-  const [browserStatus, setBrowserStatus] = useState(null)
+  const [newSessionId, setNewSessionId] = useState(null)
+  const [isMinimized, setIsMinimized] = useState(false)
 
   // Get selected job objects
   const selectedJobsArray = jobs.filter(job => selectedJobs.has(job.id))
@@ -30,576 +28,509 @@ function AutomationModal({
 
   const checkProfileAndResume = async () => {
     try {
-      console.log('AutomationModal - checkProfileAndResume called with selectedProfile:', selectedProfile)
-      console.log('selectedProfile ID:', selectedProfile?.id)
-      
-      // Use the selected profile passed from JobSearch
-      // Check for either database format (flat fields) or structured format
-      const hasValidProfile = selectedProfile && (
-        selectedProfile.full_name || // Database format
-        selectedProfile.personal_information?.basic_information?.first_name // Structured format
-      )
-      
-      if (!hasValidProfile) {
+      if (!selectedProfile || !selectedProfile.id) {
         setError('Please select a valid profile before applying to jobs.')
         return
       }
       
-      if (!selectedProfile.id) {
-        setError('Profile is missing ID. Please select a valid profile.')
-        console.error('Profile missing ID:', selectedProfile)
+      const actualToken = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('access_token') || localStorage.getItem('jwt')
+      
+      if (!actualToken) {
+        setError('No authentication token found. Please refresh and log in again.')
         return
       }
       
-      setUserProfile(selectedProfile)
+      const response = await fetch(`http://localhost:8000/user/profile/${selectedProfile.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${actualToken}`
+        }
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('❌ Failed to fetch complete profile:', errorData)
+        setError('Failed to load complete profile data. Please try again.')
+        return
+      }
+      
+      const completeProfile = await response.json()
+      setUserProfile(completeProfile)
     } catch (err) {
-      setError('Unable to load your profile. Please select a valid profile.')
+      console.error('❌ Error fetching complete profile:', err)
+      setError('Unable to load your complete profile. Please try again.')
     }
   }
 
 
   const startAutomation = async () => {
-    if (!userProfile) {
-      setError('Profile not loaded. Please try again.')
-      return
-    }
+    
+    try {
+      if (!userProfile) {
+        setError('Profile not loaded. Please try again.')
+        return
+      }
 
-    setAutomationStatus('running')
-    setCurrentJobIndex(0)
-    
-    console.log('🎯 FRONTEND DEBUG: ===== STARTING AUTOMATION WITH ALL JOBS =====')
-    console.log('🎯 FRONTEND DEBUG: Total jobs selected:', selectedJobsArray.length)
-    console.log('🎯 FRONTEND DEBUG: Jobs:', selectedJobsArray.map(j => j.title))
-    
-    // Create ONE session with ALL jobs, then process first job
-    await processFirstJobOnly()
+      await startNewAutomation()
+      
+    } catch (error) {
+      console.error('❌ Automation error:', error)
+      setError('Failed to start automation: ' + error.message)
+      setAutomationStatus('error')
+    }
   }
 
-  const processFirstJobOnly = async () => {
+  const startNewAutomation = async () => {
     try {
       setAutomationStatus('running')
       
-      console.log('🎯 FRONTEND DEBUG: ===== CREATING SESSION WITH ALL JOBS =====')
-      console.log('🎯 FRONTEND DEBUG: Will send all jobs to create ONE session')
+      // Get auth token
+      const actualToken = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('access_token') || localStorage.getItem('jwt')
       
-      // Create ONE automation session with ALL jobs
-      const response = await startJobAutomation({
-        jobs: selectedJobsArray, // Send ALL jobs
-        profile: userProfile
+      if (!actualToken) {
+        throw new Error('No authentication token found. Please refresh and log in again.')
+      }
+      
+      // Create automation session with new API
+      const response = await fetch('http://localhost:8000/automation/sessions/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${actualToken}`
+        },
+        body: JSON.stringify({
+          profile_id: userProfile.id,
+          selected_jobs: selectedJobsArray.map(job => ({
+            id: job.id,
+            title: job.title,
+            company: job.company,
+            link: job.link,
+            location: job.location || '',
+            description: job.description || ''
+          }))
+        })
       })
-      
-      // Store session ID for the entire automation
-      setCurrentSessionId(response.session_id)
-      
-      console.log('🎯 FRONTEND DEBUG: ===== SESSION CREATED - PROCESSING FIRST JOB =====')
-      console.log('🎯 FRONTEND DEBUG: Session ID:', response.session_id)
-      
-      // Now handle the first job response
-      await handleJobResponse(response)
-      
-    } catch (err) {
-      console.error('🎯 FRONTEND DEBUG: Error starting automation:', err)
-      setError('Failed to start automation: ' + err.message)
-      setAutomationStatus('setup')
-    }
-  }
 
-  const processNextJob = async () => {
-    if (currentJobIndex >= selectedJobsArray.length) {
-      setAutomationStatus('completed')
-      return
-    }
-
-    if (!currentSessionId) {
-      setError('No active session. Please restart automation.')
-      return
-    }
-    
-    try {
-      setAutomationStatus('running')
-      
-      console.log('🎯 FRONTEND DEBUG: ===== PROCESSING NEXT JOB =====')
-      console.log('🎯 FRONTEND DEBUG: Job index:', currentJobIndex)
-      console.log('🎯 FRONTEND DEBUG: Session ID:', currentSessionId)
-      
-      // Use processNextJobInSession from apiWithAuth
-      const response = await processNextJobInSession(currentSessionId)
-      
-      await handleJobResponse(response)
-      
-    } catch (err) {
-      console.error('🎯 FRONTEND DEBUG: Error processing next job:', err)
-      setError('Failed to process next job: ' + err.message)
-    }
-  }
-
-  const handleJobResponse = async (response) => {
-    try {
-      const currentJob = selectedJobsArray[currentJobIndex]
-
-      if (response.success) {
-        console.log('🎯 FRONTEND DEBUG: ===== AUTOMATION RESPONSE RECEIVED =====')
-        console.log('🎯 FRONTEND DEBUG: VERSION: EXPECTING SEMANTIC JAVASCRIPT INJECTION')
-        console.log('🎯 FRONTEND DEBUG: Response keys:', Object.keys(response))
-        console.log('🎯 FRONTEND DEBUG: Response success:', response.success)
-        console.log('🎯 FRONTEND DEBUG: Response status:', response.status)
-        console.log('🎯 FRONTEND DEBUG: Response automation_type:', response.automation_type)
-        console.log('🎯 FRONTEND DEBUG: Response has js_injection:', 'js_injection' in response)
-        console.log('🎯 FRONTEND DEBUG: Response form_data:', response.form_data)
-        console.log('🎯 FRONTEND DEBUG: Full response:', response)
-        setCurrentInstructions(response.instructions || [])
-        setCurrentSessionId(response.session_id)
-        
-        // Handle job skipped due to invalid/expired posting
-        if (response.status === 'job_skipped' || response.should_skip) {
-          console.log('Job skipped:', response.reason)
-          
-          // Record the skipped job
-          const skippedResult = {
-            job: currentJob,
-            status: 'skipped',
-            notes: response.message || response.reason || 'Job no longer available',
-            timestamp: new Date().toISOString(),
-            automation_type: response.automation_type || 'ai_validation'
-          }
-          
-          setApplicationResults(prev => [...prev, skippedResult])
-          
-          // Show user notification
-          alert(`⚠️ Job Skipped: ${currentJob.title}
-
-${response.message || response.reason || 'This job posting is no longer available or has expired.'}
-
-Moving to the next job automatically...`)
-          
-          // Automatically move to next job after a short delay
-          setTimeout(() => {
-            handleJobCompleted('skipped', response.message || response.reason || 'Job no longer available')
-          }, 2000)
-          
-          return
-        }
-        setFieldsFilled(response.fields_filled || [])
-        
-        if (response.status === 'visual_automation_active') {
-          setAutomationStatus('visual_automation_active')
-          
-          // Start monitoring browser status
-          startBrowserMonitoring(response.session_id)
-          
-          // Show instructions to user
-          alert(`Browser automation started! 
-
-IMPORTANT: This automation processes jobs ONE AT A TIME.
-
-1. Watch the form being filled automatically
-2. Review all information carefully  
-3. Click Submit on the job application form
-4. Return here and click "Application Submitted" to move to the next job
-
-Do NOT close this window - it controls the automation sequence.`)
-        } else if (response.status === 'tab_ready') {
-          setAutomationStatus('tab_opened')
-          
-          // Open URL in new tab with smart form filling
-          const applicationUrl = response.application_url || response.tab_url || currentJob.link
-          const formData = response.form_data || {}
-          const fieldsCount = response.fields_filled?.length || 0
-          
-          console.log('Opening job in new tab with smart form filling:', applicationUrl)
-          console.log('Form data available:', formData)
-          
-          // Create a URL with form data encoded as a special hash
-          const formDataEncoded = encodeURIComponent(JSON.stringify(formData))
-          const urlWithData = `${applicationUrl}#autoFillData=${formDataEncoded}`
-          
-          const newTab = window.open(urlWithData, '_blank')
-          
-          if (newTab) {
-            console.log('Job tab opened successfully with form data')
-            
-            // Store form data in localStorage for the bookmarklet to access
-            const storageKey = `autoFill_${Date.now()}`
-            localStorage.setItem(storageKey, JSON.stringify(formData))
-            
-            // Create a bookmarklet that the user can run to fill the form
-            const bookmarkletCode = `
-javascript:(function(){
-  var data = ${JSON.stringify(formData)};
-  var filled = 0;
-  var mappings = [
-    {selectors: ['input[name*="name"]:not([name*="last"]):not([name*="first"])', 'input[placeholder*="full name" i]', 'input[id*="name"]:not([id*="last"]):not([id*="first"])'], value: data.full_name},
-    {selectors: ['input[name*="first" i]', 'input[placeholder*="first name" i]', 'input[id*="first" i]'], value: data.first_name},
-    {selectors: ['input[name*="last" i]', 'input[placeholder*="last name" i]', 'input[id*="last" i]'], value: data.last_name},
-    {selectors: ['input[type="email"]', 'input[name*="email" i]', 'input[placeholder*="email" i]', 'input[id*="email" i]'], value: data.email},
-    {selectors: ['input[type="tel"]', 'input[name*="phone" i]', 'input[placeholder*="phone" i]', 'input[id*="phone" i]'], value: data.phone},
-    {selectors: ['input[name*="city" i]', 'input[placeholder*="city" i]', 'input[id*="city" i]'], value: data.city},
-    {selectors: ['input[name*="state" i]', 'input[placeholder*="state" i]', 'input[id*="state" i]'], value: data.state},
-    {selectors: ['input[name*="country" i]', 'input[placeholder*="country" i]', 'input[id*="country" i]'], value: data.country}
-  ];
-  mappings.forEach(function(mapping) {
-    if (mapping.value && mapping.value.trim()) {
-      mapping.selectors.forEach(function(selector) {
-        try {
-          document.querySelectorAll(selector).forEach(function(element) {
-            if (element && element.offsetParent !== null && !element.value) {
-              element.style.border = '2px solid #4CAF50';
-              element.style.boxShadow = '0 0 5px #4CAF50';
-              element.focus();
-              element.value = mapping.value;
-              element.dispatchEvent(new Event('input', {bubbles: true}));
-              element.dispatchEvent(new Event('change', {bubbles: true}));
-              filled++;
-              setTimeout(function() {
-                element.style.border = '';
-                element.style.boxShadow = '';
-              }, 3000);
-            }
-          });
-        } catch (e) {
-          console.log('Error filling field:', selector, e);
-        }
-      });
-    }
-  });
-  if (filled > 0) {
-    var banner = document.createElement('div');
-    banner.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; z-index: 999999; background: linear-gradient(90deg, #4CAF50, #45a049); color: white; padding: 15px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; font-size: 16px; font-weight: 500; box-shadow: 0 2px 10px rgba(0,0,0,0.3);';
-    banner.innerHTML = '🤖 <strong>Smart Auto-Fill Complete!</strong> Filled ' + filled + ' fields automatically. Please review and submit.';
-    document.body.appendChild(banner);
-    setTimeout(function() { banner.remove(); }, 8000);
-  }
-  alert('Auto-fill completed: ' + filled + ' fields filled');
-})();`
-            
-            // Copy bookmarklet to clipboard if possible
-            if (navigator.clipboard) {
-              navigator.clipboard.writeText(bookmarkletCode).then(() => {
-                console.log('Bookmarklet copied to clipboard')
-              }).catch(err => {
-                console.log('Could not copy bookmarklet:', err)
-              })
-            }
-            
-            alert(`🤖 Smart Form Filling Ready!
-
-✅ Job application opened in new tab
-📋 ${fieldsCount} fields ready to auto-fill
-🔧 Auto-fill bookmarklet copied to clipboard
-
-INSTRUCTIONS:
-1. In the job application tab, run the auto-fill by either:
-   - Pressing Ctrl+V and hitting Enter (if bookmarklet was copied)
-   - Or manually fill the form
-2. Green highlights will show filled fields
-3. Review all information carefully
-4. Submit the application
-5. Return here and click "Application Submitted"
-
-IMPORTANT: This processes jobs ONE AT A TIME.
-Do NOT close this window - it controls the automation sequence.`)
-          } else {
-            throw new Error('Popup blocked. Please allow popups for this site.')
-          }
-        } else if (response.automation_type === 'semantic_with_ai_fallback' || response.automation_type === 'browser_automation_with_ai' || response.status === 'awaiting_user_confirmation' || response.status === 'awaiting_user_submission') {
-          console.log('🎯 FRONTEND DEBUG: ===== SEMANTIC WITH AI FALLBACK PATH =====')
-          console.log('🎯 FRONTEND DEBUG: Setting automation status to awaiting_user_confirmation')
-          setAutomationStatus('awaiting_user_confirmation')
-          
-          // Semantic form filling completed - open tab with JavaScript injection
-          console.log('🎯 FRONTEND DEBUG: Semantic form filling with AI fallback completed successfully')
-          console.log('🎯 FRONTEND DEBUG: Fields filled:', response.fields_filled || 0)
-          console.log('🎯 FRONTEND DEBUG: Total fields filled:', response.total_fields_filled || 0)
-          console.log('🎯 FRONTEND DEBUG: Semantic matches:', response.semantic_matches || 0)
-          console.log('🎯 FRONTEND DEBUG: JS injection available:', !!response.js_injection)
-          console.log('🎯 FRONTEND DEBUG: JS injection length:', response.js_injection ? response.js_injection.length : 0)
-          
-          // Open tab with semantic JavaScript injection
-          const applicationUrl = response.application_url || response.job_url || currentJob.link
-          const jsInjection = response.js_injection
-          const totalFields = response.total_fields_filled || response.fields_filled || 0
-          const semanticMatches = response.semantic_matches || 0
-          
-          console.log('Opening job tab with semantic JavaScript injection:', applicationUrl)
-          
-          const newTab = window.open(applicationUrl, '_blank')
-          
-          if (newTab) {
-            console.log('Semantic form filling tab opened successfully')
-            
-            // Store the JavaScript injection in localStorage for easy access
-            const injectionKey = `semanticAutoFill_${Date.now()}`
-            localStorage.setItem(injectionKey, jsInjection)
-            
-            // Create a simplified bookmarklet that runs the semantic injection
-            const semanticBookmarklet = `javascript:${jsInjection.replace(/\n/g, ' ').replace(/\s+/g, ' ')}`
-            
-            // Copy semantic bookmarklet to clipboard if possible
-            if (navigator.clipboard) {
-              navigator.clipboard.writeText(semanticBookmarklet).then(() => {
-                console.log('Semantic auto-fill bookmarklet copied to clipboard')
-              }).catch(err => {
-                console.log('Could not copy semantic bookmarklet:', err)
-              })
-            }
-            
-            alert(`🧠 Semantic Form Filling Ready! 
-
-✅ Intelligent Analysis: ${semanticMatches} field types identified
-✅ Auto-Fill Ready: ${totalFields} form fields prepared
-🚀 Semantic JavaScript generated and copied to clipboard
-📋 Job application opened in new tab
-
-INSTRUCTIONS:
-1. In the job application tab, paste and run the auto-fill code:
-   - Press Ctrl+V in the address bar and hit Enter
-   - OR open Developer Console (F12) and paste the code
-2. Watch the semantic auto-fill work with progress indicators
-3. Green highlights will show intelligently matched fields
-4. Review all information carefully
-5. Submit the application
-6. Return here and click "Application Submitted"
-
-IMPORTANT: This processes jobs ONE AT A TIME.
-Do NOT close this window - it controls the automation sequence.`)
-          } else {
-            throw new Error('Popup blocked. Please allow popups for this site.')
-          }
-        } else if (response.status === 'manual_fallback') {
-          setAutomationStatus('manual_fallback')
-          
-          // Open URL manually due to visual automation failure
-          const applicationUrl = response.fallback_url || currentJob.link
-          console.log('Opening manual fallback URL:', applicationUrl)
-          
-          const newTab = window.open(applicationUrl, '_blank')
-          
-          if (newTab) {
-            console.log('Manual fallback tab opened successfully')
-            alert(`Visual automation not available. Job application opened in new tab.
-
-IMPORTANT: This automation processes jobs ONE AT A TIME.
-
-1. Fill out the form manually in the new tab
-2. Review all information carefully
-3. Click Submit on the job application form  
-4. Return here and click "Application Submitted" to move to the next job
-
-Do NOT close this window - it controls the automation sequence.`)
-          } else {
-            console.error('Failed to open popup - likely blocked')
-            alert(`Popup blocked! Please manually open this URL: ${applicationUrl}`)
-            // Also copy to clipboard if possible
-            if (navigator.clipboard) {
-              navigator.clipboard.writeText(applicationUrl)
-              alert(`URL copied to clipboard: ${applicationUrl}`)
-            }
-          }
-        } else if (response.status === 'automation_failed') {
-          console.log('Automation failed, opening URL manually')
-          setAutomationStatus('manual_fallback')
-          
-          // For failed automation, still try to open the URL manually
-          // Apply Lever URL transformation on frontend side as backup
-          let applicationUrl = response.application_url || currentJob.link
-          
-          // Frontend backup: Add /apply to Lever URLs if not present
-          if (applicationUrl.includes('jobs.lever.co') && !applicationUrl.endsWith('/apply')) {
-            applicationUrl = applicationUrl.replace(/\/$/, '') + '/apply'
-            console.log('Frontend applied Lever /apply transformation:', applicationUrl)
-          }
-          
-          console.log('Opening failed automation URL:', applicationUrl)
-          const newTab = window.open(applicationUrl, '_blank')
-          
-          if (newTab) {
-            console.log('Failed automation tab opened successfully')
-            alert('Automation failed, but job application page opened in new tab. Please fill out the form manually and return here when done.')
-          } else {
-            console.error('Failed to open popup - likely blocked')
-            alert(`Popup blocked! Please manually open this URL: ${applicationUrl}`)
-            if (navigator.clipboard) {
-              navigator.clipboard.writeText(applicationUrl)
-              alert(`URL copied to clipboard: ${applicationUrl}`)
-            }
-          }
-        } else {
-          console.log('Unknown automation status, using fallback:', response.status)
-          setAutomationStatus('waiting_for_submit')
-          
-          // Standard fallback - open URL manually with Lever transformation
-          let applicationUrl = response.application_url || currentJob.link
-          
-          // Frontend backup: Add /apply to Lever URLs if not present
-          if (applicationUrl.includes('jobs.lever.co') && !applicationUrl.endsWith('/apply')) {
-            applicationUrl = applicationUrl.replace(/\/$/, '') + '/apply'
-            console.log('Frontend applied Lever /apply transformation:', applicationUrl)
-          }
-          
-          console.log('Opening standard fallback URL:', applicationUrl)
-          const newTab = window.open(applicationUrl, '_blank')
-          
-          if (!newTab) {
-            throw new Error('Popup blocked. Please allow popups for this site.')
-          } else {
-            console.log('Standard fallback tab opened successfully')
-          }
-        }
-      } else {
-        throw new Error(response.error || 'Failed to generate application instructions')
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('❌ Backend error response:', errorData)
+        console.error('❌ Response status:', response.status)
+        console.error('❌ Response headers:', Object.fromEntries(response.headers.entries()))
+        throw new Error(`Failed to create automation session: ${response.status} - ${errorData}`)
       }
-      
-    } catch (err) {
-      console.error('Automation error:', err)
-      
-      // Record the failure
-      const newResult = {
-        job: currentJob,
-        status: 'failed',
-        error: err.message,
-        timestamp: new Date().toISOString()
-      }
-      
-      setApplicationResults(prev => [...prev, newResult])
-      
-      // Move to next job automatically
-      setTimeout(() => {
-        moveToNextJob()
-      }, 2000)
-    }
-  }
 
-  const markCurrentJobComplete = async () => {
-    if (!currentSessionId) {
-      console.error('No active session')
-      return
-    }
-    
-    try {
-      const response = await markJobComplete(currentSessionId, 'completed', 'Application submitted successfully')
+      const result = await response.json()
+      setNewSessionId(result.sessionId)
       
-      if (response.success) {
-        const currentJob = selectedJobsArray[currentJobIndex]
-        
-        const newResult = {
-          job: currentJob,
-          status: 'completed',
-          timestamp: new Date().toISOString()
-        }
-        
-        setApplicationResults(prev => [...prev, newResult])
-        
-        if (response.status === 'completed') {
-          setAutomationStatus('completed')
-        } else {
-          moveToNextJob()
-        }
-      }
-    } catch (err) {
-      console.error('Error marking job complete:', err)
-      alert('Error updating job status. Please try again.')
-    }
-  }
-
-  const markCurrentJobFailed = async () => {
-    if (!currentSessionId) {
-      console.error('No active session')
-      return
-    }
-    
-    try {
-      const response = await markJobComplete(currentSessionId, 'failed', 'User marked as failed')
+      console.log('✅ New automation session created:', result.sessionId)
       
-      if (response.success) {
-        const currentJob = selectedJobsArray[currentJobIndex]
-        
-        const newResult = {
-          job: currentJob,
-          status: 'failed',
-          error: 'User marked as failed',
-          timestamp: new Date().toISOString()
-        }
-        
-        setApplicationResults(prev => [...prev, newResult])
-        
-        if (response.status === 'completed') {
-          setAutomationStatus('completed')
-        } else {
-          moveToNextJob()
-        }
-      }
-    } catch (err) {
-      console.error('Error marking job failed:', err)
-      alert('Error updating job status. Please try again.')
-    }
-  }
-
-  const startBrowserMonitoring = (sessionId) => {
-    const monitor = setInterval(async () => {
+      // Store session data for Chrome extension and notify it to start
       try {
-        const status = await getBrowserStatus(sessionId)
-        setBrowserStatus(status)
+        console.log('🔍 Checking Chrome APIs:', {
+          chromeExists: typeof chrome !== 'undefined',
+          storageExists: typeof chrome !== 'undefined' && !!chrome.storage,
+          localExists: typeof chrome !== 'undefined' && !!chrome.storage?.local,
+          runtimeExists: typeof chrome !== 'undefined' && !!chrome.runtime,
+          bridgeExists: typeof window.chromeExtensionBridge !== 'undefined'
+        });
         
-        if (!status.browser_active) {
-          clearInterval(monitor)
-          if (status.status === 'browser_closed') {
-            setAutomationStatus('waiting_for_submit')
-            alert('Browser was closed. Please confirm if you submitted the application.')
-          }
+        // Try direct approach - open job tab and let extension detect it
+        console.log('🚀 Opening job tab directly - extension will auto-detect');
+        
+        // Get the first job from backend session
+        console.log('🔍 Fetching job from session:', result.sessionId);
+        const jobResponse = await fetch(`http://localhost:8000/automation/sessions/${result.sessionId}/current-job`, {
+          headers: { 'Authorization': `Bearer ${actualToken}` }
+        });
+        
+        console.log('🔍 Job response status:', jobResponse.status);
+        console.log('🔍 Job response headers:', Object.fromEntries(jobResponse.headers.entries()));
+        
+        if (!jobResponse.ok) {
+          const errorText = await jobResponse.text();
+          console.error('🔍 Job response error:', errorText);
+          throw new Error(`Failed to get current job from session: ${jobResponse.status} - ${errorText}`);
         }
-      } catch (err) {
-        console.error('Browser monitoring error:', err)
-        clearInterval(monitor)
+        
+        const jobData = await jobResponse.json();
+        console.log('🔍 Raw job data from backend:', jobData);
+        console.log('📋 Opening job:', jobData.job_title, 'at', jobData.company_name);
+        
+        // Fallback: use the jobs from the original request if backend job is empty
+        if (!jobData.job_url && selectedJobsArray.length > 0) {
+          console.log('🔄 Backend job empty, using first selected job as fallback');
+          const fallbackJob = selectedJobsArray[0];
+          console.log('📋 Fallback job:', fallbackJob.title, 'at', fallbackJob.company);
+          
+          // Fix Lever URLs by adding /apply
+          let jobUrl = fallbackJob.link;
+          if (jobUrl.includes('jobs.lever.co') && !jobUrl.endsWith('/apply')) {
+            jobUrl = jobUrl.replace(/\/$/, '') + '/apply';
+            console.log('🔧 Fixed Lever URL:', jobUrl);
+          }
+          
+          // Store session info and open fallback job
+          const sessionData = {
+            sessionId: result.sessionId,
+            userProfile: userProfile,
+            currentJob: {
+              title: fallbackJob.title,
+              company: fallbackJob.company,
+              url: jobUrl,
+              platform: jobUrl.includes('jobs.lever.co') ? 'lever' : 'unknown'
+            },
+            timestamp: Date.now()
+          };
+          
+          localStorage.setItem('currentAutomationSession', JSON.stringify(sessionData));
+          
+          // Store in Chrome extension storage (works across domains)
+          try {
+            
+            const automationData = {
+              userProfile: userProfile,
+              currentSessionId: result.sessionId,
+              automationActive: true,
+              currentJob: {
+                title: fallbackJob.title,
+                company: fallbackJob.company,
+                url: jobUrl,
+                platform: jobUrl.includes('jobs.lever.co') ? 'lever' : 'unknown'
+              }
+            };
+            
+            
+            // Chrome storage is NOT available to web pages - only to extensions!
+            // We must use Chrome extension messaging instead
+            
+            
+            // Method 1: Chrome extension messaging (PRIMARY METHOD)
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+              
+              try {
+                // Get the extension ID dynamically
+                const getExtensionId = () => {
+                  // Try to find the extension ID from installed extensions
+                  // This is a workaround since web pages can't directly get the extension ID
+                  const possibleIds = [
+                    'YOUR_EXTENSION_ID_HERE', // We'll replace this with the actual ID
+                    // Common development extension IDs (Chrome generates predictable IDs for development)
+                    chrome.runtime.id, // This won't work from web page, but worth trying
+                  ].filter(Boolean);
+                  
+                  return possibleIds[0];
+                };
+                
+                // Try different approaches to send the message
+                const extensionId = getExtensionId();
+                
+                if (extensionId && extensionId !== 'YOUR_EXTENSION_ID_HERE') {
+                  // Method 1: With explicit extension ID
+                  chrome.runtime.sendMessage(extensionId, {
+                    action: 'STORE_AUTOMATION_DATA',
+                    data: automationData
+                  }, (response) => {
+                    if (chrome.runtime.lastError) {
+                      console.error('📱 ❌ Chrome runtime error (with ID):', chrome.runtime.lastError.message);
+                      console.log('📱 🔄 Trying alternative messaging approach...');
+                      tryAlternativeMessaging();
+                    } else if (response && response.success) {
+                      console.log('📱 ✅ Automation data sent successfully via runtime message with ID!');
+                      console.log('📱 📋 Response:', response);
+                    } else {
+                      console.error('📱 ❌ Runtime message failed (with ID):', response);
+                    }
+                  });
+                } else {
+                  console.log('📱 ⚠️ Extension ID not available, trying alternative messaging...');
+                  tryAlternativeMessaging();
+                }
+                
+                function tryAlternativeMessaging() {
+                  console.log('📱 🔄 Trying alternative messaging approaches...');
+                  
+                  // Method 1: Try chrome.management if available
+                  if (typeof chrome !== 'undefined' && chrome.management && chrome.management.getAll) {
+                    chrome.management.getAll((extensions) => {
+                      const jobAssistantExt = extensions.find(ext => 
+                        ext.name.includes('AI Job Application Assistant') || 
+                        ext.name.includes('Job Application')
+                      );
+                      
+                      if (jobAssistantExt) {
+                        chrome.runtime.sendMessage(jobAssistantExt.id, {
+                          action: 'STORE_AUTOMATION_DATA',
+                          data: automationData
+                        }, (response) => {
+                          if (chrome.runtime.lastError) {
+                            console.error('📱 ❌ Extension messaging failed:', chrome.runtime.lastError.message);
+                            fallbackToStorage();
+                          } else {
+                            console.log('📱 ✅ Successfully sent to extension!', response);
+                          }
+                        });
+                      } else {
+                        console.log('📱 ⚠️ Extension not found in management list');
+                        fallbackToStorage();
+                      }
+                    });
+                  } else {
+                    console.log('📱 ⚠️ chrome.management not available, using localStorage directly');
+                    fallbackToStorage();
+                  }
+                  
+                  function fallbackToStorage() {
+                    console.log('📱 🔄 Using alternative communication methods...');
+                    
+                    // Method 1: Try to communicate with content script on THIS page first
+                    window.postMessage({
+                      type: 'CHROME_EXTENSION_MESSAGE',
+                      action: 'STORE_AUTOMATION_DATA',
+                      data: automationData,
+                      origin: 'frontend'
+                    }, '*');
+                    console.log('📱 📤 Posted message to current page content script');
+                    
+                    // Method 2: Store in localStorage (won't work cross-domain but good for debugging)
+                    const localStorageData = {
+                      ...automationData,
+                      timestamp: Date.now(),
+                      source: 'frontend'
+                    };
+                    
+                    localStorage.setItem('chromeExtensionAutomationData', JSON.stringify(localStorageData));
+                    localStorage.setItem('currentAutomationSession', JSON.stringify({
+                      sessionId: automationData.currentSessionId,
+                      userProfile: automationData.userProfile,
+                      currentJob: automationData.currentJob,
+                      timestamp: Date.now()
+                    }));
+                    console.log('📱 📤 Data stored in localStorage (for same-domain access only)');
+                    
+                    // Method 3: Try to query all tabs and inject the data
+                    if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.query) {
+                      chrome.tabs.query({}, (tabs) => {
+                        tabs.forEach(tab => {
+                          if (tab.url && (tab.url.includes('jobs.lever.co') || 
+                              tab.url.includes('boards.greenhouse.io') || 
+                              tab.url.includes('workday.com'))) {
+                            console.log('📱 📤 Sending data to job tab:', tab.url);
+                            chrome.tabs.sendMessage(tab.id, {
+                              action: 'STORE_AUTOMATION_DATA',
+                              data: automationData
+                            }, (response) => {
+                              if (chrome.runtime.lastError) {
+                                console.log('📱 ⚠️ Could not message tab:', chrome.runtime.lastError.message);
+                              } else {
+                                console.log('📱 ✅ Successfully sent to tab:', tab.url);
+                              }
+                            });
+                          }
+                        });
+                      });
+                    } else {
+                      console.log('📱 ⚠️ chrome.tabs not available');
+                    }
+                  }
+                }
+                
+              } catch (error) {
+                console.error('📱 ❌ Error sending runtime message:', error.message);
+              }
+            } else {
+              console.error('📱 ❌ Chrome runtime not available - extension may not be installed');
+            }
+            
+            // Method 2: Via Chrome runtime message to background script
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+              try {
+                chrome.runtime.sendMessage({
+                  action: 'STORE_AUTOMATION_DATA',
+                  data: automationData
+                }, (response) => {
+                  if (chrome.runtime.lastError) {
+                    console.log('📱 ⚠️ Chrome runtime error:', chrome.runtime.lastError.message);
+                  } else if (response && response.success) {
+                    console.log('📱 ✅ Stored via Chrome runtime message');
+                  } else {
+                    console.log('📱 ⚠️ Chrome runtime storage failed:', response);
+                  }
+                });
+              } catch (error) {
+                console.log('📱 ⚠️ Chrome runtime sendMessage error:', error.message);
+              }
+            }
+            
+            // Method 3: PostMessage (less reliable for cross-origin)
+            window.postMessage({
+              type: 'STORE_AUTOMATION_DATA',
+              data: automationData
+            }, '*');
+            console.log('📱 📤 Posted automation data message');
+            
+          } catch (e) {
+            console.log('📱 ❌ Chrome storage error:', e.message);
+          }
+          
+          const jobTab = window.open(jobUrl, '_blank');
+          if (!jobTab) {
+            throw new Error('Popup blocked. Please allow popups for this site.');
+          }
+          
+          console.log('✅ Fallback job tab opened:', jobUrl);
+          console.log('📱 Session data with job info stored for form filling');
+          return;
+        }
+        
+        // Fix Lever URLs by adding /apply  
+        let finalJobUrl = jobData.job_url;
+        if (finalJobUrl.includes('jobs.lever.co') && !finalJobUrl.endsWith('/apply')) {
+          finalJobUrl = finalJobUrl.replace(/\/$/, '') + '/apply';
+          console.log('🔧 Fixed Lever URL:', finalJobUrl);
+        }
+        
+        
+        // Store in Chrome storage for MAIN PATH too (not just fallback)
+        try {
+          
+          const automationData = {
+            userProfile: userProfile,
+            currentSessionId: result.sessionId,
+            automationActive: true,
+            currentJob: {
+              title: jobData.job_title,
+              company: jobData.company_name,
+              url: finalJobUrl,
+              platform: finalJobUrl.includes('jobs.lever.co') ? 'lever' : 'unknown'
+            }
+          };
+          
+          // Store via Chrome extension messaging (web pages can't access chrome.storage directly)
+          
+          // Also send via runtime message
+          if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+            chrome.runtime.sendMessage({
+              action: 'STORE_AUTOMATION_DATA',
+              data: automationData
+            }, (response) => {
+              if (chrome.runtime.lastError) {
+                console.log('📱 Main Path: Chrome runtime error:', chrome.runtime.lastError.message);
+              } else {
+                console.log('📱 ✅ Main Path: Stored via Chrome runtime message');
+              }
+            });
+          }
+          
+        } catch (e) {
+          console.error('📱 ❌ Main Path: Chrome storage error:', e.message);
+        }
+        
+        // Store session info in localStorage for extension to find
+        localStorage.setItem('currentAutomationSession', JSON.stringify({
+          sessionId: result.sessionId,
+          userProfile: userProfile,
+          currentJob: {
+            title: jobData.job_title,
+            company: jobData.company_name,
+            url: finalJobUrl,
+            platform: finalJobUrl.includes('jobs.lever.co') ? 'lever' : 'unknown'
+          },
+          timestamp: Date.now()
+        }));
+        
+        // Open the job application URL
+        const jobTab = window.open(finalJobUrl, '_blank');
+        if (!jobTab) {
+          throw new Error('Popup blocked. Please allow popups for this site.');
+        }
+        
+        console.log('✅ Job tab opened:', finalJobUrl);
+        console.log('📱 Session data with job info stored for form filling');
+      } catch (directError) {
+        console.error('📱 Direct automation error:', directError)
+        setError('Failed to open job application: ' + directError.message)
+        setAutomationStatus('error')
       }
-    }, 3000) // Check every 3 seconds
-    
-    // Store interval ID for cleanup
-    setCurrentInstructions(prev => ({ ...prev, monitorInterval: monitor }))
-  }
-
-  const moveToNextJob = () => {
-    const nextIndex = currentJobIndex + 1
-    setCurrentJobIndex(nextIndex)
-    
-    // Clear browser monitoring
-    setBrowserStatus(null)
-    
-    if (nextIndex >= selectedJobsArray.length) {
-      setAutomationStatus('completed')
-    } else {
-      // Small delay before processing next job
-      setTimeout(() => {
-        processNextJob()
-      }, 1000)
+      
+    } catch (err) {
+      console.error('❌ Error starting new automation:', err)
+      setError('Failed to start automation: ' + err.message)
+      setAutomationStatus('error')
     }
   }
+
+
+
+
 
   const resetAutomation = () => {
-    setCurrentJobIndex(0)
     setAutomationStatus('setup')
     setApplicationResults([])
-    setCurrentInstructions([])
-    setCurrentSessionId(null)
-    setFieldsFilled([])
-    setBrowserStatus(null)
     setError(null)
+    setNewSessionId(null)
+  }
+
+  const handleNewAutomationComplete = (result) => {
+    console.log('✅ New automation completed:', result)
+    setAutomationStatus('completed')
+    setNewSessionId(null)
+    
+    // Update application results for display
+    if (result.data && result.data.jobs) {
+      const results = result.data.jobs.map(job => ({
+        job: {
+          title: job.job_title,
+          company: job.company_name
+        },
+        status: job.status === 'submitted' ? 'completed' : 'failed'
+      }))
+      setApplicationResults(results)
+    }
+  }
+
+  const handleNewAutomationError = (error) => {
+    console.error('❌ New automation error:', error)
+    setError('Automation failed: ' + error.message)
+    setAutomationStatus('error')
   }
 
   const handleClose = () => {
-    if (automationStatus === 'running' || automationStatus === 'waiting_for_submit') {
-      if (!confirm('Automation is in progress. Are you sure you want to close?')) {
-        return
-      }
+    if (automationStatus === 'running') {
+      // Minimize instead of closing when automation is running
+      setIsMinimized(true)
+      return
     }
     
     resetAutomation()
     onClose()
   }
 
+  const handleMinimize = () => {
+    setIsMinimized(true)
+  }
+
+  const handleMaximize = () => {
+    setIsMinimized(false)
+  }
+
   if (!isOpen) return null
 
-  const currentJob = selectedJobsArray[currentJobIndex]
-  const progress = ((currentJobIndex + 1) / selectedJobsArray.length) * 100
+  // Minimized state - floating widget
+  if (isMinimized) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className="bg-blue-500 text-white p-4 rounded-lg shadow-lg cursor-pointer hover:bg-blue-600 transition-colors"
+             onClick={handleMaximize}>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium">Automation Running</span>
+            <span className="text-xs opacity-75">Click to expand</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -608,14 +539,26 @@ Do NOT close this window - it controls the automation sequence.`)
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
-              Job Application Automation
+              🚀 Chrome Extension Automation v2.0
             </h2>
-            <button
-              onClick={handleClose}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
+            <div className="flex space-x-2">
+              {automationStatus === 'running' && (
+                <button
+                  onClick={handleMinimize}
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Minimize"
+                >
+                  ➖
+                </button>
+              )}
+              <button
+                onClick={handleClose}
+                className="text-gray-500 hover:text-gray-700"
+                title={automationStatus === 'running' ? 'Minimize' : 'Close'}
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Error Display */}
@@ -650,144 +593,55 @@ Do NOT close this window - it controls the automation sequence.`)
                 </div>
               )}
 
+              {/* Automation System Selection */}
+              <div className="bg-gray-50 p-4 rounded-md">
+                <h4 className="font-medium text-gray-900 mb-2">Automation Method</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
+                    <span className="text-sm">
+                      🚀 <strong>Chrome Extension Automation</strong> - Advanced form filling with auto-progression
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                  <strong>Requirements:</strong> Chrome extension must be installed and active. 
+                  This method provides automatic progression between jobs.
+                </div>
+                <div className="mt-2 p-2 bg-green-50 rounded text-xs text-green-700 font-medium">
+                  ✅ UPDATED v2.0 - Legacy browser automation removed
+                </div>
+              </div>
+
               <div className="pt-4">
                 <button
                   onClick={startAutomation}
                   disabled={!userProfile}
-                  className="w-full bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-red-500 text-white px-6 py-3 rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Start Automation
+                  🚀 START CHROME EXTENSION v2.0 🚀
                 </button>
               </div>
             </div>
           )}
 
-          {/* Progress Phase */}
-          {(automationStatus === 'running' || automationStatus === 'waiting_for_submit' || automationStatus === 'visual_automation_active' || automationStatus === 'manual_fallback' || automationStatus === 'awaiting_user_confirmation') && currentJob && (
-            <div className="space-y-4">
-              {/* Progress Bar */}
-              <div>
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Job {currentJobIndex + 1} of {selectedJobsArray.length}</span>
-                  <span>{Math.round(progress)}% Complete</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
+          {/* Chrome Extension Automation Progress */}
+          {newSessionId && automationStatus === 'running' && (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Automation in Progress</h3>
+              <p className="text-gray-600 mb-4">
+                Chrome extension is processing the job application form
+              </p>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-blue-800 text-sm">
+                  <strong>Session ID:</strong> {newSessionId}
+                </p>
+                <p className="text-blue-600 text-xs mt-2">
+                  The job form should be filling automatically in the new tab. 
+                  You can minimize this window and check back later.
+                </p>
               </div>
-
-              {/* Current Job */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <h3 className="font-medium text-gray-900">{currentJob.title}</h3>
-                <p className="text-gray-600">{currentJob.company}</p>
-                <p className="text-sm text-gray-500">{currentJob.location}</p>
-              </div>
-
-              {/* Status */}
-              {automationStatus === 'running' && (
-                <div className="text-center py-4">
-                  <div className="loading-spinner mb-2"></div>
-                  <p className="text-gray-600">Starting browser automation...</p>
-                </div>
-              )}
-
-              {automationStatus === 'visual_automation_active' && (
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                  <h4 className="font-medium text-blue-800 mb-2">🤖 Visual Automation Active</h4>
-                  <p className="text-blue-700 text-sm mb-3">
-                    Browser automation is running! You can watch the form being filled automatically.
-                  </p>
-                  
-                  {fieldsFilled.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-sm font-medium text-blue-800 mb-1">Fields Filled:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {fieldsFilled.map((field, index) => (
-                          <span key={index} className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
-                            ✓ {field}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {browserStatus && (
-                    <div className="text-xs text-blue-600">
-                      Browser Status: {browserStatus.browser_active ? '🟢 Active' : '🔴 Inactive'}
-                      {browserStatus.current_url && (
-                        <div className="mt-1 truncate">URL: {browserStatus.current_url}</div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={markCurrentJobComplete}
-                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 text-sm"
-                    >
-                      ✓ Application Submitted
-                    </button>
-                    <button
-                      onClick={markCurrentJobFailed}
-                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 text-sm"
-                    >
-                      ✗ Mark as Failed
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {automationStatus === 'manual_fallback' && (
-                <div className="bg-orange-50 border border-orange-200 rounded-md p-4">
-                  <h4 className="font-medium text-orange-800 mb-2">🔧 Manual Application Mode</h4>
-                  <p className="text-orange-700 text-sm mb-4">
-                    Visual automation is not available (ChromeDriver not installed). The job application page has been opened in a new tab for manual completion.
-                  </p>
-                  
-                  <div className="flex gap-2">
-                    <button
-                      onClick={markCurrentJobComplete}
-                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 text-sm"
-                    >
-                      ✓ Application Submitted
-                    </button>
-                    <button
-                      onClick={markCurrentJobFailed}
-                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 text-sm"
-                    >
-                      ✗ Mark as Failed
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {(automationStatus === 'waiting_for_submit' || automationStatus === 'awaiting_user_confirmation') && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                  <h4 className="font-medium text-yellow-800 mb-2">Action Required</h4>
-                  <p className="text-yellow-700 text-sm mb-4">
-                    The application form has been opened in a new tab and filled with your information. 
-                    Please review the details and click Submit on that page, then return here.
-                  </p>
-                  
-                  <div className="flex gap-2">
-                    <button
-                      onClick={markCurrentJobComplete}
-                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 text-sm"
-                    >
-                      ✓ Application Submitted
-                    </button>
-                    <button
-                      onClick={markCurrentJobFailed}
-                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 text-sm"
-                    >
-                      ✗ Mark as Failed
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 

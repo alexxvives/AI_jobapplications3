@@ -96,7 +96,17 @@ class LeverScraper(BaseScraper):
         
         print(f"    Trying Lever API: {api_url}")
         
-        data, status_code = self.http.fetch_json(api_url)
+        content = self.http_client.get(api_url)
+        if content:
+            try:
+                data = json.loads(content)
+                status_code = 200
+            except json.JSONDecodeError:
+                data = None
+                status_code = 400
+        else:
+            data = None
+            status_code = 404
         
         if status_code == 200 and data:
             # Convert dict to JSON string for parsing
@@ -121,7 +131,8 @@ class LeverScraper(BaseScraper):
         
         print(f"    Trying Lever page: {page_url}")
         
-        content, status_code = self.http.fetch_page_content(page_url)
+        content = self.http_client.get(page_url)
+        status_code = 200 if content else 404
         
         if status_code == 200 and content:
             jobs = self.parse_jobs(content, is_api=False)
@@ -156,7 +167,17 @@ class LeverScraper(BaseScraper):
             print(f"    Trying search result: {url}")
             
             if 'api.lever.co' in url:
-                data, status_code = self.http.fetch_json(url)
+                content = self.http_client.get(url)
+                if content:
+                    try:
+                        data = json.loads(content)
+                        status_code = 200
+                    except json.JSONDecodeError:
+                        data = None
+                        status_code = 400
+                else:
+                    data = None
+                    status_code = 404
                 if status_code == 200 and data:
                     content = json.dumps(data)
                     jobs = self.parse_jobs(content, is_api=True)
@@ -168,7 +189,8 @@ class LeverScraper(BaseScraper):
                 else:
                     print(f"      Error {status_code}")
             else:
-                content, status_code = self.http.fetch_page_content(url)
+                content = self.http_client.get(url)
+                status_code = 200 if content else 404
                 if status_code == 200 and content:
                     jobs = self.parse_jobs(content, is_api=False)
                     if jobs:
@@ -205,8 +227,7 @@ class LeverScraper(BaseScraper):
             
             # Save to database
             company_id = self.db.save_company_result(
-                company, self.platform_name, result['url'], 
-                "success_with_jobs", job_count
+                company['name'], result['url'], job_count
             )
             self.db.save_jobs(company_id, self.platform_name, jobs)
             
@@ -224,8 +245,7 @@ class LeverScraper(BaseScraper):
             
             if job_count > 0:
                 company_id = self.db.save_company_result(
-                    company, self.platform_name, result['url'], 
-                    "success_with_jobs", job_count
+                    company['name'], result['url'], job_count
                 )
                 self.db.save_jobs(company_id, self.platform_name, jobs)
                 
@@ -235,8 +255,7 @@ class LeverScraper(BaseScraper):
                 )
             else:
                 self.db.save_company_result(
-                    company, self.platform_name, result['url'], 
-                    "success_no_jobs", 0
+                    company['name'], result['url'], 0
                 )
                 
                 return ScrapingResult(
@@ -254,8 +273,7 @@ class LeverScraper(BaseScraper):
             job_count = len(jobs)
             
             company_id = self.db.save_company_result(
-                company, self.platform_name, result['url'], 
-                "success_with_jobs_search", job_count
+                company['name'], result['url'], job_count
             )
             self.db.save_jobs(company_id, self.platform_name, jobs)
             
@@ -267,7 +285,7 @@ class LeverScraper(BaseScraper):
         # All methods failed
         error_status = f"error_{result.get('status_code', 'unknown')}"
         self.db.save_company_result(
-            company, self.platform_name, 'N/A', error_status, 0
+            company['name'], None, 0
         )
         
         return ScrapingResult(

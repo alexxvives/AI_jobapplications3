@@ -86,6 +86,51 @@ This platform has **3 core modules** that work together:
    - `job_application` module generates form-filling instructions
    - Extension fills forms and shows progress overlay
 
+---
+
+## 🚀 Job Application Automation Process (Detailed)
+
+### **Simplify.jobs-Style Chrome Extension Workflow**
+
+**Phase 1: User Initiation**
+1. User browses jobs and selects multiple jobs to apply to
+2. User chooses which profile/resume to use for applications  
+3. User clicks "Start Applying" button
+4. Backend prepares application queue and creates automation session
+
+**Phase 2: Per-Job Automation Loop**
+1. System opens new browser tab with first job's application URL
+2. Chrome extension automatically detects job page and activates itself (no manual opening required)
+3. Extension popup/sidebar appears showing:
+   - Current progress (e.g., "Job 1 of 5")
+   - Profile data being used
+   - Form filling status/progress
+   - "Waiting for user submission" indicator
+
+**Phase 3: Form Filling & User Interaction**
+1. Extension automatically fills form fields using profile data
+2. User reviews filled information and can make adjustments
+3. User manually clicks the job site's "Submit Application" button
+4. Extension monitors for successful submission
+
+**Phase 4: Progression Control**
+1. Extension detects user has submitted the application
+2. System confirms submission was successful
+3. **ONLY AFTER** successful submission, open next job tab
+4. Repeat loop for remaining jobs
+
+**Phase 5: Error Handling**
+- If submission fails: DO NOT proceed to next job, show error state
+- If user cancels: Allow skip current job or stop entire process  
+- If page errors: DO NOT proceed, handle gracefully
+
+### **Critical Requirements**
+- ✅ User-controlled submission (extension fills, user submits)
+- ✅ Wait for submission before proceeding to next job
+- ✅ Error blocking (no progression if anything fails)
+- ✅ Auto-extension activation on job page load
+- ✅ Progress tracking and user feedback
+
 4. **Tracking & Management**
    - Application status tracked in dashboard
    - Users can review/edit before submission
@@ -329,11 +374,14 @@ Load unpacked from chrome-extension/ directory
 - ✅ **React frontend** with profile management
 - ✅ **Chrome extension structure**
 - ✅ **FastAPI backend** with SQLAlchemy + SQLite
+- ✅ **Chrome Extension Form Filling** (2025-07-14): Complete cross-domain communication and automated form filling
+- ✅ **Programmatic Resume Upload**: Automatic resume download and upload to file input fields
+- ✅ **Advanced Field Mapping**: Handles complex UUID-based field names, languages, locations, visa requirements
+- ✅ **Anti-Hallucination**: Only fills actual profile data, no hardcoded defaults
 
 🔄 **In Progress**:
 - **Job scraping scale-up**: Test more Lever companies, fix other platform scrapers
-- **Chrome extension ↔ Ollama integration**
-- **Advanced form field detection**
+- **Form filling edge cases**: Final debugging of specific field types and dropdown matching
 
 🗓️ **Planned**:
 - **Application status tracking**

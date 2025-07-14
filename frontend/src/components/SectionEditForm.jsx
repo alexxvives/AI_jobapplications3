@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { COUNTRIES, VISA_OPTIONS } from '../utils/countries'
 
 function SectionEditForm({ section, data, onSave, onCancel }) {
   const [formData, setFormData] = useState(data)
@@ -130,19 +131,10 @@ function SectionEditForm({ section, data, onSave, onCancel }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Country Code</label>
-            <input
-              type="text"
-              value={formData.personal_information?.contact_information?.country_code || ''}
-              onChange={(e) => handleInputChange('personal_information.contact_information.country_code', e.target.value)}
-              placeholder="+1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Telephone</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number (include country code)</label>
             <input
               type="tel"
+              placeholder="e.g., +1 (555) 123-4567"
               value={formData.personal_information?.contact_information?.telephone || ''}
               onChange={(e) => handleInputChange('personal_information.contact_information.telephone', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -193,21 +185,29 @@ function SectionEditForm({ section, data, onSave, onCancel }) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-            <input
-              type="text"
+            <select
               value={formData.personal_information?.address?.country || ''}
               onChange={(e) => handleInputChange('personal_information.address.country', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            >
+              <option value="">Select a country...</option>
+              {COUNTRIES.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Citizenship</label>
-            <input
-              type="text"
+            <select
               value={formData.personal_information?.address?.citizenship || ''}
               onChange={(e) => handleInputChange('personal_information.address.citizenship', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            >
+              <option value="">Select citizenship...</option>
+              {COUNTRIES.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -558,15 +558,16 @@ function SectionEditForm({ section, data, onSave, onCancel }) {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Visa Requirement</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Visa Sponsorship Required</label>
           <select
             value={formData.job_preferences?.visa_requirement || ''}
             onChange={(e) => handleInputChange('job_preferences.visa_requirement', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Select</option>
-            <option value="Yes">Yes</option>
-            <option value="No">No</option>
+            <option value="">Select visa status...</option>
+            {VISA_OPTIONS.map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
           </select>
         </div>
       </div>

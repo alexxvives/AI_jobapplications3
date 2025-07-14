@@ -7,13 +7,27 @@
   "permissions": [
     "activeTab",
     "storage",
-    "scripting"
+    "scripting",
+    "tabs",
+    "contextMenus",
+    "management"
   ],
   
   "host_permissions": [
     "https://*/*",
-    "http://*/*"
+    "http://*/*",
+    "http://localhost:3000/*",
+    "http://localhost:3001/*"
   ],
+  
+  "externally_connectable": {
+    "matches": [
+      "http://localhost:3000/*",
+      "http://localhost:3001/*",
+      "https://localhost:3000/*",
+      "https://localhost:3001/*"
+    ]
+  },
   
   "background": {
     "service_worker": "background.js",
@@ -37,8 +51,16 @@
         "https://recruiting.adp.com/*",
         "https://*.myworkdayjobs.com/*"
       ],
-      "js": ["content.js"],
+      "js": ["form-filler.js", "submission-monitor.js", "content.js"],
       "css": ["content.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://localhost:3000/*",
+        "http://localhost:3001/*"
+      ],
+      "js": ["web-bridge.js"],
       "run_at": "document_idle"
     }
   ],
@@ -50,7 +72,7 @@
   
   "web_accessible_resources": [
     {
-      "resources": ["injected-script.js"],
+      "resources": ["injected-script.js", "form-filler.js", "submission-monitor.js"],
       "matches": ["<all_urls>"]
     }
   ]

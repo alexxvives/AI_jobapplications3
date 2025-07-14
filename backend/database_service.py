@@ -7,7 +7,7 @@ import sqlite3
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from database import engine, SessionLocal, SCRAPING_DB_PATH
-from models import Base, Job, User, Profile, Application
+from models import Base, Job, User, Profile, Application, Company
 
 
 class UnifiedDatabaseService:
@@ -25,27 +25,8 @@ class UnifiedDatabaseService:
         # Create all SQLAlchemy tables
         Base.metadata.create_all(bind=engine)
         
-        # Create any additional scraper-specific tables if needed
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Company tracking table for scrapers
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS scraper_companies (
-                id INTEGER PRIMARY KEY,
-                name TEXT,
-                domain TEXT,
-                platform TEXT,
-                url TEXT,
-                status TEXT,
-                job_count INTEGER DEFAULT 0,
-                last_scraped TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        conn.commit()
-        conn.close()
+        # The companies table from SQLAlchemy models is sufficient
+        # No additional scraper-specific tables needed
     
     def get_sqlalchemy_session(self) -> Session:
         """Get SQLAlchemy session for ORM operations"""
@@ -69,7 +50,7 @@ class UnifiedDatabaseService:
                 location=job_data.get('location', ''),
                 description=job_data.get('description', ''),
                 link=job_data.get('link', ''),
-                source=job_data.get('platform', job_data.get('source', '')),
+                platform=job_data.get('platform', job_data.get('source', '')),
                 job_type=job_data.get('job_type'),
                 work_type=job_data.get('work_type'),
                 experience_level=job_data.get('experience_level'),
@@ -105,25 +86,37 @@ class UnifiedDatabaseService:
                 continue
         return job_ids
     
-    def save_company_result(self, company_name: str, domain: str, platform: str, 
-                          url: str, status: str, job_count: int = 0) -> int:
-        """Save company scraping result"""
-        conn = self.get_raw_connection()
-        cursor = conn.cursor()
-        
+    def save_company_result(self, company_name: str, url: str = None, job_count: int = 0) -> int:
+        """Save company scraping result using simplified companies table"""
+        db = self.get_sqlalchemy_session()
         try:
-            cursor.execute('''
-                INSERT INTO scraper_companies 
-                (name, domain, platform, url, status, job_count, last_scraped)
-                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ''', (company_name, domain, platform, url, status, job_count))
+            # Check for existing company by name
+            existing = db.query(Company).filter(Company.name == company_name).first()
             
-            company_id = cursor.lastrowid
-            conn.commit()
-            return company_id
-            
+            if existing:
+                # Update existing company
+                existing.job_count = job_count
+                if url:
+                    existing.url = url
+                db.commit()
+                return existing.id
+            else:
+                # Create new company
+                company = Company(
+                    name=company_name,
+                    url=url,
+                    job_count=job_count
+                )
+                db.add(company)
+                db.commit()
+                db.refresh(company)
+                return company.id
+                
+        except Exception as e:
+            db.rollback()
+            raise e
         finally:
-            conn.close()
+            db.close()
     
     def get_job_count(self) -> int:
         """Get total number of jobs in database"""
@@ -134,16 +127,16 @@ class UnifiedDatabaseService:
         finally:
             db.close()
     
-    def get_jobs_by_source(self) -> Dict[str, int]:
-        """Get job counts grouped by source/platform"""
+    def get_jobs_by_platform(self) -> Dict[str, int]:
+        """Get job counts grouped by platform"""
         conn = self.get_raw_connection()
         cursor = conn.cursor()
         
         try:
             cursor.execute('''
-                SELECT source, COUNT(*) as count 
+                SELECT platform, COUNT(*) as count 
                 FROM jobs 
-                GROUP BY source
+                GROUP BY platform
             ''')
             
             results = {}

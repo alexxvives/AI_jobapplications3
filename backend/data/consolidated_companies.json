@@ -1,9 +1,13 @@
 {
-  "total_companies": 583,
-  "generated_at": "2025-07-09",
+  "total_companies": 150,
+  "generated_at": "2025-07-13",
   "sources": [
-    "shared_companies.py (tekhycommon)",
-    "CSV files (Workday, ADP, Lever, Workable)"
+    "CSV files (Workday, ADP, Lever)"
+  ],
+  "platforms": [
+    "lever",
+    "adp",
+    "workday"
   ],
   "companies": [
     {
@@ -30,139 +34,6 @@
       ]
     },
     {
-      "name": "Acuity",
-      "domain": "acuity.com",
-      "company_id": "acuity",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Adobe",
-      "domain": "adobe.com",
-      "company_id": "adobe",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Adobe-Analytics",
-      "domain": "adobe-analytics.com",
-      "company_id": "adobe-analytics",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Adyen",
-      "domain": "adyen.com",
-      "company_id": "adyen",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Airbnb-Ltd",
-      "domain": "airbnb-ltd.com",
-      "company_id": "airbnb-ltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown",
-        "greenhouse"
-      ]
-    },
-    {
-      "name": "Airbnbcorp",
-      "domain": "airbnbcorp.com",
-      "company_id": "airbnbcorp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Airbnbinc",
-      "domain": "airbnbinc.com",
-      "company_id": "airbnbinc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Airbnbllc",
-      "domain": "airbnbllc.com",
-      "company_id": "airbnbllc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Airbnbltd",
-      "domain": "airbnbltd.com",
-      "company_id": "airbnbltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Airbrake",
-      "domain": "airbrake.com",
-      "company_id": "airbrake",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Airtable",
-      "domain": "airtable.com",
-      "company_id": "airtable",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Alphabet",
-      "domain": "alphabet.com",
-      "company_id": "alphabet",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Amazon-Llc",
       "domain": "amazon-llc.com",
       "company_id": "amazon-llc",
@@ -172,140 +43,7 @@
       "platforms": [
         "unknown",
         "adp",
-        "ashby",
-        "freshteam",
-        "greenhouse",
-        "gusto",
-        "oracle",
-        "paycom",
-        "paylocity",
-        "personio",
-        "recruitee",
-        "rippling",
-        "teamtailor",
-        "workable",
-        "workday",
-        "zenefits",
-        "zoho"
-      ]
-    },
-    {
-      "name": "Amazoncorp",
-      "domain": "amazoncorp.com",
-      "company_id": "amazoncorp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Amazoninc",
-      "domain": "amazoninc.com",
-      "company_id": "amazoninc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Amazonllc",
-      "domain": "amazonllc.com",
-      "company_id": "amazonllc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Amazonltd",
-      "domain": "amazonltd.com",
-      "company_id": "amazonltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Amazonpay",
-      "domain": "amazonpay.com",
-      "company_id": "amazonpay",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Amd",
-      "domain": "amd.com",
-      "company_id": "amd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Amerisourcebergen",
-      "domain": "amerisourcebergen.com",
-      "company_id": "amerisourcebergen",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Amplitude",
-      "domain": "amplitude.com",
-      "company_id": "amplitude",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Anthem",
-      "domain": "anthem.com",
-      "company_id": "anthem",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Anthropic",
-      "domain": "anthropic.com",
-      "company_id": "anthropic",
-      "sources": [],
-      "platforms": [
-        "ashby"
-      ]
-    },
-    {
-      "name": "Apollo",
-      "domain": "apollo.com",
-      "company_id": "apollo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
+        "workday"
       ]
     },
     {
@@ -318,151 +56,8 @@
       "platforms": [
         "unknown",
         "adp",
-        "ashby",
-        "bamboohr",
-        "breezyhr",
-        "freshteam",
-        "greenhouse",
-        "gusto",
-        "hibob",
-        "icims",
-        "jobvite",
         "lever",
-        "namely",
-        "oracle",
-        "paycom",
-        "paylocity",
-        "personio",
-        "recruitee",
-        "rippling",
-        "smartrecruiters",
-        "successfactors",
-        "teamtailor",
-        "workable",
-        "workday",
-        "zenefits",
-        "zoho"
-      ]
-    },
-    {
-      "name": "Applecorp",
-      "domain": "applecorp.com",
-      "company_id": "applecorp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Appleinc",
-      "domain": "appleinc.com",
-      "company_id": "appleinc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Applellc",
-      "domain": "applellc.com",
-      "company_id": "applellc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Appleltd",
-      "domain": "appleltd.com",
-      "company_id": "appleltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Applied-Materials",
-      "domain": "applied-materials.com",
-      "company_id": "applied-materials",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Asana",
-      "domain": "asana.com",
-      "company_id": "asana",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Atlassian",
-      "domain": "atlassian.com",
-      "company_id": "atlassian",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Att",
-      "domain": "att.com",
-      "company_id": "att",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Autodesk",
-      "domain": "autodesk.com",
-      "company_id": "autodesk",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Aweber",
-      "domain": "aweber.com",
-      "company_id": "aweber",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "BMTX Inc",
-      "domain": "bmtx.com",
-      "company_id": "bmtx",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
+        "workday"
       ]
     },
     {
@@ -499,17 +94,6 @@
       ]
     },
     {
-      "name": "Bancontact",
-      "domain": "bancontact.com",
-      "company_id": "bancontact",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Bank of America Corporation",
       "domain": "bankofamerica.com",
       "company_id": "bankofamerica",
@@ -529,17 +113,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Basecamp",
-      "domain": "basecamp.com",
-      "company_id": "basecamp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -565,17 +138,6 @@
       ]
     },
     {
-      "name": "Bayut Ltd",
-      "domain": "bayut.com",
-      "company_id": "bayut",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
       "name": "Bazaarvoice",
       "domain": "bazaarvoice.com",
       "company_id": "bazaarvoice",
@@ -584,50 +146,6 @@
       ],
       "platforms": [
         "lever"
-      ]
-    },
-    {
-      "name": "Bazaraki Group",
-      "domain": "bazaraki.com",
-      "company_id": "bazaraki",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Bdjobs.com Ltd",
-      "domain": "bdjobs.com",
-      "company_id": "bdjobs",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Bear",
-      "domain": "bear.com",
-      "company_id": "bear",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Beckett Grading",
-      "domain": "beckett.com",
-      "company_id": "beckett",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
       ]
     },
     {
@@ -664,17 +182,6 @@
       ]
     },
     {
-      "name": "Berkshirehathaway",
-      "domain": "berkshirehathaway.com",
-      "company_id": "berkshirehathaway",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Best Egg",
       "domain": "bestegg.com",
       "company_id": "bestegg",
@@ -683,17 +190,6 @@
       ],
       "platforms": [
         "lever"
-      ]
-    },
-    {
-      "name": "Better Impact",
-      "domain": "betterimpact.com",
-      "company_id": "betterimpact",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
       ]
     },
     {
@@ -719,17 +215,6 @@
       ]
     },
     {
-      "name": "Billdesk",
-      "domain": "billdesk.com",
-      "company_id": "billdesk",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Binance",
       "domain": "binance.com",
       "company_id": "binance",
@@ -739,17 +224,6 @@
       "platforms": [
         "unknown",
         "lever"
-      ]
-    },
-    {
-      "name": "Bitbucket",
-      "domain": "bitbucket.com",
-      "company_id": "bitbucket",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -775,17 +249,6 @@
       ]
     },
     {
-      "name": "Bitstamp Ltd",
-      "domain": "bitstamp.net",
-      "company_id": "bitstamp",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
       "name": "Blizzard Entertainment Inc",
       "domain": "blizzard.com",
       "company_id": "blizzard",
@@ -808,17 +271,6 @@
       ]
     },
     {
-      "name": "Boeing",
-      "domain": "boeing.com",
-      "company_id": "boeing",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Bond University",
       "domain": "bond.edu.au",
       "company_id": "bond",
@@ -838,52 +290,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Booking",
-      "domain": "booking.com",
-      "company_id": "booking",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Booksy Inc",
-      "domain": "booksy.com",
-      "company_id": "booksy",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Boostnote",
-      "domain": "boostnote.com",
-      "company_id": "boostnote",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Box Inc",
-      "domain": "boxcdn.net",
-      "company_id": "box",
-      "sources": [
-        "shared_companies",
-        "csv_workable"
-      ],
-      "platforms": [
-        "unknown",
-        "workable"
       ]
     },
     {
@@ -944,48 +350,6 @@
       ]
     },
     {
-      "name": "Buckaroo",
-      "domain": "buckaroo.com",
-      "company_id": "buckaroo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Bugsnag",
-      "domain": "bugsnag.com",
-      "company_id": "bugsnag",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Buildkite",
-      "domain": "buildkite.com",
-      "company_id": "buildkite",
-      "sources": [],
-      "platforms": [
-        "ashby"
-      ]
-    },
-    {
-      "name": "Bukalapak",
-      "domain": "bukalapak.com",
-      "company_id": "bukalapak",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Bumble",
       "domain": "bumble.com",
       "company_id": "bumble",
@@ -994,28 +358,6 @@
       ],
       "platforms": [
         "lever"
-      ]
-    },
-    {
-      "name": "Bunny",
-      "domain": "bunny.com",
-      "company_id": "bunny",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Bunq",
-      "domain": "bunq.com",
-      "company_id": "bunq",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -1041,37 +383,6 @@
       ]
     },
     {
-      "name": "ButterCMS LLC",
-      "domain": "buttercms.com",
-      "company_id": "buttercms",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "ButterflyMX  Inc.",
-      "domain": "butterflymx.com",
-      "company_id": "butterflymx",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Buzzfeed",
-      "domain": "buzzfeed.com",
-      "company_id": "buzzfeed",
-      "sources": [],
-      "platforms": [
-        "greenhouse"
-      ]
-    },
-    {
       "name": "Byrider",
       "domain": "byrider.com",
       "company_id": "byrider",
@@ -1080,17 +391,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Bytedance",
-      "domain": "bytedance.com",
-      "company_id": "bytedance",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -1138,50 +438,6 @@
       ]
     },
     {
-      "name": "Cadence",
-      "domain": "cadence.com",
-      "company_id": "cadence",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Calendly",
-      "domain": "calendly.com",
-      "company_id": "calendly",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Calypso",
-      "domain": "calypso.com",
-      "company_id": "calypso",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Campaign-Monitor",
-      "domain": "campaign-monitor.com",
-      "company_id": "campaign-monitor",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Canadian Broadcasting Corporation",
       "domain": "cbc.ca",
       "company_id": "cbc",
@@ -1201,17 +457,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Canon",
-      "domain": "canon.com",
-      "company_id": "canon",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -1237,17 +482,6 @@
       ]
     },
     {
-      "name": "Capture One",
-      "domain": "captureone.com",
-      "company_id": "captureone",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
       "name": "Carbon Inc",
       "domain": "carbon3d.com",
       "company_id": "carbon3d",
@@ -1256,17 +490,6 @@
       ],
       "platforms": [
         "lever"
-      ]
-    },
-    {
-      "name": "Cardinalhealth",
-      "domain": "cardinalhealth.com",
-      "company_id": "cardinalhealth",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -1281,50 +504,6 @@
       ]
     },
     {
-      "name": "Cashfree",
-      "domain": "cashfree.com",
-      "company_id": "cashfree",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Catch Group Pty Ltd",
-      "domain": "catch.com.au",
-      "company_id": "catch",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Ccavenue",
-      "domain": "ccavenue.com",
-      "company_id": "ccavenue",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Celestino",
-      "domain": "celestino.gr",
-      "company_id": "celestino",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
       "name": "Cell Press",
       "domain": "cell.com",
       "company_id": "cell",
@@ -1333,17 +512,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Centene",
-      "domain": "centene.com",
-      "company_id": "centene",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -1358,17 +526,6 @@
       ]
     },
     {
-      "name": "Checkout",
-      "domain": "checkout.com",
-      "company_id": "checkout",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Chegg Inc",
       "domain": "chegg.com",
       "company_id": "chegg",
@@ -1377,17 +534,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Chevron",
-      "domain": "chevron.com",
-      "company_id": "chevron",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -1402,17 +548,6 @@
       ]
     },
     {
-      "name": "Cisco",
-      "domain": "cisco.com",
-      "company_id": "cisco",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Citibank",
       "domain": "citi.com",
       "company_id": "citi",
@@ -1421,39 +556,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Citrus",
-      "domain": "citrus.com",
-      "company_id": "citrus",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Citygroupinc",
-      "domain": "citygroupinc.com",
-      "company_id": "citygroupinc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Citymapper",
-      "domain": "citymapper.com",
-      "company_id": "citymapper",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
       ]
     },
     {
@@ -1490,28 +592,6 @@
       ]
     },
     {
-      "name": "Clearbit",
-      "domain": "clearbit.com",
-      "company_id": "clearbit",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Clerk",
-      "domain": "clerk.com",
-      "company_id": "clerk",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Cleveland Clinic",
       "domain": "clevelandclinic.org",
       "company_id": "clevelandclinic",
@@ -1520,83 +600,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Clickfunnels",
-      "domain": "clickfunnels.com",
-      "company_id": "clickfunnels",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Clickup",
-      "domain": "clickup.com",
-      "company_id": "clickup",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Close",
-      "domain": "close.com",
-      "company_id": "close",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "CloudLinux Inc",
-      "domain": "cloudlinux.com",
-      "company_id": "cloudlinux",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Cloudflare",
-      "domain": "cloudflare.com",
-      "company_id": "cloudflare",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Cocacola",
-      "domain": "cocacola.com",
-      "company_id": "cocacola",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Coda",
-      "domain": "coda.com",
-      "company_id": "coda",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -1622,17 +625,6 @@
       ]
     },
     {
-      "name": "Coinbase",
-      "domain": "coinbase.com",
-      "company_id": "coinbase",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Coindesk Ltd",
       "domain": "coindesk.com",
       "company_id": "coindesk",
@@ -1641,17 +633,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Coinlist",
-      "domain": "coinlist.co",
-      "company_id": "coinlist",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
       ]
     },
     {
@@ -1688,17 +669,6 @@
       ]
     },
     {
-      "name": "Comcast",
-      "domain": "comcast.com",
-      "company_id": "comcast",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "CommonLit\u00e2\u201e\u00a2",
       "domain": "commonlit.org",
       "company_id": "commonlit",
@@ -1732,28 +702,6 @@
       ]
     },
     {
-      "name": "Connexity Inc",
-      "domain": "connexity.com",
-      "company_id": "connexity",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Constant-Contact",
-      "domain": "constant-contact.com",
-      "company_id": "constant-contact",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Contactout Ltd",
       "domain": "contactout.com",
       "company_id": "contactout",
@@ -1765,17 +713,6 @@
       ]
     },
     {
-      "name": "Convertkit",
-      "domain": "convertkit.com",
-      "company_id": "convertkit",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Cooke Aquaculture Inc",
       "domain": "cookeaqua.com",
       "company_id": "cookeaqua",
@@ -1784,17 +721,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Cookpad Inc",
-      "domain": "cookpad.com",
-      "company_id": "cookpad",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
       ]
     },
     {
@@ -1831,50 +757,6 @@
       ]
     },
     {
-      "name": "Cosmos Sport S.A",
-      "domain": "cosmossport.gr",
-      "company_id": "cosmossport",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Costco",
-      "domain": "costco.com",
-      "company_id": "costco",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Craft",
-      "domain": "craft.com",
-      "company_id": "craft",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Crazy-Egg",
-      "domain": "crazy-egg.com",
-      "company_id": "crazy-egg",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Credit Acceptance Corporation",
       "domain": "creditacceptance.com",
       "company_id": "creditacceptance",
@@ -1883,37 +765,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Crystal Cruises LLC",
-      "domain": "crystalcruises.com",
-      "company_id": "crystalcruises",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Crystalknows Inc",
-      "domain": "crystalknows.com",
-      "company_id": "crystalknows",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Cursor",
-      "domain": "cursor.com",
-      "company_id": "cursor",
-      "sources": [],
-      "platforms": [
-        "ashby"
       ]
     },
     {
@@ -1939,17 +790,6 @@
       ]
     },
     {
-      "name": "Cvs",
-      "domain": "cvs.com",
-      "company_id": "cvs",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Cybex",
       "domain": "cybexintl.com",
       "company_id": "cybexintl",
@@ -1958,147 +798,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Datadog",
-      "domain": "datadog.com",
-      "company_id": "datadog",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Dell",
-      "domain": "dell.com",
-      "company_id": "dell",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Diebold",
-      "domain": "diebold.com",
-      "company_id": "diebold",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Digitalocean",
-      "domain": "digitalocean.com",
-      "company_id": "digitalocean",
-      "sources": [],
-      "platforms": [
-        "greenhouse"
-      ]
-    },
-    {
-      "name": "Discord",
-      "domain": "discord.com",
-      "company_id": "discord",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Disney",
-      "domain": "disney.com",
-      "company_id": "disney",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Doodle",
-      "domain": "doodle.com",
-      "company_id": "doodle",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Doordash",
-      "domain": "doordash.com",
-      "company_id": "doordash",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Dotpay",
-      "domain": "dotpay.com",
-      "company_id": "dotpay",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Drip",
-      "domain": "drip.com",
-      "company_id": "drip",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Dropbox",
-      "domain": "dropbox.com",
-      "company_id": "dropbox",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Elastic",
-      "domain": "elastic.com",
-      "company_id": "elastic",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Eloqua",
-      "domain": "eloqua.com",
-      "company_id": "eloqua",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -2113,160 +812,6 @@
       ]
     },
     {
-      "name": "Eps",
-      "domain": "eps.com",
-      "company_id": "eps",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Etsy",
-      "domain": "etsy.com",
-      "company_id": "etsy",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Evernote",
-      "domain": "evernote.com",
-      "company_id": "evernote",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Expedia",
-      "domain": "expedia.com",
-      "company_id": "expedia",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Express",
-      "domain": "express.com",
-      "company_id": "express",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Exxonmobil",
-      "domain": "exxonmobil.com",
-      "company_id": "exxonmobil",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Facebook-Corp",
-      "domain": "facebook-corp.com",
-      "company_id": "facebook-corp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Facebookcorp",
-      "domain": "facebookcorp.com",
-      "company_id": "facebookcorp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Facebookinc",
-      "domain": "facebookinc.com",
-      "company_id": "facebookinc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Facebookllc",
-      "domain": "facebookllc.com",
-      "company_id": "facebookllc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Facebookltd",
-      "domain": "facebookltd.com",
-      "company_id": "facebookltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fanniemae",
-      "domain": "fanniemae.com",
-      "company_id": "fanniemae",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fastly",
-      "domain": "fastly.com",
-      "company_id": "fastly",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fedex",
-      "domain": "fedex.com",
-      "company_id": "fedex",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Fi",
       "domain": "tryfi.com",
       "company_id": "tryfi",
@@ -2275,806 +820,6 @@
       ],
       "platforms": [
         "lever"
-      ]
-    },
-    {
-      "name": "Fig",
-      "domain": "fig.com",
-      "company_id": "fig",
-      "sources": [],
-      "platforms": [
-        "ashby"
-      ]
-    },
-    {
-      "name": "Figma",
-      "domain": "figma.com",
-      "company_id": "figma",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Finastra",
-      "domain": "finastra.com",
-      "company_id": "finastra",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fis",
-      "domain": "fis.com",
-      "company_id": "fis",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fiserv",
-      "domain": "fiserv.com",
-      "company_id": "fiserv",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fitbit",
-      "domain": "fitbit.com",
-      "company_id": "fitbit",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Flex Your Cyber",
-      "domain": "keepersecurity.com",
-      "company_id": "keepersecurity",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Flipkart",
-      "domain": "flipkart.com",
-      "company_id": "flipkart",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fly",
-      "domain": "fly.com",
-      "company_id": "fly",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Ford",
-      "domain": "ford.com",
-      "company_id": "ford",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fordmotor",
-      "domain": "fordmotor.com",
-      "company_id": "fordmotor",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Forms",
-      "domain": "forms.com",
-      "company_id": "forms",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Foursquare",
-      "domain": "foursquare.com",
-      "company_id": "foursquare",
-      "sources": [],
-      "platforms": [
-        "greenhouse"
-      ]
-    },
-    {
-      "name": "Framer",
-      "domain": "framer.com",
-      "company_id": "framer",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Freddiemac",
-      "domain": "freddiemac.com",
-      "company_id": "freddiemac",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Freecharge",
-      "domain": "freecharge.com",
-      "company_id": "freecharge",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Freshsales",
-      "domain": "freshsales.com",
-      "company_id": "freshsales",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fujifilm",
-      "domain": "fujifilm.com",
-      "company_id": "fujifilm",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fujitsu",
-      "domain": "fujitsu.com",
-      "company_id": "fujitsu",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fullcontact",
-      "domain": "fullcontact.com",
-      "company_id": "fullcontact",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Fullstory",
-      "domain": "fullstory.com",
-      "company_id": "fullstory",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Garena",
-      "domain": "garena.com",
-      "company_id": "garena",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Generaleectric",
-      "domain": "generaleectric.com",
-      "company_id": "generaleectric",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Generalmotors",
-      "domain": "generalmotors.com",
-      "company_id": "generalmotors",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Getresponse",
-      "domain": "getresponse.com",
-      "company_id": "getresponse",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Giropay",
-      "domain": "giropay.com",
-      "company_id": "giropay",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Github",
-      "domain": "github.com",
-      "company_id": "github",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Gitlab",
-      "domain": "gitlab.com",
-      "company_id": "gitlab",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Gm",
-      "domain": "gm.com",
-      "company_id": "gm",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Gojek",
-      "domain": "gojek.com",
-      "company_id": "gojek",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Google-Analytics",
-      "domain": "google-analytics.com",
-      "company_id": "google-analytics",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Google-Corp",
-      "domain": "google-corp.com",
-      "company_id": "google-corp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Googlecorp",
-      "domain": "googlecorp.com",
-      "company_id": "googlecorp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Googleinc",
-      "domain": "googleinc.com",
-      "company_id": "googleinc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Googlellc",
-      "domain": "googlellc.com",
-      "company_id": "googlellc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Googleltd",
-      "domain": "googleltd.com",
-      "company_id": "googleltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Googlepay",
-      "domain": "googlepay.com",
-      "company_id": "googlepay",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Gopro",
-      "domain": "gopro.com",
-      "company_id": "gopro",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Gotomeeting",
-      "domain": "gotomeeting.com",
-      "company_id": "gotomeeting",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Grab",
-      "domain": "grab.com",
-      "company_id": "grab",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Groupon",
-      "domain": "groupon.com",
-      "company_id": "groupon",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Grubhub",
-      "domain": "grubhub.com",
-      "company_id": "grubhub",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown",
-        "greenhouse"
-      ]
-    },
-    {
-      "name": "Haymarket Media Group",
-      "domain": "campaignlive.co.uk",
-      "company_id": "campaignlive",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Heap",
-      "domain": "heap.com",
-      "company_id": "heap",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Height",
-      "domain": "height.com",
-      "company_id": "height",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Hitachi",
-      "domain": "hitachi.com",
-      "company_id": "hitachi",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Homedepot",
-      "domain": "homedepot.com",
-      "company_id": "homedepot",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Honda",
-      "domain": "honda.com",
-      "company_id": "honda",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Honeybadger",
-      "domain": "honeybadger.com",
-      "company_id": "honeybadger",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Honor",
-      "domain": "honor.com",
-      "company_id": "honor",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Hotjar",
-      "domain": "hotjar.com",
-      "company_id": "hotjar",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Huawei",
-      "domain": "huawei.com",
-      "company_id": "huawei",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Hubspot",
-      "domain": "hubspot.com",
-      "company_id": "hubspot",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Humana",
-      "domain": "humana.com",
-      "company_id": "humana",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Ibm",
-      "domain": "ibm.com",
-      "company_id": "ibm",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Ideal",
-      "domain": "ideal.com",
-      "company_id": "ideal",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Infusionsoft",
-      "domain": "infusionsoft.com",
-      "company_id": "infusionsoft",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Ingenico",
-      "domain": "ingenico.com",
-      "company_id": "ingenico",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Instacart",
-      "domain": "instacart.com",
-      "company_id": "instacart",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Instamojo",
-      "domain": "instamojo.com",
-      "company_id": "instamojo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Instapage",
-      "domain": "instapage.com",
-      "company_id": "instapage",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Intel",
-      "domain": "intel.com",
-      "company_id": "intel",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Intuit",
-      "domain": "intuit.com",
-      "company_id": "intuit",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Invision",
-      "domain": "invision.com",
-      "company_id": "invision",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Islestarr Holdings Ltd",
-      "domain": "charlottetilbury.com",
-      "company_id": "charlottetilbury",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Jabong",
-      "domain": "jabong.com",
-      "company_id": "jabong",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Jack-Henry",
-      "domain": "jack-henry.com",
-      "company_id": "jack-henry",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Johnsonjohnson",
-      "domain": "johnsonjohnson.com",
-      "company_id": "johnsonjohnson",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Joplin",
-      "domain": "joplin.com",
-      "company_id": "joplin",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Jotform",
-      "domain": "jotform.com",
-      "company_id": "jotform",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Jpmorgan",
-      "domain": "jpmorgan.com",
-      "company_id": "jpmorgan",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "KNIME.com AG",
-      "domain": "knime.com",
-      "company_id": "knime",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Katalon LLC",
-      "domain": "katalon.com",
-      "company_id": "katalon",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
       ]
     },
     {
@@ -3089,15 +834,6 @@
       ]
     },
     {
-      "name": "Kickstarter",
-      "domain": "kickstarter.com",
-      "company_id": "kickstarter",
-      "sources": [],
-      "platforms": [
-        "greenhouse"
-      ]
-    },
-    {
       "name": "King",
       "domain": "king.com",
       "company_id": "king",
@@ -3106,28 +842,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Kiosked",
-      "domain": "kiosked.com",
-      "company_id": "kiosked",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Kissmetrics",
-      "domain": "kissmetrics.com",
-      "company_id": "kissmetrics",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -3142,28 +856,6 @@
       ]
     },
     {
-      "name": "Kla",
-      "domain": "kla.com",
-      "company_id": "kla",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Klarna",
-      "domain": "klarna.com",
-      "company_id": "klarna",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Klarna Bank AB",
       "domain": "klarna.com",
       "company_id": "klarna",
@@ -3172,17 +864,6 @@
       ],
       "platforms": [
         "lever"
-      ]
-    },
-    {
-      "name": "Klaviyo",
-      "domain": "klaviyo.com",
-      "company_id": "klaviyo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -3230,17 +911,6 @@
       ]
     },
     {
-      "name": "Kroger",
-      "domain": "kroger.com",
-      "company_id": "kroger",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "La Trobe University",
       "domain": "collaw.edu.au",
       "company_id": "collaw",
@@ -3249,159 +919,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Lam-Research",
-      "domain": "lam-research.com",
-      "company_id": "lam-research",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Lattice",
-      "domain": "lattice.com",
-      "company_id": "lattice",
-      "sources": [],
-      "platforms": [
-        "ashby"
-      ]
-    },
-    {
-      "name": "Laverna",
-      "domain": "laverna.com",
-      "company_id": "laverna",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Lazada",
-      "domain": "lazada.com",
-      "company_id": "lazada",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Leadiq",
-      "domain": "leadiq.com",
-      "company_id": "leadiq",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Leadpages",
-      "domain": "leadpages.com",
-      "company_id": "leadpages",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Lg",
-      "domain": "lg.com",
-      "company_id": "lg",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Linear",
-      "domain": "linear.com",
-      "company_id": "linear",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Linkedin",
-      "domain": "linkedin.com",
-      "company_id": "linkedin",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Lockheedmartin",
-      "domain": "lockheedmartin.com",
-      "company_id": "lockheedmartin",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Logrocket",
-      "domain": "logrocket.com",
-      "company_id": "logrocket",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Logseq",
-      "domain": "logseq.com",
-      "company_id": "logseq",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Lucy Burns Institute Inc",
-      "domain": "ballotpedia.org",
-      "company_id": "ballotpedia",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Lyft",
-      "domain": "lyft.com",
-      "company_id": "lyft",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown",
-        "greenhouse"
       ]
     },
     {
@@ -3416,311 +933,14 @@
       ]
     },
     {
-      "name": "Mailchimp",
-      "domain": "mailchimp.com",
-      "company_id": "mailchimp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mailgun",
-      "domain": "mailgun.com",
-      "company_id": "mailgun",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mambu",
-      "domain": "mambu.com",
-      "company_id": "mambu",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mandrill",
-      "domain": "mandrill.com",
-      "company_id": "mandrill",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mark-Text",
-      "domain": "mark-text.com",
-      "company_id": "mark-text",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Marketo",
-      "domain": "marketo.com",
-      "company_id": "marketo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mastercard",
-      "domain": "mastercard.com",
-      "company_id": "mastercard",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mckesson",
-      "domain": "mckesson.com",
-      "company_id": "mckesson",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Meta",
       "domain": "meta.com",
       "company_id": "meta",
       "sources": [],
       "platforms": [
         "adp",
-        "ashby",
-        "bamboohr",
-        "breezyhr",
-        "freshteam",
-        "greenhouse",
-        "gusto",
-        "hibob",
-        "icims",
-        "jobvite",
         "lever",
-        "namely",
-        "oracle",
-        "paycom",
-        "paylocity",
-        "personio",
-        "recruitee",
-        "rippling",
-        "smartrecruiters",
-        "successfactors",
-        "teamtailor",
-        "workable",
-        "workday",
-        "zenefits",
-        "zoho"
-      ]
-    },
-    {
-      "name": "Micron",
-      "domain": "micron.com",
-      "company_id": "micron",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Microsoft-Ltd",
-      "domain": "microsoft-ltd.com",
-      "company_id": "microsoft-ltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Microsoftcorp",
-      "domain": "microsoftcorp.com",
-      "company_id": "microsoftcorp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Microsoftinc",
-      "domain": "microsoftinc.com",
-      "company_id": "microsoftinc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Microsoftllc",
-      "domain": "microsoftllc.com",
-      "company_id": "microsoftllc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Microsoftltd",
-      "domain": "microsoftltd.com",
-      "company_id": "microsoftltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mitsubishi",
-      "domain": "mitsubishi.com",
-      "company_id": "mitsubishi",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mixpanel",
-      "domain": "mixpanel.com",
-      "company_id": "mixpanel",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mobikwik",
-      "domain": "mobikwik.com",
-      "company_id": "mobikwik",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mollie",
-      "domain": "mollie.com",
-      "company_id": "mollie",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Monday",
-      "domain": "monday.com",
-      "company_id": "monday",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Mongodb",
-      "domain": "mongodb.com",
-      "company_id": "mongodb",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Monzo",
-      "domain": "monzo.com",
-      "company_id": "monzo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Multisafepay",
-      "domain": "multisafepay.com",
-      "company_id": "multisafepay",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Murex",
-      "domain": "murex.com",
-      "company_id": "murex",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Myntra",
-      "domain": "myntra.com",
-      "company_id": "myntra",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "N26",
-      "domain": "n26.com",
-      "company_id": "n26",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
+        "workday"
       ]
     },
     {
@@ -3757,17 +977,6 @@
       ]
     },
     {
-      "name": "Napster",
-      "domain": "napster.com",
-      "company_id": "napster",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
       "name": "Nasdaq",
       "domain": "nasdaq.com",
       "company_id": "nasdaq",
@@ -3790,28 +999,6 @@
       ]
     },
     {
-      "name": "Ncr",
-      "domain": "ncr.com",
-      "company_id": "ncr",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Nec",
-      "domain": "nec.com",
-      "company_id": "nec",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "NetBrain",
       "domain": "netbraintech.com",
       "company_id": "netbraintech",
@@ -3823,83 +1010,6 @@
       ]
     },
     {
-      "name": "Netflix-Ltd",
-      "domain": "netflix-ltd.com",
-      "company_id": "netflix-ltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Netflixcorp",
-      "domain": "netflixcorp.com",
-      "company_id": "netflixcorp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Netflixinc",
-      "domain": "netflixinc.com",
-      "company_id": "netflixinc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Netflixllc",
-      "domain": "netflixllc.com",
-      "company_id": "netflixllc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Netflixltd",
-      "domain": "netflixltd.com",
-      "company_id": "netflixltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Netlify",
-      "domain": "netlify.com",
-      "company_id": "netlify",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "News Break",
-      "domain": "newsbreak.com",
-      "company_id": "newsbreak",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
       "name": "Nexxt Inc",
       "domain": "nexxt.com",
       "company_id": "nexxt",
@@ -3908,61 +1018,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Nielsen",
-      "domain": "nielsen.com",
-      "company_id": "nielsen",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Nike Inc",
-      "domain": "nike.com",
-      "company_id": "nike",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Nikon",
-      "domain": "nikon.com",
-      "company_id": "nikon",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Nissan",
-      "domain": "nissan.com",
-      "company_id": "nissan",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Nixdorf",
-      "domain": "nixdorf.com",
-      "company_id": "nixdorf",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -3999,28 +1054,6 @@
       ]
     },
     {
-      "name": "Notable",
-      "domain": "notable.com",
-      "company_id": "notable",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Notion",
-      "domain": "notion.com",
-      "company_id": "notion",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Nuance Communications Inc",
       "domain": "nuance.com",
       "company_id": "nuance",
@@ -4029,28 +1062,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Nvidia",
-      "domain": "nvidia.com",
-      "company_id": "nvidia",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Nykaa",
-      "domain": "nykaa.com",
-      "company_id": "nykaa",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -4065,17 +1076,6 @@
       ]
     },
     {
-      "name": "Obsidian",
-      "domain": "obsidian.com",
-      "company_id": "obsidian",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Oclc Inc",
       "domain": "oclc.org",
       "company_id": "oclc",
@@ -4084,28 +1084,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Octopus",
-      "domain": "octopus.com",
-      "company_id": "octopus",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Ogone",
-      "domain": "ogone.com",
-      "company_id": "ogone",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -4120,17 +1098,6 @@
       ]
     },
     {
-      "name": "Ola",
-      "domain": "ola.com",
-      "company_id": "ola",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Olo Inc",
       "domain": "olo.com",
       "company_id": "olo",
@@ -4142,39 +1109,6 @@
       ]
     },
     {
-      "name": "Olympus",
-      "domain": "olympus.com",
-      "company_id": "olympus",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Omnisend",
-      "domain": "omnisend.com",
-      "company_id": "omnisend",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "OnBuy",
-      "domain": "onbuy.com",
-      "company_id": "onbuy",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
       "name": "OnTheMarket.com",
       "domain": "onthemarket.com",
       "company_id": "onthemarket",
@@ -4183,28 +1117,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Onenote",
-      "domain": "onenote.com",
-      "company_id": "onenote",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Oneplus",
-      "domain": "oneplus.com",
-      "company_id": "oneplus",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -4230,39 +1142,6 @@
       ]
     },
     {
-      "name": "Oppo",
-      "domain": "oppo.com",
-      "company_id": "oppo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Optimizely",
-      "domain": "optimizely.com",
-      "company_id": "optimizely",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Oracle",
-      "domain": "oracle.com",
-      "company_id": "oracle",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Oregon State Treasury",
       "domain": "oregon.gov",
       "company_id": "oregon",
@@ -4271,17 +1150,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Outreach",
-      "domain": "outreach.com",
-      "company_id": "outreach",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -4307,17 +1175,6 @@
       ]
     },
     {
-      "name": "Overstock",
-      "domain": "overstock.com",
-      "company_id": "overstock",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Oxfam GB",
       "domain": "oxfam.org.uk",
       "company_id": "oxfam",
@@ -4329,484 +1186,6 @@
       ]
     },
     {
-      "name": "Palantir",
-      "domain": "palantir.com",
-      "company_id": "palantir",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Panasonic",
-      "domain": "panasonic.com",
-      "company_id": "panasonic",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Pandora",
-      "domain": "pandora.com",
-      "company_id": "pandora",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Pardot",
-      "domain": "pardot.com",
-      "company_id": "pardot",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Pay",
-      "domain": "pay.com",
-      "company_id": "pay",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Paynl",
-      "domain": "paynl.com",
-      "company_id": "paynl",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Paypal",
-      "domain": "paypal.com",
-      "company_id": "paypal",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Payroll And Benefits",
-      "domain": "payroll and benefits.com",
-      "company_id": "payroll and benefits",
-      "sources": [],
-      "platforms": [
-        "gusto",
-        "namely",
-        "zenefits"
-      ]
-    },
-    {
-      "name": "Paytm",
-      "domain": "paytm.com",
-      "company_id": "paytm",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Payu",
-      "domain": "payu.com",
-      "company_id": "payu",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Peloton",
-      "domain": "peloton.com",
-      "company_id": "peloton",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Pendo",
-      "domain": "pendo.com",
-      "company_id": "pendo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Penta",
-      "domain": "penta.com",
-      "company_id": "penta",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Pepsi",
-      "domain": "pepsi.com",
-      "company_id": "pepsi",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Petlab Co",
-      "domain": "thepetlabco.com",
-      "company_id": "thepetlabco",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Pfizer",
-      "domain": "pfizer.com",
-      "company_id": "pfizer",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Phillips66",
-      "domain": "phillips66.com",
-      "company_id": "phillips66",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Phonepe",
-      "domain": "phonepe.com",
-      "company_id": "phonepe",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Pinterest",
-      "domain": "pinterest.com",
-      "company_id": "pinterest",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Pipedrive",
-      "domain": "pipedrive.com",
-      "company_id": "pipedrive",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Pipl",
-      "domain": "pipl.com",
-      "company_id": "pipl",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Plaid",
-      "domain": "plaid.com",
-      "company_id": "plaid",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Plane",
-      "domain": "plane.com",
-      "company_id": "plane",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Planetscale",
-      "domain": "planetscale.com",
-      "company_id": "planetscale",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Pointclickcare",
-      "domain": "pointclickcare.com",
-      "company_id": "pointclickcare",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Postmark",
-      "domain": "postmark.com",
-      "company_id": "postmark",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Postmates",
-      "domain": "postmates.com",
-      "company_id": "postmates",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Productivity",
-      "domain": "productivity.com",
-      "company_id": "productivity",
-      "sources": [],
-      "platforms": [
-        "zoho"
-      ]
-    },
-    {
-      "name": "Progressive Turnout Project",
-      "domain": "turnoutpac.org",
-      "company_id": "turnoutpac",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Przelewy24",
-      "domain": "przelewy24.com",
-      "company_id": "przelewy24",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Qonto",
-      "domain": "qonto.com",
-      "company_id": "qonto",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Qownnotes",
-      "domain": "qownnotes.com",
-      "company_id": "qownnotes",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Qualcomm",
-      "domain": "qualcomm.com",
-      "company_id": "qualcomm",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Qualtrics",
-      "domain": "qualtrics.com",
-      "company_id": "qualtrics",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Railway",
-      "domain": "railway.com",
-      "company_id": "railway",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Razorpay",
-      "domain": "razorpay.com",
-      "company_id": "razorpay",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Realme",
-      "domain": "realme.com",
-      "company_id": "realme",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Recruitment",
-      "domain": "recruitment.com",
-      "company_id": "recruitment",
-      "sources": [],
-      "platforms": [
-        "successfactors"
-      ]
-    },
-    {
-      "name": "Reddit",
-      "domain": "reddit.com",
-      "company_id": "reddit",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Render",
-      "domain": "render.com",
-      "company_id": "render",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Retool",
-      "domain": "retool.com",
-      "company_id": "retool",
-      "sources": [],
-      "platforms": [
-        "ashby"
-      ]
-    },
-    {
-      "name": "Revolut",
-      "domain": "revolut.com",
-      "company_id": "revolut",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Ricoh",
-      "domain": "ricoh.com",
-      "company_id": "ricoh",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Roam",
-      "domain": "roam.com",
-      "company_id": "roam",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Robert Sanders",
       "domain": "calendly.com",
       "company_id": "calendly",
@@ -4815,455 +1194,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "Roku",
-      "domain": "roku.com",
-      "company_id": "roku",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Rollbar",
-      "domain": "rollbar.com",
-      "company_id": "rollbar",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Salesforce",
-      "domain": "salesforce.com",
-      "company_id": "salesforce",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Salesloft",
-      "domain": "salesloft.com",
-      "company_id": "salesloft",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Samsung",
-      "domain": "samsung.com",
-      "company_id": "samsung",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sap",
-      "domain": "sap.com",
-      "company_id": "sap",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Scale",
-      "domain": "scale.com",
-      "company_id": "scale",
-      "sources": [],
-      "platforms": [
-        "ashby"
-      ]
-    },
-    {
-      "name": "Sea",
-      "domain": "sea.com",
-      "company_id": "sea",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Segment",
-      "domain": "segment.com",
-      "company_id": "segment",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sendgrid",
-      "domain": "sendgrid.com",
-      "company_id": "sendgrid",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sendinblue",
-      "domain": "sendinblue.com",
-      "company_id": "sendinblue",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sentry",
-      "domain": "sentry.com",
-      "company_id": "sentry",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Servicenow",
-      "domain": "servicenow.com",
-      "company_id": "servicenow",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sharp",
-      "domain": "sharp.com",
-      "company_id": "sharp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Shopee",
-      "domain": "shopee.com",
-      "company_id": "shopee",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Shopify",
-      "domain": "shopify.com",
-      "company_id": "shopify",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Simplenote",
-      "domain": "simplenote.com",
-      "company_id": "simplenote",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sisow",
-      "domain": "sisow.com",
-      "company_id": "sisow",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sketch",
-      "domain": "sketch.com",
-      "company_id": "sketch",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Slack",
-      "domain": "slack.com",
-      "company_id": "slack",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Snap",
-      "domain": "snap.com",
-      "company_id": "snap",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Snapdeal",
-      "domain": "snapdeal.com",
-      "company_id": "snapdeal",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Snowflake",
-      "domain": "snowflake.com",
-      "company_id": "snowflake",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sofort",
-      "domain": "sofort.com",
-      "company_id": "sofort",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Solaris",
-      "domain": "solaris.com",
-      "company_id": "solaris",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Solarisbank",
-      "domain": "solarisbank.com",
-      "company_id": "solarisbank",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sony",
-      "domain": "sony.com",
-      "company_id": "sony",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sourcegraph",
-      "domain": "sourcegraph.com",
-      "company_id": "sourcegraph",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Sparkpost",
-      "domain": "sparkpost.com",
-      "company_id": "sparkpost",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Splunk",
-      "domain": "splunk.com",
-      "company_id": "splunk",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Spokeo",
-      "domain": "spokeo.com",
-      "company_id": "spokeo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Spotify",
-      "domain": "spotify.com",
-      "company_id": "spotify",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Square",
-      "domain": "square.com",
-      "company_id": "square",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Starbucks",
-      "domain": "starbucks.com",
-      "company_id": "starbucks",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Starling",
-      "domain": "starling.com",
-      "company_id": "starling",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Stripe",
-      "domain": "stripe.com",
-      "company_id": "stripe",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Supabase",
-      "domain": "supabase.com",
-      "company_id": "supabase",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Surveymonkey",
-      "domain": "surveymonkey.com",
-      "company_id": "surveymonkey",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Swiggy",
-      "domain": "swiggy.com",
-      "company_id": "swiggy",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Symphony",
-      "domain": "symphony.com",
-      "company_id": "symphony",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Synopsys",
-      "domain": "synopsys.com",
-      "company_id": "synopsys",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -5344,17 +1274,6 @@
       ]
     },
     {
-      "name": "Tableau",
-      "domain": "tableau.com",
-      "company_id": "tableau",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Tait Ltd",
       "domain": "taitradio.com",
       "company_id": "taitradio",
@@ -5363,17 +1282,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Talent.com",
-      "domain": "talent.com",
-      "company_id": "talent",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
       ]
     },
     {
@@ -5388,17 +1296,6 @@
       ]
     },
     {
-      "name": "Target",
-      "domain": "target.com",
-      "company_id": "target",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Tarkett",
       "domain": "tarkett.com",
       "company_id": "tarkett",
@@ -5410,28 +1307,6 @@
       ]
     },
     {
-      "name": "Team17",
-      "domain": "team17.com",
-      "company_id": "team17",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Teams",
-      "domain": "teams.com",
-      "company_id": "teams",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Techstars",
       "domain": "techstars.com",
       "company_id": "techstars",
@@ -5440,30 +1315,7 @@
         "csv_workable"
       ],
       "platforms": [
-        "lever",
-        "workable"
-      ]
-    },
-    {
-      "name": "Temenos",
-      "domain": "temenos.com",
-      "company_id": "temenos",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Tenjin Inc",
-      "domain": "tenjin.com",
-      "company_id": "tenjin",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
+        "lever"
       ]
     },
     {
@@ -5486,41 +1338,7 @@
         "csv_workable"
       ],
       "platforms": [
-        "lever",
-        "workable"
-      ]
-    },
-    {
-      "name": "Termly.io",
-      "domain": "termly.io",
-      "company_id": "termly",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Tesla",
-      "domain": "tesla.com",
-      "company_id": "tesla",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Texas-Instruments",
-      "domain": "texas-instruments.com",
-      "company_id": "texas-instruments",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
+        "lever"
       ]
     },
     {
@@ -5576,17 +1394,6 @@
       ],
       "platforms": [
         "workday"
-      ]
-    },
-    {
-      "name": "The Drum",
-      "domain": "thedrum.com",
-      "company_id": "thedrum",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
       ]
     },
     {
@@ -5649,17 +1456,6 @@
       ]
     },
     {
-      "name": "Third Space Learning",
-      "domain": "thirdspacelearning.com",
-      "company_id": "thirdspacelearning",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
       "name": "Thomson Reuters Corporation",
       "domain": "thomsonreuters.com",
       "company_id": "thomsonreuters",
@@ -5704,17 +1500,6 @@
       ]
     },
     {
-      "name": "Tiktok",
-      "domain": "tiktok.com",
-      "company_id": "tiktok",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Timehop Inc",
       "domain": "timehop.com",
       "company_id": "timehop",
@@ -5734,28 +1519,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Tokopedia",
-      "domain": "tokopedia.com",
-      "company_id": "tokopedia",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Toshiba",
-      "domain": "toshiba.com",
-      "company_id": "toshiba",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -5781,17 +1544,6 @@
       ]
     },
     {
-      "name": "Toyota",
-      "domain": "toyota.com",
-      "company_id": "toyota",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Toyota Usa Foundation",
       "domain": "toyota.com",
       "company_id": "toyota",
@@ -5814,39 +1566,6 @@
       ]
     },
     {
-      "name": "Travis CI",
-      "domain": "travis-ci.com",
-      "company_id": "travis-ci",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Travis CI GmbH",
-      "domain": "travis-ci.org",
-      "company_id": "travis-ci",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Treatwell",
-      "domain": "treatwell.co.uk",
-      "company_id": "treatwell",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
       "name": "Treering",
       "domain": "treering.com",
       "company_id": "treering",
@@ -5855,17 +1574,6 @@
       ],
       "platforms": [
         "lever"
-      ]
-    },
-    {
-      "name": "Trello",
-      "domain": "trello.com",
-      "company_id": "trello",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -5880,17 +1588,6 @@
       ]
     },
     {
-      "name": "Tripadvisor",
-      "domain": "tripadvisor.com",
-      "company_id": "tripadvisor",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "TripleLift",
       "domain": "triplelift.com",
       "company_id": "triplelift",
@@ -5899,39 +1596,6 @@
       ],
       "platforms": [
         "adp"
-      ]
-    },
-    {
-      "name": "Truphone Ltd",
-      "domain": "truphone.com",
-      "company_id": "truphone",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "Turtl",
-      "domain": "turtl.com",
-      "company_id": "turtl",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Twilio",
-      "domain": "twilio.com",
-      "company_id": "twilio",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
       ]
     },
     {
@@ -5946,347 +1610,6 @@
       ]
     },
     {
-      "name": "Twitch",
-      "domain": "twitch.com",
-      "company_id": "twitch",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Twitter",
-      "domain": "twitter.com",
-      "company_id": "twitter",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Typeform",
-      "domain": "typeform.com",
-      "company_id": "typeform",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Typora",
-      "domain": "typora.com",
-      "company_id": "typora",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Uber",
-      "domain": "uber.com",
-      "company_id": "uber",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Ubercorp",
-      "domain": "ubercorp.com",
-      "company_id": "ubercorp",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Uberinc",
-      "domain": "uberinc.com",
-      "company_id": "uberinc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Uberllc",
-      "domain": "uberllc.com",
-      "company_id": "uberllc",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Uberltd",
-      "domain": "uberltd.com",
-      "company_id": "uberltd",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Ulysses",
-      "domain": "ulysses.com",
-      "company_id": "ulysses",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Unbounce",
-      "domain": "unbounce.com",
-      "company_id": "unbounce",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Unitedhealthgroup",
-      "domain": "unitedhealthgroup.com",
-      "company_id": "unitedhealthgroup",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Unity",
-      "domain": "unity.com",
-      "company_id": "unity",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Ups",
-      "domain": "ups.com",
-      "company_id": "ups",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Valero",
-      "domain": "valero.com",
-      "company_id": "valero",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Vercel",
-      "domain": "vercel.com",
-      "company_id": "vercel",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Verifone",
-      "domain": "verifone.com",
-      "company_id": "verifone",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Verizon",
-      "domain": "verizon.com",
-      "company_id": "verizon",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Visa",
-      "domain": "visa.com",
-      "company_id": "visa",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Vivo",
-      "domain": "vivo.com",
-      "company_id": "vivo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Vmware",
-      "domain": "vmware.com",
-      "company_id": "vmware",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Vnote",
-      "domain": "vnote.com",
-      "company_id": "vnote",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Walgreens",
-      "domain": "walgreens.com",
-      "company_id": "walgreens",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Walmart",
-      "domain": "walmart.com",
-      "company_id": "walmart",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Wayfair",
-      "domain": "wayfair.com",
-      "company_id": "wayfair",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Webex",
-      "domain": "webex.com",
-      "company_id": "webex",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "When2Meet",
-      "domain": "when2meet.com",
-      "company_id": "when2meet",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Whitepages",
-      "domain": "whitepages.com",
-      "company_id": "whitepages",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Wincor",
-      "domain": "wincor.com",
-      "company_id": "wincor",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Workday",
-      "domain": "workday.com",
-      "company_id": "workday",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Worldpay",
-      "domain": "worldpay.com",
-      "company_id": "worldpay",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
       "name": "Worthington Cylinder Corporation",
       "domain": "bernzomatic.com",
       "company_id": "bernzomatic",
@@ -6298,105 +1621,6 @@
       ]
     },
     {
-      "name": "Xiaomi",
-      "domain": "xiaomi.com",
-      "company_id": "xiaomi",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Zendesk",
-      "domain": "zendesk.com",
-      "company_id": "zendesk",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Zettlr",
-      "domain": "zettlr.com",
-      "company_id": "zettlr",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Zoho",
-      "domain": "zoho.com",
-      "company_id": "zoho",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Zomato",
-      "domain": "zomato.com",
-      "company_id": "zomato",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Zoom",
-      "domain": "zoom.com",
-      "company_id": "zoom",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "Zoominfo",
-      "domain": "zoominfo.com",
-      "company_id": "zoominfo",
-      "sources": [
-        "shared_companies"
-      ],
-      "platforms": [
-        "unknown"
-      ]
-    },
-    {
-      "name": "balena",
-      "domain": "balena.io",
-      "company_id": "balena",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "battlefy.com",
-      "domain": "battlefy.com",
-      "company_id": "battlefy",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
       "name": "bonusprint",
       "domain": "bonusprint.co.uk",
       "company_id": "bonusprint",
@@ -6405,28 +1629,6 @@
       ],
       "platforms": [
         "lever"
-      ]
-    },
-    {
-      "name": "cliniko.com",
-      "domain": "cliniko.com",
-      "company_id": "cliniko",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
-      ]
-    },
-    {
-      "name": "n8n GmbH",
-      "domain": "n8n.io",
-      "company_id": "n8n",
-      "sources": [
-        "csv_workable"
-      ],
-      "platforms": [
-        "workable"
       ]
     },
     {
