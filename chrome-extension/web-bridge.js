@@ -69,22 +69,24 @@ window.addEventListener('message', async (event) => {
             });
             
             // Check if chrome.storage is available - TEST_ID: CHROME_STORAGE_FIX_v16
+            let verification = null;
             if (chrome && chrome.storage && chrome.storage.local) {
                 await chrome.storage.local.set(storageData);
                 console.log('🌉 ✅ Automation data stored in Chrome storage from frontend!');
                 
                 // Verify storage worked
-                const verification = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive']);
+                verification = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive']);
+                console.log('🌉 ✅ Storage verification:', {
+                    hasProfile: !!verification.userProfile,
+                    profileName: verification.userProfile?.full_name,
+                    hasSession: !!verification.currentSessionId,
+                    isActive: verification.automationActive
+                });
             } else {
                 console.log('🌉 ⚠️ Chrome storage not available on this domain, using localStorage fallback');
                 localStorage.setItem('chromeExtensionAutomationData', JSON.stringify(storageData));
+                console.log('🌉 ✅ Storage verification: Using localStorage fallback (no verification available)');
             }
-            console.log('🌉 ✅ Storage verification:', {
-                hasProfile: !!verification.userProfile,
-                profileName: verification.userProfile?.full_name,
-                hasSession: !!verification.currentSessionId,
-                isActive: verification.automationActive
-            });
             
             // Also send to background script to notify all tabs
             if (chrome.runtime && chrome.runtime.sendMessage) {
