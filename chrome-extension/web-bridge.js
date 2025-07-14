@@ -68,11 +68,17 @@ window.addEventListener('message', async (event) => {
                 active: storageData.automationActive
             });
             
-            await chrome.storage.local.set(storageData);
-            console.log('🌉 ✅ Automation data stored in Chrome storage from frontend!');
-            
-            // Verify storage worked
-            const verification = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive']);
+            // Check if chrome.storage is available - TEST_ID: CHROME_STORAGE_FIX_v16
+            if (chrome && chrome.storage && chrome.storage.local) {
+                await chrome.storage.local.set(storageData);
+                console.log('🌉 ✅ Automation data stored in Chrome storage from frontend!');
+                
+                // Verify storage worked
+                const verification = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive']);
+            } else {
+                console.log('🌉 ⚠️ Chrome storage not available on this domain, using localStorage fallback');
+                localStorage.setItem('chromeExtensionAutomationData', JSON.stringify(storageData));
+            }
             console.log('🌉 ✅ Storage verification:', {
                 hasProfile: !!verification.userProfile,
                 profileName: verification.userProfile?.full_name,

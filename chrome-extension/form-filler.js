@@ -284,6 +284,13 @@ class SmartFormFiller {
                 field: 'willing_to_relocate',
                 value: jobPrefs.willing_to_relocate || '',
                 confidence: 0.8
+            },
+            // Resume/File Upload - TEST_ID: RESUME_MODERN_v16
+            {
+                patterns: ['resume', 'cv', 'curriculum vitae', 'attach resume', 'upload resume', 'resume file'],
+                field: 'resume',
+                value: 'RESUME_FILE', // Special value to trigger file upload
+                confidence: 0.95
             }
         ];
 
@@ -390,6 +397,8 @@ class SmartFormFiller {
                 return await this.fillSelectField(element, value, fieldInfo);
             } else if (element.type === 'checkbox' || element.type === 'radio') {
                 return await this.fillBooleanField(element, value, fieldInfo);
+            } else if (element.type === 'file') {
+                return await this.fillFileField(element, value, fieldInfo);
             } else {
                 return await this.fillTextField(element, value, fieldInfo);
             }
@@ -524,6 +533,46 @@ class SmartFormFiller {
             total: this.totalFields,
             percentage: this.totalFields > 0 ? (this.filledFields / this.totalFields) * 100 : 0
         };
+    }
+
+    async fillFileField(element, value, fieldInfo) {
+        // Handle resume upload using legacy handleResumeUpload function - TEST_ID: RESUME_MODERN_v16
+        try {
+            console.log(`📎 TEST_ID: RESUME_MODERN_v16 - File field detected in modern system: ${fieldInfo.name || fieldInfo.id}`);
+            
+            // Get the legacy resume upload function from content script
+            if (window.jobApplicationAssistant && window.jobApplicationAssistant.handleResumeUpload) {
+                console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Using legacy resume upload function`);
+                const success = await window.jobApplicationAssistant.handleResumeUpload(element, {
+                    name: fieldInfo.name,
+                    id: fieldInfo.id,
+                    type: 'file'
+                });
+                
+                return {
+                    field: fieldInfo.label || fieldInfo.name,
+                    success: success,
+                    value: success ? 'Resume uploaded' : 'Upload failed',
+                    error: success ? null : 'Resume upload failed'
+                };
+            } else {
+                console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Legacy resume upload function not available`);
+                return {
+                    field: fieldInfo.label || fieldInfo.name,
+                    success: false,
+                    value: '',
+                    error: 'Resume upload function not available'
+                };
+            }
+        } catch (error) {
+            console.error('📎 TEST_ID: RESUME_MODERN_v16 - Error in file field handling:', error);
+            return {
+                field: fieldInfo.label || fieldInfo.name,
+                success: false,
+                value: '',
+                error: error.message
+            };
+        }
     }
 
     async generateCoverLetter(jobDescription) {
