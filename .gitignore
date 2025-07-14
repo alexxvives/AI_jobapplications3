@@ -122,5 +122,10 @@ bin/ollama
 backend/storage/resumes/
 backend/storage/temp_automation/
 
-# Ollama directory
+# Ollama directory and logs
 ollama/
+ollama.log
+
+# Chrome extension testing files
+test_chrome_storage.html
+chrome_storage_test.js
