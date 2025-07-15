@@ -90,11 +90,7 @@ class JobApplicationAssistant {
                             console.log('🔄 UI updated with new profile data');
                         }
                         
-                        // Stop polling since we found data
-                        if (this.profilePollingInterval) {
-                            clearInterval(this.profilePollingInterval);
-                            console.log('✅ Profile polling stopped - data received via message');
-                        }
+                        // Profile data loaded via message
                         
                     } catch (error) {
                         console.error('❌ Error storing automation data from window message:', error);
@@ -127,86 +123,8 @@ class JobApplicationAssistant {
         }
     }
 
-    startProfilePolling() {
-        console.log('🔄 Starting profile polling (checking every 2 seconds for 30 seconds)...');
-        console.log('🔥 DEBUG: USING NEW SMART POLLING - LOGS EVERY 10 SECONDS 🔥');
-        let pollCount = 0;
-        
-        // Check Chrome storage every 2 seconds for new automation data
-        this.profilePollingInterval = setInterval(async () => {
-            try {
-                pollCount++;
-                const result = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive', 'currentJob']);
-                
-                // Only log every 5th poll (every 10 seconds) unless we find data
-                const shouldLog = pollCount % 5 === 1 || result.userProfile;
-                
-                if (shouldLog) {
-                    console.log(`🔍 Profile poll #${pollCount}:`, {
-                        hasProfile: !!result.userProfile,
-                        hasSession: !!result.currentSessionId,
-                        isActive: !!result.automationActive,
-                        profileName: result.userProfile?.full_name || result.userProfile?.email || 'None'
-                    });
-                }
-                
-                // Only update if we don't have profile data yet
-                if (!this.userProfile) {
-                    // Check Chrome storage first
-                    if (result.userProfile && result.automationActive) {
-                        console.log('✅ Profile found in Chrome storage!');
-                        
-                        this.userProfile = result.userProfile;
-                        this.currentSessionId = result.currentSessionId;
-                        this.automationMode = true;
-                        
-                        this.stopPollingAndStartAutomation();
-                    } else {
-                        // Also check localStorage during polling
-                        const extensionData = localStorage.getItem('chromeExtensionAutomationData');
-                        if (extensionData) {
-                            console.log('✅ Profile found in localStorage!');
-                            const data = JSON.parse(extensionData);
-                            
-                            if (data.userProfile && data.currentSessionId) {
-                                this.userProfile = data.userProfile;
-                                this.currentSessionId = data.currentSessionId;
-                                this.automationMode = data.automationActive;
-                                // Sync to Chrome storage
-                                await chrome.storage.local.set({
-                                    userProfile: this.userProfile,
-                                    currentSessionId: this.currentSessionId,
-                                    automationActive: this.automationMode,
-                                    currentJob: data.currentJob
-                                });
-                                
-                                this.stopPollingAndStartAutomation();
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                if (error.message && error.message.includes('Extension context invalidated')) {
-                    // Extension was reloaded, stop polling gracefully
-                    console.log('⚠️ Extension context invalidated, stopping profile polling');
-                    if (this.profilePollingInterval) {
-                        clearInterval(this.profilePollingInterval);
-                        this.profilePollingInterval = null;
-                    }
-                    return;
-                }
-                console.error('❌ Error in profile polling:', error);
-            }
-        }, 2000); // Poll every 2 seconds instead of 1
-        
-        // Stop polling after 30 seconds to avoid infinite checking
-        setTimeout(() => {
-            if (this.profilePollingInterval) {
-                clearInterval(this.profilePollingInterval);
-                console.log('🛑 Profile polling stopped after 30 second timeout');
-            }
-        }, 30000);
-    }
+    // Removed profile polling - profile is loaded once on page load in loadUserProfile()
+    // This eliminates unnecessary background checking every 2 seconds
 
     stopPollingAndStartAutomation() {
         // Update UI
@@ -223,9 +141,7 @@ class JobApplicationAssistant {
             }, 1000);
         }
         
-        // Stop polling once we have data
-        clearInterval(this.profilePollingInterval);
-        console.log('✅ Profile polling stopped - data found');
+        // Data found and automation started
     }
 
     async init() {
@@ -248,8 +164,7 @@ class JobApplicationAssistant {
             // Check if we're in automation mode
             await this.checkAutomationMode();
             
-            // Set up periodic profile checking (for cross-origin automation)
-            this.startProfilePolling();
+            // Profile already loaded once in loadUserProfile() - no need for polling
         }
     }
 
@@ -680,11 +595,7 @@ class JobApplicationAssistant {
             return;
         }
         
-        // Stop any ongoing polling to prevent duplicate runs
-        if (this.profilePollingInterval) {
-            clearInterval(this.profilePollingInterval);
-            this.profilePollingInterval = null;
-        }
+        // Ready to start form filling
         
         console.log('🚀 Starting form filling with profile:', this.userProfile.full_name || this.userProfile.email);
         

@@ -9,8 +9,10 @@ class SmartFormFiller {
         this.totalFields = 0;
         this.automationSession = null;
         this.progressCallback = null;
+        this.detectedPlatform = this.detectPlatform();
         
         console.log('🧠 Smart Form Filler initialized');
+        console.log(`🌐 Detected platform: ${this.detectedPlatform}`);
     }
 
     async init(profile, sessionId = null, progressCallback = null) {
@@ -26,15 +28,34 @@ class SmartFormFiller {
     }
 
     async detectFormFields() {
-        const formElements = document.querySelectorAll('input, textarea, select');
+        // Platform-specific selectors for better coverage
+        let formSelector = 'input, textarea, select';
+        if (this.detectedPlatform === 'lever') {
+            // Lever often has complex nested structures
+            formSelector = 'input, textarea, select, [data-qa*="input"], [class*="input"]';
+        } else if (this.detectedPlatform === 'greenhouse') {
+            formSelector = 'input, textarea, select, [data-greenhouse*="input"]';
+        } else if (this.detectedPlatform === 'workday') {
+            formSelector = 'input, textarea, select, [data-automation-id]';
+        }
+        
+        const formElements = document.querySelectorAll(formSelector);
         this.detectedFields = [];
         this.totalFields = 0;
+        
+        console.log(`🔍 DEBUG: Platform: ${this.detectedPlatform}, Total DOM elements found: ${formElements.length}`);
 
         for (const element of formElements) {
+            console.log(`🔍 DEBUG: Element - Type: ${element.type || element.tagName}, ID: ${element.id}, Name: ${element.name}, Visible: ${this.isFieldVisible(element)}`);
+            
             const fieldInfo = this.analyzeField(element);
+            console.log(`🔍 DEBUG: Field analysis - Fillable: ${fieldInfo.fillable}, Type: ${fieldInfo.type}, Label: ${fieldInfo.label}`);
+            
             if (fieldInfo.fillable) {
                 this.detectedFields.push(fieldInfo);
                 this.totalFields++;
+            } else if (element.type === 'file') {
+                console.log(`📎 🔍 DEBUG: FILE INPUT FOUND BUT NOT FILLABLE - ID: ${element.id}, Name: ${element.name}, Visible: ${this.isFieldVisible(element)}, Disabled: ${element.disabled}`);
             }
         }
 
@@ -42,6 +63,73 @@ class SmartFormFiller {
         this.detectedFields.sort((a, b) => b.confidence - a.confidence);
         
         return this.detectedFields;
+    }
+
+    async extractFormStructureForOllama() {
+        console.log('🧠 Extracting comprehensive form structure for Ollama analysis...');
+        
+        // Get all form elements (same selector as detectFormFields)
+        let formSelector = 'input, textarea, select';
+        if (this.detectedPlatform === 'lever') {
+            formSelector = 'input, textarea, select, [data-qa*="input"], [class*="input"]';
+        } else if (this.detectedPlatform === 'greenhouse') {
+            formSelector = 'input, textarea, select, [data-greenhouse*="input"]';
+        } else if (this.detectedPlatform === 'workday') {
+            formSelector = 'input, textarea, select, [data-automation-id]';
+        }
+        
+        const formElements = document.querySelectorAll(formSelector);
+        const formStructure = {
+            platform: this.detectedPlatform,
+            fields: []
+        };
+        
+        for (const element of formElements) {
+            // Skip hidden system fields
+            if (element.type === 'hidden' || element.type === 'submit' || element.type === 'button') {
+                continue;
+            }
+            
+            // Skip if not visible or disabled
+            if (!this.isFieldVisible(element) || element.disabled || element.readOnly) {
+                continue;
+            }
+            
+            const fieldData = {
+                id: element.id || '',
+                name: element.name || '',
+                type: element.type || element.tagName.toLowerCase(),
+                label: this.extractFieldLabel(element)
+            };
+            
+            // Extract options for select/radio fields
+            if (element.type === 'select-one' || element.tagName === 'SELECT') {
+                fieldData.options = Array.from(element.options).map(opt => ({
+                    value: opt.value,
+                    text: opt.textContent.trim()
+                })).filter(opt => opt.text); // Filter out empty options
+            } else if (element.type === 'radio') {
+                // Find all radio buttons with the same name
+                const radioGroup = document.querySelectorAll(`input[type="radio"][name="${element.name}"]`);
+                fieldData.options = Array.from(radioGroup).map(radio => {
+                    const radioLabel = this.extractFieldLabel(radio);
+                    return {
+                        value: radio.value,
+                        text: radioLabel || radio.value
+                    };
+                }).filter((opt, index, arr) => 
+                    // Remove duplicates
+                    arr.findIndex(item => item.value === opt.value) === index
+                );
+            }
+            
+            formStructure.fields.push(fieldData);
+        }
+        
+        // Fields will be processed in DOM order
+        
+        console.log('🧠 Form structure extracted:', formStructure);
+        return formStructure;
     }
 
     analyzeField(element) {
@@ -139,6 +227,13 @@ class SmartFormFiller {
         const style = window.getComputedStyle(element);
         const rect = element.getBoundingClientRect();
         
+        // Special case: File inputs are often intentionally hidden but still functional
+        if (element.type === 'file') {
+            console.log(`📎 🔍 DEBUG: File input visibility check - ID: ${element.id}, Display: ${style.display}, Visibility: ${style.visibility}, Opacity: ${style.opacity}`);
+            // For file inputs, only check if they're not display:none (they can be visually hidden)
+            return style.display !== 'none';
+        }
+        
         return style.display !== 'none' && 
                style.visibility !== 'hidden' && 
                style.opacity !== '0' &&
@@ -159,8 +254,18 @@ class SmartFormFiller {
             fieldInfo.label,
             fieldInfo.name,
             fieldInfo.id,
-            fieldInfo.placeholder
+            fieldInfo.placeholder,
+            fieldInfo.element.getAttribute('data-qa') || '',
+            fieldInfo.element.getAttribute('data-testid') || ''
         ].join(' ').toLowerCase();
+        
+        // Debug file input mapping and location fields
+        if (fieldInfo.type === 'file') {
+            console.log(`📎 🔍 DEBUG: FILE INPUT MAPPING - Type: ${fieldInfo.type}, SearchText: "${searchText}", ID: ${fieldInfo.id}, Name: ${fieldInfo.name}`);
+        }
+        if (searchText.includes('location')) {
+            console.log(`📍 🔍 DEBUG: LOCATION FIELD DETECTED - Type: ${fieldInfo.type}, SearchText: "${searchText}", ID: ${fieldInfo.id}, Name: ${fieldInfo.name}`);
+        }
 
         // Field mapping rules with confidence scores
         const mappingRules = [
@@ -209,6 +314,13 @@ class SmartFormFiller {
                 value: personalInfo.address?.city || '',
                 confidence: 0.85
             },
+            // Location field (city, state combination)
+            {
+                patterns: ['location-input', 'current location', 'location', 'structured-contact-location'],
+                field: 'current_location',
+                value: personalInfo.address ? `${personalInfo.address.city || ''}, ${personalInfo.address.state || ''}`.trim().replace(/^,\s*|,\s*$/g, '') : '',
+                confidence: 0.9
+            },
             {
                 patterns: ['state', 'province', 'region'],
                 field: 'state',
@@ -229,6 +341,12 @@ class SmartFormFiller {
             },
 
             // Professional Information
+            {
+                patterns: ['current company', 'company', 'employer', 'organization', 'current employer'],
+                field: 'current_company',
+                value: this.currentProfile?.work_experience?.[0]?.company || '',
+                confidence: 0.8
+            },
             {
                 patterns: ['linkedin', 'linkedin profile', 'linkedin url'],
                 field: 'linkedin',
@@ -318,7 +436,139 @@ class SmartFormFiller {
             throw new Error('No profile available for form filling');
         }
 
-        console.log(`🚀 Starting form filling for ${this.totalFields} fields`);
+        console.log(`🚀 TEST_ID: OLLAMA_SYSTEM_v3 - Starting intelligent form filling with Ollama...`);
+        
+        // Step 1: Extract comprehensive form structure for Ollama
+        console.log(`🧠 TEST_ID: OLLAMA_SYSTEM_v3 - Step 1: Extracting form structure`);
+        const formStructure = await this.extractFormStructureForOllama();
+        
+        // Step 2: Get intelligent answers from Ollama
+        console.log(`🧠 TEST_ID: OLLAMA_SYSTEM_v3 - Step 2: Sending to Ollama for analysis`);
+        
+        // Update UI to show LLM is thinking
+        if (this.progressCallback) {
+            this.progressCallback({
+                current: 0,
+                total: this.totalFields,
+                field: "🧠 AI is analyzing form and generating answers...",
+                success: true
+            });
+        }
+        
+        const ollamaAnswers = await this.getOllamaFormAnswers(formStructure, this.currentProfile);
+        
+        // Step 3: Apply answers using existing field detection (preserves resume upload)
+        if (ollamaAnswers) {
+            console.log(`🧠 TEST_ID: OLLAMA_SYSTEM_v3 - Step 3: SUCCESS! Applying Ollama answers`);
+            return await this.fillFormWithOllamaAnswers(ollamaAnswers);
+        } else {
+            // Fallback to traditional method if Ollama fails
+            console.log('🧠 TEST_ID: OLLAMA_SYSTEM_v3 - FAILED: Ollama failed, using traditional field mapping...');
+            return await this.fillFormTraditional();
+        }
+    }
+
+    async fillFormWithOllamaAnswers(ollamaAnswers) {
+        console.log(`🧠 Applying Ollama answers to form fields...`);
+        this.filledFields = 0;
+
+        const fillResults = {
+            total: this.totalFields,
+            filled: 0,
+            skipped: 0,
+            errors: [],
+            fields: []
+        };
+
+        // Sort fields by position (top to bottom) - TEST_ID: SEQUENTIAL_FILL_v16
+        const sortedFields = this.detectedFields.slice().sort((a, b) => {
+            const rectA = a.element.getBoundingClientRect();
+            const rectB = b.element.getBoundingClientRect();
+            
+            // If fields are on roughly the same row (within 10px), sort left to right
+            if (Math.abs(rectA.top - rectB.top) < 10) {
+                return rectA.left - rectB.left;
+            }
+            return rectA.top - rectB.top; // Top to bottom
+        });
+        
+        console.log(`🔄 TEST_ID: OLLAMA_FILL_v1 - Processing ${sortedFields.length} fields with Ollama answers`);
+
+        for (const fieldInfo of sortedFields) {
+            try {
+                console.log(`🔄 TEST_ID: OLLAMA_FILL_v1 - Processing field: ${fieldInfo.label || fieldInfo.name}`);
+                
+                // Get answer from Ollama responses (try both id and name)
+                const ollamaValue = ollamaAnswers[fieldInfo.id] || 
+                                 ollamaAnswers[fieldInfo.name] || 
+                                 ollamaAnswers[fieldInfo.element.id] || 
+                                 ollamaAnswers[fieldInfo.element.name];
+                
+                let result;
+                
+                // PRESERVE RESUME UPLOAD: Use existing file upload logic
+                if (fieldInfo.type === 'file') {
+                    console.log(`📎 PRESERVE: Using existing resume upload logic for file field`);
+                    result = await this.fillField(fieldInfo); // Use existing method
+                } else if (ollamaValue && ollamaValue !== "SKIP_FILE_UPLOAD") {
+                    // Use Ollama answer for non-file fields
+                    result = await this.fillFieldWithOllamaAnswer(fieldInfo, ollamaValue);
+                } else {
+                    // Skip if no Ollama answer
+                    result = {
+                        field: fieldInfo.label || fieldInfo.name,
+                        success: false,
+                        reason: 'No Ollama answer provided'
+                    };
+                }
+                
+                fillResults.fields.push(result);
+                
+                if (result.success) {
+                    fillResults.filled++;
+                    this.filledFields++;
+                    console.log(`✅ TEST_ID: OLLAMA_FILL_v1 - Successfully filled: ${fieldInfo.label || fieldInfo.name}`);
+                } else {
+                    fillResults.skipped++;
+                    console.log(`⚠️ TEST_ID: OLLAMA_FILL_v1 - Skipped: ${fieldInfo.label || fieldInfo.name}`);
+                }
+
+                // Update progress
+                if (this.progressCallback) {
+                    this.progressCallback({
+                        current: this.filledFields,
+                        total: this.totalFields,
+                        field: fieldInfo.label || fieldInfo.name,
+                        success: result.success
+                    });
+                }
+
+                // Sequential delay between fields - TEST_ID: OLLAMA_FILL_v1
+                console.log(`⏱️ TEST_ID: OLLAMA_FILL_v1 - Waiting 500ms before next field...`);
+                await this.delay(500);
+
+            } catch (error) {
+                console.error('Error filling field:', fieldInfo.label, error);
+                fillResults.errors.push({
+                    field: fieldInfo.label || fieldInfo.name,
+                    error: error.message
+                });
+            }
+        }
+
+        console.log(`✅ Ollama form filling complete: ${fillResults.filled}/${fillResults.total} fields filled`);
+        
+        // Mark form as filled in automation session
+        if (this.automationSession) {
+            await this.markFormFilled(fillResults);
+        }
+
+        return fillResults;
+    }
+
+    async fillFormTraditional() {
+        // Original form filling method (fallback)
+        console.log(`🚀 Starting traditional form filling for ${this.totalFields} fields`);
         this.filledFields = 0;
 
         const fillResults = {
@@ -432,7 +682,9 @@ class SmartFormFiller {
     }
 
     async fillTextField(element, value, fieldInfo) {
-        // Simulate typing for better compatibility
+        // Location field should be treated exactly like any other text field
+        
+        // Standard text field filling
         for (let i = 0; i < value.length; i++) {
             element.value += value[i];
             
@@ -508,6 +760,133 @@ class SmartFormFiller {
         };
     }
 
+    async fillFieldWithOllamaAnswer(fieldInfo, ollamaValue) {
+        const element = fieldInfo.element;
+        
+        try {
+            // Focus the element
+            element.focus();
+
+            // Fill based on element type
+            if (element.tagName === 'SELECT') {
+                return await this.fillSelectFieldWithOllama(element, ollamaValue, fieldInfo);
+            } else if (element.type === 'checkbox' || element.type === 'radio') {
+                return await this.fillBooleanFieldWithOllama(element, ollamaValue, fieldInfo);
+            } else {
+                return await this.fillTextFieldWithOllama(element, ollamaValue, fieldInfo);
+            }
+
+        } catch (error) {
+            return {
+                field: fieldInfo.label || fieldInfo.name,
+                success: false,
+                reason: error.message
+            };
+        }
+    }
+
+    async fillTextFieldWithOllama(element, value, fieldInfo) {
+        // Clear existing value
+        element.value = '';
+        
+        // Type the Ollama answer character by character
+        for (let i = 0; i < value.length; i++) {
+            element.value += value[i];
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            element.dispatchEvent(new Event('keyup', { bubbles: true }));
+            await this.delay(10); // Same speed as traditional method
+        }
+
+        // Trigger change event
+        element.dispatchEvent(new Event('change', { bubbles: true }));
+        element.dispatchEvent(new Event('blur', { bubbles: true }));
+
+        return {
+            field: fieldInfo.label || fieldInfo.name,
+            success: true,
+            value: value
+        };
+    }
+
+    async fillSelectFieldWithOllama(element, value, fieldInfo) {
+        // Find matching option (exact match or contains)
+        const options = Array.from(element.options);
+        let matchingOption = null;
+
+        // Try exact match first
+        matchingOption = options.find(option => 
+            option.textContent.trim() === value ||
+            option.value === value
+        );
+
+        // Try partial match if exact match fails
+        if (!matchingOption) {
+            matchingOption = options.find(option => 
+                option.textContent.toLowerCase().includes(value.toLowerCase()) ||
+                value.toLowerCase().includes(option.textContent.toLowerCase())
+            );
+        }
+
+        if (matchingOption) {
+            element.value = matchingOption.value;
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            return {
+                field: fieldInfo.label || fieldInfo.name,
+                success: true,
+                value: matchingOption.textContent.trim()
+            };
+        }
+
+        return {
+            field: fieldInfo.label || fieldInfo.name,
+            success: false,
+            reason: `No matching option found for "${value}"`
+        };
+    }
+
+    async fillBooleanFieldWithOllama(element, value, fieldInfo) {
+        // For radio buttons, find the radio with matching label text
+        if (element.type === 'radio') {
+            const radioGroup = document.querySelectorAll(`input[type="radio"][name="${element.name}"]`);
+            
+            for (const radio of radioGroup) {
+                const radioLabel = this.extractFieldLabel(radio);
+                if (radioLabel && (radioLabel.includes(value) || value.includes(radioLabel))) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                    return {
+                        field: fieldInfo.label || fieldInfo.name,
+                        success: true,
+                        value: radioLabel
+                    };
+                }
+            }
+            
+            return {
+                field: fieldInfo.label || fieldInfo.name,
+                success: false,
+                reason: `No matching radio option for "${value}"`
+            };
+        }
+
+        // For checkboxes
+        const shouldCheck = value.toLowerCase().includes('yes') || 
+                           value.toLowerCase().includes('true') || 
+                           value === '1';
+
+        if (element.checked !== shouldCheck) {
+            element.checked = shouldCheck;
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        return {
+            field: fieldInfo.label || fieldInfo.name,
+            success: true,
+            value: shouldCheck ? 'checked' : 'unchecked'
+        };
+    }
+
     async markFormFilled(fillResults) {
         try {
             const response = await chrome.runtime.sendMessage({
@@ -541,6 +920,76 @@ class SmartFormFiller {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    detectPlatform() {
+        const url = window.location.href.toLowerCase();
+        const domain = window.location.hostname.toLowerCase();
+        
+        // Platform detection based on URL patterns and DOM characteristics
+        if (url.includes('jobs.lever.co') || domain.includes('lever.co')) {
+            return 'lever';
+        }
+        if (url.includes('greenhouse') || domain.includes('greenhouse') || document.querySelector('[data-greenhouse]')) {
+            return 'greenhouse';
+        }
+        if (url.includes('workday') || domain.includes('workday') || document.querySelector('[data-automation-id]')) {
+            return 'workday';
+        }
+        if (url.includes('bamboohr') || domain.includes('bamboohr')) {
+            return 'bamboohr';
+        }
+        if (url.includes('smartrecruiters') || domain.includes('smartrecruiters')) {
+            return 'smartrecruiters';
+        }
+        if (url.includes('jobvite') || domain.includes('jobvite')) {
+            return 'jobvite';
+        }
+        if (url.includes('taleo') || domain.includes('taleo')) {
+            return 'taleo';
+        }
+        if (url.includes('icims') || domain.includes('icims')) {
+            return 'icims';
+        }
+        
+        return 'generic';
+    }
+
+    async getOllamaFormAnswers(formStructure, userProfile) {
+        console.log('🧠 TEST_ID: OLLAMA_SYSTEM_v4 - Sending to BACKEND for Ollama analysis (bypass Chrome restrictions)...');
+        console.log('🧠 DEBUG: User Profile being sent to Ollama:', JSON.stringify(userProfile, null, 2));
+        console.log('🧠 DEBUG: Form Structure being sent to Ollama:', JSON.stringify(formStructure, null, 2));
+        console.log('⏳ AI is thinking... Please wait while the language model analyzes the form and generates intelligent answers.');
+        
+        try {
+            // Call backend endpoint instead of Ollama directly
+            const response = await fetch('http://localhost:8000/ai/analyze-form', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    formStructure: formStructure,
+                    userProfile: userProfile
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Backend API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ AI analysis complete! Generated intelligent answers for form fields.');
+            console.log('🧠 TEST_ID: OLLAMA_SYSTEM_v4 - SUCCESS: Received answers from backend:', data.answers);
+            
+            return data.answers;
+            
+        } catch (error) {
+            console.error('🧠 ❌ Content: Error calling backend for Ollama analysis:', error);
+            // Fallback to old mapping system if backend fails
+            console.log('🧠 Falling back to traditional field mapping...');
+            return null;
+        }
+    }
+
     // Public methods for external use
     getDetectedFields() {
         return this.detectedFields;
@@ -557,16 +1006,21 @@ class SmartFormFiller {
     async fillFileField(element, value, fieldInfo) {
         // Handle resume upload - TEST_ID: RESUME_MODERN_v16
         try {
-            console.log(`📎 TEST_ID: RESUME_MODERN_v16 - File field detected in modern system: ${fieldInfo.name || fieldInfo.id}`);
+            console.log(`📎 🔍 DEBUG: File field detected - name: ${fieldInfo.name}, id: ${fieldInfo.id}, element:`, element);
+            console.log(`📎 🔍 DEBUG: Current profile available:`, !!this.currentProfile);
+            console.log(`📎 🔍 DEBUG: Profile ID:`, this.currentProfile?.id);
+            console.log(`📎 🔍 DEBUG: Window jobApplicationAssistant available:`, !!window.jobApplicationAssistant);
+            console.log(`📎 🔍 DEBUG: handleResumeUpload function available:`, !!window.jobApplicationAssistant?.handleResumeUpload);
             
             // Method 1: Try accessing the legacy function
             if (window.jobApplicationAssistant && window.jobApplicationAssistant.handleResumeUpload) {
-                console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Using legacy resume upload function`);
+                console.log(`📎 🔍 DEBUG: TRYING METHOD 1 - Legacy resume upload function`);
                 const success = await window.jobApplicationAssistant.handleResumeUpload(element, {
                     name: fieldInfo.name,
                     id: fieldInfo.id,
                     type: 'file'
                 });
+                console.log(`📎 🔍 DEBUG: Method 1 result: ${success}`);
                 
                 return {
                     field: fieldInfo.label || fieldInfo.name,
@@ -577,8 +1031,9 @@ class SmartFormFiller {
             }
             
             // Method 2: Fallback - try to call the resume upload directly
-            console.log(`📎 TEST_ID: RESUME_MODERN_v16 - Fallback: trying direct resume upload`);
+            console.log(`📎 🔍 DEBUG: TRYING METHOD 2 - Fallback direct resume upload`);
             const success = await this.uploadResumeFile(element);
+            console.log(`📎 🔍 DEBUG: Method 2 result: ${success}`);
             
             return {
                 field: fieldInfo.label || fieldInfo.name,

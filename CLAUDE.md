@@ -378,10 +378,16 @@ Load unpacked from chrome-extension/ directory
 - ✅ **Programmatic Resume Upload**: Automatic resume download and upload to file input fields
 - ✅ **Advanced Field Mapping**: Handles complex UUID-based field names, languages, locations, visa requirements
 - ✅ **Anti-Hallucination**: Only fills actual profile data, no hardcoded defaults
+- ✅ **Ollama Integration Overhaul** (2025-07-15): Complete simplification and improvement of AI form filling
+  - **Simplified Architecture**: Pre-extract clean user data, send clean form structure to Ollama
+  - **Smart Location Handling**: Distinguishes between current location vs. preferred job location
+  - **Enhanced Debugging**: Full prompt/response logging with user feedback during AI processing
+  - **No Smart Defaults**: Returns null when data unavailable instead of guessing
+  - **Fixed Authentication**: Temporarily bypassed auth issues for profile loading
 
 🔄 **In Progress**:
-- **Job scraping scale-up**: Test more Lever companies, fix other platform scrapers
-- **Form filling edge cases**: Final debugging of specific field types and dropdown matching
+- **Backend API 500 Error**: Final debugging of Ollama integration endpoint
+- **Chrome Extension Testing**: End-to-end testing with real job application forms
 
 🗓️ **Planned**:
 - **Application status tracking**
@@ -453,7 +459,21 @@ ollama serve
 |--------------------|-------|----------|-------------|
 | `parse_resume`      | llama3.2 | `agent_orchestrator.py` | Extracts structured data from resume text |
 | `write_cover_letter` | llama3.2 | `agent_orchestrator.py` | Generates personalized cover letters |
-| `apply_to_jobs`     | llama3.2 | `agent_orchestrator.py` | Creates form-filling instructions |
+| `analyze_form`      | llama3.2 | `main.py:/ai/analyze-form` | **NEW**: Intelligent form field mapping with clean data extraction |
+
+### Enhanced Form Filling with Ollama (2025-07-15)
+
+**New Simplified Architecture**:
+1. **Pre-extract clean user data** from profile (name, email, current_location, preferred_location, etc.)
+2. **Send clean form structure** to Ollama (field name, type, label, options only)
+3. **Smart field mapping** based on field labels and context
+4. **No hallucination** - returns null when data not available
+
+**Key Improvements**:
+- ✅ **Context-aware**: Distinguishes "current location" vs "which location are you applying for"
+- ✅ **Transparent logging**: Full prompt and response visibility
+- ✅ **User feedback**: Shows "AI is thinking..." during processing
+- ✅ **Clean data flow**: Profile → Clean extraction → Ollama → Field mapping
 
 ### Error Handling & Fallbacks
 

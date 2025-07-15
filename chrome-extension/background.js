@@ -87,6 +87,11 @@ class BackgroundService {
                     sendResponse({ success: true, stats });
                     break;
 
+                case 'OLLAMA_FORM_ANALYSIS':
+                    console.log('🧠 Background processing Ollama form analysis request');
+                    await this.handleOllamaFormAnalysis(request.formStructure, request.userProfile, sendResponse);
+                    break;
+
                 case 'detectJobSite':
                     const isJobSite = await this.detectJobApplicationSite(request.url);
                     sendResponse({ success: true, isJobSite });
@@ -802,6 +807,82 @@ class BackgroundService {
         } catch (error) {
             console.error('📱 Background: ❌ Error storing automation data:', error);
             return { success: false, error: error.message };
+        }
+    }
+
+    async handleOllamaFormAnalysis(formStructure, userProfile, sendResponse) {
+        console.log('🧠 TEST_ID: OLLAMA_SYSTEM_v4 - Background: Starting Ollama form analysis');
+        
+        const prompt = `You are an AI assistant helping to fill out a job application form. 
+
+USER PROFILE:
+${JSON.stringify(userProfile, null, 2)}
+
+JOB APPLICATION FORM:
+${JSON.stringify(formStructure, null, 2)}
+
+INSTRUCTIONS:
+1. Analyze each form field and provide the most appropriate answer based on the user's profile
+2. For text fields: provide the relevant text from the profile
+3. For select/dropdown fields: choose the EXACT option text that best matches from the available options
+4. For radio buttons: choose the EXACT option text that best matches from the available options
+5. For file uploads: return "SKIP_FILE_UPLOAD" (file uploads are handled separately)
+6. If you don't have relevant information, return an empty string ""
+7. For location fields, use format: "City, State" (e.g., "New York, NY")
+
+RESPONSE FORMAT - Return only valid JSON:
+{
+  "field_id_or_name": "answer_value",
+  "another_field": "another_answer"
+}
+
+EXAMPLE:
+{
+  "name": "John Doe",
+  "email": "john@email.com", 
+  "location": "San Francisco, CA",
+  "experience": "3-5 years",
+  "visa": "No visa required"
+}
+
+Respond with JSON only:`;
+
+        try {
+            console.log('🧠 TEST_ID: OLLAMA_SYSTEM_v4 - Background: Making Ollama API request...');
+            
+            const response = await fetch('http://localhost:11434/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: 'llama3.2',
+                    prompt: prompt,
+                    stream: false
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Ollama API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('🧠 TEST_ID: OLLAMA_SYSTEM_v4 - Background: Raw Ollama response:', data.response);
+            
+            // Parse the JSON response
+            const jsonMatch = data.response.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) {
+                throw new Error('No JSON found in Ollama response');
+            }
+            
+            const answers = JSON.parse(jsonMatch[0]);
+            console.log('🧠 TEST_ID: OLLAMA_SYSTEM_v4 - Background: Parsed Ollama answers:', answers);
+            
+            sendResponse({ success: true, answers: answers });
+            
+        } catch (error) {
+            console.error('🧠 Background: ❌ Ollama API error:', error);
+            sendResponse({ success: false, error: error.message });
         }
     }
 }

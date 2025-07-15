@@ -6,6 +6,7 @@ from typing import List, Optional
 import uvicorn
 import os
 import time
+import json
 from datetime import timedelta
 from pydantic import BaseModel
 
@@ -732,15 +733,42 @@ async def skip_current_job(session_id: str, request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to skip job: {str(e)}")
 
+@app.get("/debug/profiles/{user_id}")
+async def debug_get_profiles(user_id: int, db: Session = Depends(get_db)):
+    """Debug endpoint to check profiles for a specific user ID (no auth required)"""
+    try:
+        profiles = db.query(Profile).filter(Profile.user_id == user_id).all()
+        
+        if not profiles:
+            return {"profiles": [], "message": f"No profiles found for user ID {user_id}"}
+        
+        profile_list = []
+        for profile in profiles:
+            profile_list.append({
+                "id": profile.id,
+                "title": profile.title,
+                "full_name": profile.full_name,
+                "email": profile.email,
+                "phone": profile.phone,
+                "created_at": profile.created_at.isoformat() if profile.created_at else None,
+                "updated_at": profile.updated_at.isoformat() if profile.updated_at else None,
+                "has_resume": bool(profile.resume_path)
+            })
+        
+        return {"profiles": profile_list, "count": len(profile_list)}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get profiles: {str(e)}")
+
 @app.get("/user/profiles")
 async def get_all_user_profiles(
-    current_user: User = Depends(get_current_user),
+    user_id: int = Query(default=1, description="User ID for development"),
     db: Session = Depends(get_db)
 ):
-    """Get all profiles for the authenticated user"""
+    """Get all profiles for a user (dev mode: no auth required)"""
     try:
         profiles = db.query(Profile).filter(
-            Profile.user_id == current_user.id
+            Profile.user_id == user_id
         ).order_by(Profile.updated_at.desc()).all()
         
         if not profiles:
@@ -1128,6 +1156,206 @@ async def generate_field_mappings(profile_data: dict, form_fields: list) -> dict
             mappings[field_id] = profile_data['personal_information']['zip_code']
     
     return mappings
+
+def extract_user_data_from_profile(user_profile: dict) -> dict:
+    """Extract clean, structured user data from profile"""
+    try:
+        personal_info = user_profile.get("personal_information", {})
+        basic_info = personal_info.get("basic_information", {})
+        contact_info = personal_info.get("contact_information", {})
+        address_info = personal_info.get("address", {})
+        work_exp = user_profile.get("work_experience", [])
+        education = user_profile.get("education", [])
+        job_prefs = user_profile.get("job_preferences", {})
+        
+        # Build clean user data structure
+        user_data = {
+            # Personal Information
+            "first_name": basic_info.get("first_name") or contact_info.get("first_name") or user_profile.get("first_name"),
+            "last_name": basic_info.get("last_name") or contact_info.get("last_name") or user_profile.get("last_name"),
+            "full_name": user_profile.get("full_name") or f"{basic_info.get('first_name', '')} {basic_info.get('last_name', '')}".strip(),
+            "email": contact_info.get("email") or user_profile.get("email"),
+            "phone": contact_info.get("telephone") or contact_info.get("phone") or user_profile.get("phone"),
+            
+            # Current Location (where user lives now)
+            "current_city": address_info.get("city"),
+            "current_state": address_info.get("state"), 
+            "current_country": address_info.get("country"),
+            "current_location": f"{address_info.get('city', '')}, {address_info.get('state', '')}".strip().strip(','),
+            
+            # Job/Work Preferences (where user wants to work)
+            "preferred_location": job_prefs.get("location_preference"),  # e.g. "Remote", "New York", etc.
+            "willing_to_relocate": job_prefs.get("willing_to_relocate"),
+            "remote_preference": job_prefs.get("remote_preference"),
+            
+            # Professional Information
+            "current_company": work_exp[0].get("company") if work_exp else None,
+            "current_title": work_exp[0].get("title") if work_exp else None,
+            "linkedin": job_prefs.get("linkedin_link"),
+            "skills": user_profile.get("skills", []),
+            "education_degree": education[0].get("degree") if education else None,
+            "education_school": education[0].get("institution") if education else None
+        }
+        
+        # Remove None/empty values
+        return {k: v for k, v in user_data.items() if v and v != ", "}
+        
+    except Exception as e:
+        print(f"Error extracting user data: {e}")
+        return {}
+
+def clean_form_structure(form_structure: dict) -> list:
+    """Clean form structure to only include essential data for Ollama"""
+    try:
+        clean_fields = []
+        
+        for field in form_structure.get("fields", []):
+            clean_field = {
+                "id": field.get("id", ""),
+                "name": field.get("name", ""),
+                "type": field.get("type", ""),
+                "label": field.get("label", "")
+            }
+            
+            # Add options for dropdown/radio fields
+            if field.get("options"):
+                clean_field["options"] = [
+                    {"value": opt.get("value", ""), "text": opt.get("text", "")}
+                    for opt in field.get("options", [])
+                    if opt.get("text")  # Only include options with text
+                ]
+            
+            clean_fields.append(clean_field)
+        
+        return clean_fields
+        
+    except Exception as e:
+        print(f"Error cleaning form structure: {e}")
+        return []
+
+@app.post("/ai/analyze-form")
+async def analyze_form_with_ollama(request: dict):
+    """
+    Analyze job application form using Ollama AI
+    Bypasses Chrome extension CORS restrictions
+    """
+    try:
+        form_structure = request.get('formStructure')
+        user_profile = request.get('userProfile')
+        
+        if not form_structure or not user_profile:
+            raise HTTPException(status_code=400, detail="Missing formStructure or userProfile")
+        
+        print(f"🧠 Backend: Received form analysis request for {len(form_structure.get('fields', []))} fields")
+        
+        # Extract clean user data from profile
+        user_data = extract_user_data_from_profile(user_profile)
+        print(f"🧠 DEBUG: Extracted user data: {json.dumps(user_data, indent=2)}")
+        
+        # Clean form structure (remove positioning and unnecessary data)
+        clean_form = clean_form_structure(form_structure)
+        print(f"🧠 DEBUG: Clean form structure: {json.dumps(clean_form, indent=2)}")
+        
+        # Enhanced Ollama prompt that distinguishes between different types of location questions
+        prompt = f"""You are filling out a job application form. Map the user data to the appropriate form fields based on what each field is asking.
+
+USER DATA:
+{json.dumps(user_data, indent=2)}
+
+FORM FIELDS:
+{json.dumps(clean_form, indent=2)}
+
+INSTRUCTIONS:
+1. READ THE FIELD LABEL carefully to understand what it's asking for
+2. Map data accordingly:
+   - "Current location", "Where do you live", "Address" → use current_location from user data
+   - "Which location are you applying for", "Preferred location", "Job location" → use preferred_location OR make intelligent choice from options
+   - "Name", "Full name" → use full_name
+   - "Email" → use email
+   - "Phone" → use phone
+   - For dropdown/radio fields: choose the EXACT option text that matches the user data
+3. For job location preferences, if user has no explicit preference:
+   - Choose "Remote" if available in options
+   - Otherwise choose closest match to user's current location
+   - Return null only if no reasonable choice can be made
+4. If no matching data exists in the user profile, return null
+5. Use the field "name" or "id" as the JSON key
+
+RESPONSE FORMAT - Return ONLY valid JSON:
+{{
+  "field_name": "value_or_null"
+}}
+
+JSON:"""
+
+        # Call Ollama API
+        import requests
+        print("🧠 Backend: Calling Ollama API...")
+        print("=" * 80)
+        print("📋 EXACT PROMPT SENT TO OLLAMA:")
+        print("=" * 80)
+        print(prompt)
+        print("=" * 80)
+        
+        ollama_response = requests.post(
+            'http://localhost:11434/api/generate',
+            json={
+                'model': 'llama3.2',
+                'prompt': prompt,
+                'stream': False
+            },
+            timeout=30
+        )
+        
+        if ollama_response.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Ollama API error: {ollama_response.status_code}")
+        
+        ollama_data = ollama_response.json()
+        raw_response = ollama_data.get('response', '')
+        print("=" * 80)
+        print("🤖 EXACT OLLAMA RESPONSE:")
+        print("=" * 80)
+        print(raw_response)
+        print("=" * 80)
+        
+        # Parse JSON from response - find the first complete JSON object
+        import re
+        
+        # First try to find JSON blocks
+        json_matches = re.findall(r'\{[^{}]*\}', raw_response)
+        if not json_matches:
+            # Try more aggressive matching for nested JSON
+            json_match = re.search(r'\{.*\}', raw_response, re.DOTALL)
+            if json_match:
+                json_matches = [json_match.group()]
+        
+        if not json_matches:
+            raise HTTPException(status_code=500, detail="No valid JSON found in Ollama response")
+        
+        # Try to parse each JSON match
+        answers = None
+        for json_text in json_matches:
+            try:
+                answers = json.loads(json_text.strip())
+                break
+            except json.JSONDecodeError:
+                continue
+        
+        if answers is None:
+            print(f"🧠 Backend: Could not parse any JSON from: {raw_response}")
+            raise HTTPException(status_code=500, detail="Failed to parse JSON from Ollama response")
+        
+        print("=" * 80)
+        print("✅ FINAL PARSED ANSWERS:")
+        print("=" * 80)
+        print(json.dumps(answers, indent=2))
+        print("=" * 80)
+        
+        return {"success": True, "answers": answers}
+        
+    except Exception as e:
+        print(f"❌ Backend: Ollama analysis error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

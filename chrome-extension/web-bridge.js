@@ -51,6 +51,7 @@ window.addEventListener('message', async (event) => {
         }
         
         try {
+            console.log('🌉 🔍 DEBUG: Starting automation data storage process');
             const automationData = event.data.data;
             
             // Store in Chrome storage (this works because we're in extension context)
@@ -68,14 +69,19 @@ window.addEventListener('message', async (event) => {
                 active: storageData.automationActive
             });
             
-            // Check if chrome.storage is available - TEST_ID: CHROME_STORAGE_FIX_v16
+            // Check if chrome.storage is available - TEST_ID: CHROME_STORAGE_FIX_v16  
+            console.log('🌉 🔍 DEBUG: Checking chrome.storage availability');
             let verification = null;
+            
             if (chrome && chrome.storage && chrome.storage.local) {
+                console.log('🌉 🔍 DEBUG: Chrome storage available, storing data');
                 await chrome.storage.local.set(storageData);
                 console.log('🌉 ✅ Automation data stored in Chrome storage from frontend!');
                 
                 // Verify storage worked
+                console.log('🌉 🔍 DEBUG: Verifying storage worked');
                 verification = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive']);
+                console.log('🌉 🔍 DEBUG: Verification object:', verification);
                 console.log('🌉 ✅ Storage verification:', {
                     hasProfile: !!verification.userProfile,
                     profileName: verification.userProfile?.full_name,
@@ -83,10 +89,13 @@ window.addEventListener('message', async (event) => {
                     isActive: verification.automationActive
                 });
             } else {
+                console.log('🌉 🔍 DEBUG: Chrome storage NOT available, using localStorage');
                 console.log('🌉 ⚠️ Chrome storage not available on this domain, using localStorage fallback');
                 localStorage.setItem('chromeExtensionAutomationData', JSON.stringify(storageData));
                 console.log('🌉 ✅ Storage verification: Using localStorage fallback (no verification available)');
             }
+            
+            console.log('🌉 🔍 DEBUG: About to send to background script');
             
             // Also send to background script to notify all tabs
             if (chrome.runtime && chrome.runtime.sendMessage) {
