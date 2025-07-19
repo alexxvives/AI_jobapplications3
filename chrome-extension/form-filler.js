@@ -43,19 +43,51 @@ class SmartFormFiller {
         this.detectedFields = [];
         this.totalFields = 0;
         
+        // Track processed radio groups to avoid duplicates
+        const processedRadioGroups = new Set();
+        
         console.log(`🔍 DEBUG: Platform: ${this.detectedPlatform}, Total DOM elements found: ${formElements.length}`);
 
         for (const element of formElements) {
             console.log(`🔍 DEBUG: Element - Type: ${element.type || element.tagName}, ID: ${element.id}, Name: ${element.name}, Visible: ${this.isFieldVisible(element)}`);
             
+            // Skip radio buttons if we've already processed this group
+            if (element.type === 'radio') {
+                if (processedRadioGroups.has(element.name)) {
+                    console.log(`🔍 DEBUG: Skipping duplicate radio button in group "${element.name}"`);
+                    continue;
+                }
+                processedRadioGroups.add(element.name);
+            }
+            
             const fieldInfo = this.analyzeField(element);
             console.log(`🔍 DEBUG: Field analysis - Fillable: ${fieldInfo.fillable}, Type: ${fieldInfo.type}, Label: ${fieldInfo.label}`);
+            
+            // Special debug for dropdowns that might not be detected
+            if (element.tagName === 'SELECT') {
+                console.log(`🔍 DROPDOWN_DETECTION: Found SELECT element`);
+                console.log(`🔍 DROPDOWN_DETECTION: - ID: ${element.id}, Name: ${element.name}`);
+                console.log(`🔍 DROPDOWN_DETECTION: - Parent class: ${element.parentElement?.className}`);
+                console.log(`🔍 DROPDOWN_DETECTION: - Visible: ${this.isFieldVisible(element)}, Disabled: ${element.disabled}`);
+                console.log(`🔍 DROPDOWN_DETECTION: - Label found: "${fieldInfo.label}"`);
+                console.log(`🔍 DROPDOWN_DETECTION: - Options count: ${element.options.length}`);
+                console.log(`🔍 DROPDOWN_DETECTION: - Fillable: ${fieldInfo.fillable}`);
+                
+                // Force include all visible SELECT elements for Ollama analysis
+                if (this.isFieldVisible(element) && !element.disabled && element.options.length > 1) {
+                    console.log(`🔍 DROPDOWN_DETECTION: ✅ FORCING inclusion of dropdown (even if not traditionally fillable)`);
+                    fieldInfo.fillable = true;
+                    fieldInfo.confidence = 0.7; // Medium confidence for forced dropdowns
+                }
+            }
             
             if (fieldInfo.fillable) {
                 this.detectedFields.push(fieldInfo);
                 this.totalFields++;
             } else if (element.type === 'file') {
                 console.log(`📎 🔍 DEBUG: FILE INPUT FOUND BUT NOT FILLABLE - ID: ${element.id}, Name: ${element.name}, Visible: ${this.isFieldVisible(element)}, Disabled: ${element.disabled}`);
+            } else if (element.tagName === 'SELECT') {
+                console.log(`🔍 DROPDOWN_DETECTION: ❌ SELECT element NOT marked as fillable - investigating why...`);
             }
         }
 
@@ -84,6 +116,9 @@ class SmartFormFiller {
             fields: []
         };
         
+        // Track processed radio groups to avoid duplicates
+        const processedRadioGroups = new Set();
+        
         for (const element of formElements) {
             // Skip hidden system fields
             if (element.type === 'hidden' || element.type === 'submit' || element.type === 'button') {
@@ -92,7 +127,17 @@ class SmartFormFiller {
             
             // Skip if not visible or disabled
             if (!this.isFieldVisible(element) || element.disabled || element.readOnly) {
+                console.log(`🎯 OLLAMA_FORM_DEBUG: Skipping element - Visible: ${this.isFieldVisible(element)}, Disabled: ${element.disabled}, ReadOnly: ${element.readOnly}`);
                 continue;
+            }
+            
+            // Skip radio buttons if we've already processed this group
+            if (element.type === 'radio') {
+                if (processedRadioGroups.has(element.name)) {
+                    console.log(`🎯 Skipping duplicate radio button in group "${element.name}"`);
+                    continue;
+                }
+                processedRadioGroups.add(element.name);
             }
             
             const fieldData = {
@@ -101,6 +146,14 @@ class SmartFormFiller {
                 type: element.type || element.tagName.toLowerCase(),
                 label: this.extractFieldLabel(element)
             };
+            
+            // Debug logging for dropdowns
+            if (element.tagName === 'SELECT') {
+                console.log(`🎯 OLLAMA_FORM_DEBUG: Processing SELECT element`);
+                console.log(`🎯 OLLAMA_FORM_DEBUG: - ID: ${fieldData.id}, Name: ${fieldData.name}`);
+                console.log(`🎯 OLLAMA_FORM_DEBUG: - Label: "${fieldData.label}"`);
+                console.log(`🎯 OLLAMA_FORM_DEBUG: - Options count: ${element.options.length}`);
+            }
             
             // Extract options for select/radio fields
             if (element.type === 'select-one' || element.tagName === 'SELECT') {
@@ -111,16 +164,19 @@ class SmartFormFiller {
             } else if (element.type === 'radio') {
                 // Find all radio buttons with the same name
                 const radioGroup = document.querySelectorAll(`input[type="radio"][name="${element.name}"]`);
-                fieldData.options = Array.from(radioGroup).map(radio => {
-                    const radioLabel = this.extractFieldLabel(radio);
-                    return {
-                        value: radio.value,
-                        text: radioLabel || radio.value
-                    };
-                }).filter((opt, index, arr) => 
-                    // Remove duplicates
-                    arr.findIndex(item => item.value === opt.value) === index
-                );
+                
+                // Extract the VALUES from radio buttons - these are the actual answer options
+                fieldData.options = Array.from(radioGroup)
+                    .map(radio => radio.value.trim())
+                    .filter((value, index, arr) => 
+                        // Remove duplicates and empty values
+                        value && arr.indexOf(value) === index
+                    );
+                
+                // For radio buttons, the main label should be the question text
+                fieldData.question = fieldData.label;
+                
+                console.log(`🎯 Radio Group "${element.name}": Question="${fieldData.question}", Options=[${fieldData.options.join(', ')}]`);
             }
             
             formStructure.fields.push(fieldData);
@@ -174,15 +230,70 @@ class SmartFormFiller {
         // Try multiple methods to extract field label
         let label = '';
 
-        // Method 1: Associated label element
-        if (element.id) {
+        // Method 1: Lever-specific structure - .application-label sibling
+        if (!label && this.detectedPlatform === 'lever') {
+            console.log(`🎯 LEVER_LABEL_DEBUG: Starting Lever label extraction for element:`, element);
+            
+            // Strategy A: Look for .application-question ancestor containing .application-label
+            const questionContainer = element.closest('.application-question');
+            if (questionContainer) {
+                const labelDiv = questionContainer.querySelector('.application-label');
+                if (labelDiv) {
+                    label = labelDiv.textContent.trim();
+                    console.log(`🎯 LEVER_LABEL_DEBUG: Strategy A - Found label in .application-question: "${label}"`);
+                }
+            }
+            
+            // Strategy B: Check if element is in .application-field and look for sibling .application-label
+            if (!label) {
+                const fieldContainer = element.closest('.application-field');
+                if (fieldContainer) {
+                    console.log(`🎯 LEVER_LABEL_DEBUG: Element is in .application-field, checking for sibling .application-label`);
+                    
+                    // Look for preceding sibling with .application-label
+                    let sibling = fieldContainer.previousElementSibling;
+                    while (sibling) {
+                        console.log(`🎯 LEVER_LABEL_DEBUG: Checking sibling with class: ${sibling.className}`);
+                        if (sibling.classList.contains('application-label')) {
+                            label = sibling.textContent.trim();
+                            console.log(`🎯 LEVER_LABEL_DEBUG: Strategy B - Found label in sibling .application-label: "${label}"`);
+                            break;
+                        }
+                        sibling = sibling.previousElementSibling;
+                    }
+                }
+            }
+            
+            // Strategy C: Look for any .application-label in the general vicinity
+            if (!label) {
+                const allLabels = document.querySelectorAll('.application-label');
+                console.log(`🎯 LEVER_LABEL_DEBUG: Strategy C - Found ${allLabels.length} .application-label elements, checking proximity`);
+                
+                for (const labelElement of allLabels) {
+                    // Check if this label is followed by our field container
+                    let nextSibling = labelElement.nextElementSibling;
+                    while (nextSibling) {
+                        if (nextSibling.contains(element)) {
+                            label = labelElement.textContent.trim();
+                            console.log(`🎯 LEVER_LABEL_DEBUG: Strategy C - Found label: "${label}" that precedes our field`);
+                            break;
+                        }
+                        nextSibling = nextSibling.nextElementSibling;
+                    }
+                    if (label) break;
+                }
+            }
+        }
+
+        // Method 2: Associated label element
+        if (!label && element.id) {
             const labelElement = document.querySelector(`label[for="${element.id}"]`);
             if (labelElement) {
                 label = labelElement.textContent.trim();
             }
         }
 
-        // Method 2: Parent label
+        // Method 3: Parent label
         if (!label) {
             const parentLabel = element.closest('label');
             if (parentLabel) {
@@ -190,38 +301,64 @@ class SmartFormFiller {
             }
         }
 
-        // Method 3: Previous sibling text
+        // Method 4: Previous sibling text (common in many ATS)
         if (!label) {
             let sibling = element.previousElementSibling;
             while (sibling && !label) {
                 if (sibling.tagName === 'LABEL' || sibling.textContent.trim()) {
-                    label = sibling.textContent.trim();
-                    break;
+                    const siblingText = sibling.textContent.trim();
+                    if (siblingText && siblingText.length < 200) {
+                        label = siblingText;
+                        break;
+                    }
                 }
                 sibling = sibling.previousElementSibling;
             }
         }
 
-        // Method 4: Parent container text
+        // Method 5: Parent container with question-like class names
+        if (!label) {
+            const questionParent = element.closest('[class*="question"], [class*="field"], [class*="form-group"]');
+            if (questionParent) {
+                // Look for label-like elements within the question container
+                const labelElement = questionParent.querySelector('[class*="label"], [class*="question"], .field-label');
+                if (labelElement && labelElement !== element.parentElement) {
+                    label = labelElement.textContent.trim();
+                }
+            }
+        }
+
+        // Method 6: Parent container text (fallback)
         if (!label) {
             const parent = element.parentElement;
             if (parent) {
                 const parentText = parent.textContent.replace(element.textContent || '', '').trim();
-                if (parentText && parentText.length < 100) {
+                if (parentText && parentText.length < 100 && parentText.length > 3) {
                     label = parentText;
                 }
             }
         }
 
-        // Method 5: aria-label or data attributes
+        // Method 7: aria-label or data attributes
         if (!label) {
             label = element.getAttribute('aria-label') || 
                    element.getAttribute('data-label') || 
-                   element.getAttribute('title') || '';
+                   element.getAttribute('title') || 
+                   element.getAttribute('placeholder') || '';
+        }
+
+        // Clean up the label text
+        if (label) {
+            // Remove common suffixes and clean up
+            label = label.replace(/\s*\*\s*$/, '') // Remove required asterisks
+                        .replace(/\s*:\s*$/, '') // Remove trailing colons
+                        .replace(/\s+/g, ' ')    // Normalize whitespace
+                        .trim();
         }
 
         return label;
     }
+
 
     isFieldVisible(element) {
         const style = window.getComputedStyle(element);
@@ -504,6 +641,10 @@ class SmartFormFiller {
                                  ollamaAnswers[fieldInfo.element.id] || 
                                  ollamaAnswers[fieldInfo.element.name];
                 
+                console.log(`🔄 FIELD_DEBUG: Field "${fieldInfo.label || fieldInfo.name}" - ID: ${fieldInfo.id}, Name: ${fieldInfo.name}, Type: ${fieldInfo.type}`);
+                console.log(`🔄 FIELD_DEBUG: Ollama answer: "${ollamaValue}"`);
+                console.log(`🔄 FIELD_DEBUG: Element DOM path: ${this.getElementPath(fieldInfo.element)}`);
+                
                 let result;
                 
                 // PRESERVE RESUME UPLOAD: Use existing file upload logic
@@ -512,9 +653,11 @@ class SmartFormFiller {
                     result = await this.fillField(fieldInfo); // Use existing method
                 } else if (ollamaValue && ollamaValue !== "SKIP_FILE_UPLOAD") {
                     // Use Ollama answer for non-file fields
+                    console.log(`🔄 FIELD_DEBUG: Using Ollama answer for field "${fieldInfo.label || fieldInfo.name}"`);
                     result = await this.fillFieldWithOllamaAnswer(fieldInfo, ollamaValue);
                 } else {
                     // Skip if no Ollama answer
+                    console.log(`🔄 FIELD_DEBUG: Skipping field "${fieldInfo.label || fieldInfo.name}" - no Ollama answer`);
                     result = {
                         field: fieldInfo.label || fieldInfo.name,
                         success: false,
@@ -763,20 +906,29 @@ class SmartFormFiller {
     async fillFieldWithOllamaAnswer(fieldInfo, ollamaValue) {
         const element = fieldInfo.element;
         
+        console.log(`🔍 DROPDOWN_DEBUG: Starting fillFieldWithOllamaAnswer for field "${fieldInfo.label || fieldInfo.name}"`);
+        console.log(`🔍 DROPDOWN_DEBUG: Element tag: ${element.tagName}, type: ${element.type}`);
+        console.log(`🔍 DROPDOWN_DEBUG: Ollama value: "${ollamaValue}"`);
+        console.log(`🔍 DROPDOWN_DEBUG: Field ID: ${fieldInfo.id}, Name: ${fieldInfo.name}`);
+        
         try {
             // Focus the element
             element.focus();
 
             // Fill based on element type
             if (element.tagName === 'SELECT') {
+                console.log(`🔍 DROPDOWN_DEBUG: Detected SELECT dropdown, calling fillSelectFieldWithOllama`);
                 return await this.fillSelectFieldWithOllama(element, ollamaValue, fieldInfo);
             } else if (element.type === 'checkbox' || element.type === 'radio') {
+                console.log(`🔍 DROPDOWN_DEBUG: Detected ${element.type}, calling fillBooleanFieldWithOllama`);
                 return await this.fillBooleanFieldWithOllama(element, ollamaValue, fieldInfo);
             } else {
+                console.log(`🔍 DROPDOWN_DEBUG: Detected text field (tag: ${element.tagName}, type: ${element.type}), calling fillTextFieldWithOllama`);
                 return await this.fillTextFieldWithOllama(element, ollamaValue, fieldInfo);
             }
 
         } catch (error) {
+            console.log(`🔍 DROPDOWN_DEBUG: Error in fillFieldWithOllamaAnswer: ${error.message}`);
             return {
                 field: fieldInfo.label || fieldInfo.name,
                 success: false,
@@ -786,31 +938,207 @@ class SmartFormFiller {
     }
 
     async fillTextFieldWithOllama(element, value, fieldInfo) {
+        console.log(`🔍 FILL_DEBUG: Starting fillTextFieldWithOllama for field "${fieldInfo.label || fieldInfo.name}"`);
+        console.log(`🔍 FILL_DEBUG: Target value: "${value}"`);
+        console.log(`🔍 FILL_DEBUG: Element initial value: "${element.value}"`);
+        console.log(`🔍 FILL_DEBUG: Element type: ${element.type}, tag: ${element.tagName}`);
+        console.log(`🔍 FILL_DEBUG: Element id: ${element.id}, name: ${element.name}`);
+        
+        // Detect if this is a location field that might be problematic
+        const isLocationField = (fieldInfo.label?.toLowerCase().includes('location') || 
+                               fieldInfo.name?.toLowerCase().includes('location') ||
+                               fieldInfo.id?.toLowerCase().includes('location'));
+        
+        if (isLocationField) {
+            console.log(`📍 LOCATION_FIX: Detected location field, using enhanced filling strategy`);
+            return await this.fillLocationFieldSafe(element, value, fieldInfo);
+        }
+        
         // Clear existing value
         element.value = '';
+        console.log(`🔍 FILL_DEBUG: Cleared field, current value: "${element.value}"`);
         
         // Type the Ollama answer character by character
         for (let i = 0; i < value.length; i++) {
+            const previousValue = element.value;
             element.value += value[i];
+            const newValue = element.value;
+            
+            console.log(`🔍 FILL_DEBUG: Character ${i+1}/${value.length}: "${value[i]}" | Before: "${previousValue}" | After: "${newValue}"`);
+            
             element.dispatchEvent(new Event('input', { bubbles: true }));
             element.dispatchEvent(new Event('keyup', { bubbles: true }));
+            
+            // Check if value was unexpectedly cleared
+            if (element.value !== newValue) {
+                console.log(`🔍 FILL_DEBUG: ⚠️ VALUE CHANGED UNEXPECTEDLY! Expected: "${newValue}", Actual: "${element.value}"`);
+                console.log(`🔍 FILL_DEBUG: This suggests an event listener is clearing the field`);
+            }
+            
             await this.delay(10); // Same speed as traditional method
         }
 
+        console.log(`🔍 FILL_DEBUG: After typing complete, field value: "${element.value}"`);
+        
         // Trigger change event
         element.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log(`🔍 FILL_DEBUG: After change event, field value: "${element.value}"`);
+        
         element.dispatchEvent(new Event('blur', { bubbles: true }));
+        console.log(`🔍 FILL_DEBUG: After blur event, field value: "${element.value}"`);
+
+        // Final value check
+        const finalValue = element.value;
+        const success = finalValue === value;
+        
+        console.log(`🔍 FILL_DEBUG: Final result - Expected: "${value}", Actual: "${finalValue}", Success: ${success}`);
+        
+        if (!success) {
+            console.log(`🔍 FILL_DEBUG: ❌ Field filling failed - value was cleared or changed by form validation/events`);
+        }
 
         return {
             field: fieldInfo.label || fieldInfo.name,
-            success: true,
-            value: value
+            success: success,
+            value: finalValue,
+            expectedValue: value
         };
     }
 
+    async fillLocationFieldSafe(element, value, fieldInfo) {
+        console.log(`📍 LOCATION_FIX: Starting safe location field filling`);
+        console.log(`📍 LOCATION_FIX: Target value: "${value}"`);
+        console.log(`📍 LOCATION_FIX: Element details:`, {
+            id: element.id,
+            name: element.name,
+            className: element.className,
+            type: element.type,
+            tagName: element.tagName
+        });
+        
+        // Strategy 1: Monitor value changes in real-time
+        let valueChangeCount = 0;
+        const originalValue = element.value;
+        
+        // Set up a mutation observer to catch value changes
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                    valueChangeCount++;
+                    console.log(`📍 LOCATION_FIX: 🚨 VALUE ATTRIBUTE CHANGED #${valueChangeCount}: "${element.value}"`);
+                }
+            });
+        });
+        
+        observer.observe(element, { attributes: true, attributeFilter: ['value'] });
+        
+        // Monitor property changes
+        let propertyChangeCount = 0;
+        const checkValueChange = () => {
+            if (element.value !== value && element.value !== originalValue) {
+                propertyChangeCount++;
+                console.log(`📍 LOCATION_FIX: 🚨 VALUE PROPERTY CHANGED #${propertyChangeCount}: "${element.value}"`);
+            }
+        };
+        
+        try {
+            console.log(`📍 LOCATION_FIX: Step 1 - Setting value directly`);
+            element.value = value;
+            console.log(`📍 LOCATION_FIX: After direct set: "${element.value}"`);
+            checkValueChange();
+            
+            await this.delay(50);
+            console.log(`📍 LOCATION_FIX: After 50ms: "${element.value}"`);
+            checkValueChange();
+            
+            console.log(`📍 LOCATION_FIX: Step 2 - Triggering input event`);
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            console.log(`📍 LOCATION_FIX: After input event: "${element.value}"`);
+            checkValueChange();
+            
+            await this.delay(50);
+            console.log(`📍 LOCATION_FIX: After 50ms: "${element.value}"`);
+            checkValueChange();
+            
+            console.log(`📍 LOCATION_FIX: Step 3 - Triggering change event`);
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log(`📍 LOCATION_FIX: After change event: "${element.value}"`);
+            checkValueChange();
+            
+            await this.delay(100);
+            console.log(`📍 LOCATION_FIX: After 100ms: "${element.value}"`);
+            checkValueChange();
+            
+            // Try to prevent clearing by setting readonly temporarily
+            if (element.value !== value) {
+                console.log(`📍 LOCATION_FIX: Step 4 - Value was cleared, trying readonly protection`);
+                element.readOnly = true;
+                element.value = value;
+                console.log(`📍 LOCATION_FIX: After readonly + set: "${element.value}"`);
+                
+                await this.delay(200);
+                element.readOnly = false;
+                console.log(`📍 LOCATION_FIX: After removing readonly: "${element.value}"`);
+            }
+            
+            // Final aggressive attempt - keep setting the value until it sticks
+            if (element.value !== value) {
+                console.log(`📍 LOCATION_FIX: Step 5 - Aggressive persistence attempt`);
+                for (let attempt = 0; attempt < 5; attempt++) {
+                    element.value = value;
+                    console.log(`📍 LOCATION_FIX: Persistence attempt ${attempt + 1}: "${element.value}"`);
+                    await this.delay(100);
+                    if (element.value === value) {
+                        console.log(`📍 LOCATION_FIX: ✅ Persistence worked on attempt ${attempt + 1}`);
+                        break;
+                    }
+                }
+            }
+            
+            observer.disconnect();
+            
+            const finalValue = element.value;
+            const success = finalValue === value;
+            
+            console.log(`📍 LOCATION_FIX: FINAL RESULT:`);
+            console.log(`📍 LOCATION_FIX: - Expected: "${value}"`);
+            console.log(`📍 LOCATION_FIX: - Actual: "${finalValue}"`);
+            console.log(`📍 LOCATION_FIX: - Success: ${success}`);
+            console.log(`📍 LOCATION_FIX: - Value attribute changes: ${valueChangeCount}`);
+            console.log(`📍 LOCATION_FIX: - Value property changes: ${propertyChangeCount}`);
+            
+            return {
+                field: fieldInfo.label || fieldInfo.name,
+                success: success,
+                value: finalValue,
+                strategy: 'monitored-aggressive'
+            };
+            
+        } catch (error) {
+            observer.disconnect();
+            console.log(`📍 LOCATION_FIX: Error during filling: ${error.message}`);
+            return {
+                field: fieldInfo.label || fieldInfo.name,
+                success: false,
+                value: element.value,
+                strategy: 'error',
+                error: error.message
+            };
+        }
+    }
+
     async fillSelectFieldWithOllama(element, value, fieldInfo) {
+        console.log(`🔍 SELECT_DEBUG: Starting fillSelectFieldWithOllama for "${fieldInfo.label || fieldInfo.name}"`);
+        console.log(`🔍 SELECT_DEBUG: Target value: "${value}"`);
+        
         // Find matching option (exact match or contains)
         const options = Array.from(element.options);
+        console.log(`🔍 SELECT_DEBUG: Found ${options.length} options in dropdown:`);
+        
+        options.forEach((option, index) => {
+            console.log(`🔍 SELECT_DEBUG: Option ${index}: value="${option.value}", text="${option.textContent.trim()}"`);
+        });
+        
         let matchingOption = null;
 
         // Try exact match first
@@ -818,6 +1146,10 @@ class SmartFormFiller {
             option.textContent.trim() === value ||
             option.value === value
         );
+        
+        if (matchingOption) {
+            console.log(`🔍 SELECT_DEBUG: ✅ EXACT MATCH found: "${matchingOption.textContent.trim()}" (value: "${matchingOption.value}")`);
+        }
 
         // Try partial match if exact match fails
         if (!matchingOption) {
@@ -825,11 +1157,19 @@ class SmartFormFiller {
                 option.textContent.toLowerCase().includes(value.toLowerCase()) ||
                 value.toLowerCase().includes(option.textContent.toLowerCase())
             );
+            
+            if (matchingOption) {
+                console.log(`🔍 SELECT_DEBUG: ✅ PARTIAL MATCH found: "${matchingOption.textContent.trim()}" (value: "${matchingOption.value}")`);
+            }
         }
 
         if (matchingOption) {
+            const oldValue = element.value;
             element.value = matchingOption.value;
             element.dispatchEvent(new Event('change', { bubbles: true }));
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            console.log(`🔍 SELECT_DEBUG: ✅ Successfully set dropdown value from "${oldValue}" to "${element.value}"`);
             
             return {
                 field: fieldInfo.label || fieldInfo.name,
@@ -838,6 +1178,7 @@ class SmartFormFiller {
             };
         }
 
+        console.log(`🔍 SELECT_DEBUG: ❌ NO MATCH found for "${value}" in dropdown options`);
         return {
             field: fieldInfo.label || fieldInfo.name,
             success: false,
@@ -846,19 +1187,43 @@ class SmartFormFiller {
     }
 
     async fillBooleanFieldWithOllama(element, value, fieldInfo) {
-        // For radio buttons, find the radio with matching label text
+        console.log(`🔍 RADIO_DEBUG: Starting fillBooleanFieldWithOllama for "${fieldInfo.label || fieldInfo.name}"`);
+        console.log(`🔍 RADIO_DEBUG: Target value: "${value}"`);
+        console.log(`🔍 RADIO_DEBUG: Element type: ${element.type}`);
+        
+        // For radio buttons, find the radio with matching label text or value
         if (element.type === 'radio') {
             const radioGroup = document.querySelectorAll(`input[type="radio"][name="${element.name}"]`);
+            console.log(`🔍 RADIO_DEBUG: Found ${radioGroup.length} radio buttons in group "${element.name}"`);
             
             for (const radio of radioGroup) {
                 const radioLabel = this.extractFieldLabel(radio);
-                if (radioLabel && (radioLabel.includes(value) || value.includes(radioLabel))) {
+                const radioValue = radio.value;
+                
+                console.log(`🔍 RADIO_DEBUG: Checking radio - Value: "${radioValue}", Label: "${radioLabel}"`);
+                
+                // Try multiple matching strategies
+                const matches = [
+                    radioValue === value,                              // Exact value match
+                    radioLabel === value,                              // Exact label match  
+                    radioValue.toLowerCase() === value.toLowerCase(),   // Case-insensitive value
+                    radioLabel && radioLabel.toLowerCase() === value.toLowerCase(), // Case-insensitive label
+                    radioLabel && radioLabel.includes(value),          // Label contains value
+                    value.includes(radioLabel),                        // Value contains label
+                    radioValue.includes(value),                        // Value contains radio value
+                    value.includes(radioValue)                         // Value contains radio value
+                ];
+                
+                if (matches.some(match => match)) {
+                    console.log(`🔍 RADIO_DEBUG: ✅ MATCH FOUND! Selecting radio with value "${radioValue}" and label "${radioLabel}"`);
                     radio.checked = true;
                     radio.dispatchEvent(new Event('change', { bubbles: true }));
+                    radio.dispatchEvent(new Event('click', { bubbles: true }));
+                    
                     return {
                         field: fieldInfo.label || fieldInfo.name,
                         success: true,
-                        value: radioLabel
+                        value: radioLabel || radioValue
                     };
                 }
             }
@@ -920,6 +1285,25 @@ class SmartFormFiller {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    getElementPath(element) {
+        // Helper function to get DOM path for debugging
+        const path = [];
+        let current = element;
+        
+        while (current && current !== document.body) {
+            let selector = current.tagName.toLowerCase();
+            if (current.id) {
+                selector += `#${current.id}`;
+            } else if (current.className) {
+                selector += `.${current.className.split(' ').join('.')}`;
+            }
+            path.unshift(selector);
+            current = current.parentElement;
+        }
+        
+        return path.join(' > ');
+    }
+
     detectPlatform() {
         const url = window.location.href.toLowerCase();
         const domain = window.location.hostname.toLowerCase();
@@ -959,6 +1343,12 @@ class SmartFormFiller {
         console.log('🧠 DEBUG: Form Structure being sent to Ollama:', JSON.stringify(formStructure, null, 2));
         console.log('⏳ AI is thinking... Please wait while the language model analyzes the form and generates intelligent answers.');
         
+        // Show AI thinking indicator in popup
+        await chrome.storage.local.set({
+            aiThinking: true,
+            aiThinkingStatus: 'Analyzing form fields with AI...'
+        });
+        
         try {
             // Call backend endpoint instead of Ollama directly
             const response = await fetch('http://localhost:8000/ai/analyze-form', {
@@ -968,7 +1358,8 @@ class SmartFormFiller {
                 },
                 body: JSON.stringify({
                     formStructure: formStructure,
-                    userProfile: userProfile
+                    userProfile: userProfile,
+                    jobUrl: window.location.href  // Include current page URL to lookup job description
                 })
             });
 
@@ -980,10 +1371,23 @@ class SmartFormFiller {
             console.log('✅ AI analysis complete! Generated intelligent answers for form fields.');
             console.log('🧠 TEST_ID: OLLAMA_SYSTEM_v4 - SUCCESS: Received answers from backend:', data.answers);
             
+            // Hide AI thinking indicator
+            await chrome.storage.local.set({
+                aiThinking: false,
+                aiThinkingStatus: 'Processing complete'
+            });
+            
             return data.answers;
             
         } catch (error) {
             console.error('🧠 ❌ Content: Error calling backend for Ollama analysis:', error);
+            
+            // Hide AI thinking indicator on error
+            await chrome.storage.local.set({
+                aiThinking: false,
+                aiThinkingStatus: 'AI processing failed'
+            });
+            
             // Fallback to old mapping system if backend fails
             console.log('🧠 Falling back to traditional field mapping...');
             return null;

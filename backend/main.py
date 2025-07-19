@@ -1158,79 +1158,140 @@ async def generate_field_mappings(profile_data: dict, form_fields: list) -> dict
     return mappings
 
 def extract_user_data_from_profile(user_profile: dict) -> dict:
-    """Extract clean, structured user data from profile"""
+    """Extract COMPLETE user data from profile - include everything for intelligent AI decisions"""
     try:
+        # Extract nested profile structure or flat structure
         personal_info = user_profile.get("personal_information", {})
         basic_info = personal_info.get("basic_information", {})
         contact_info = personal_info.get("contact_information", {})
-        address_info = personal_info.get("address", {})
+        address_info = personal_info.get("address_information", personal_info.get("address", {}))
+        
+        # Get all sections
         work_exp = user_profile.get("work_experience", [])
         education = user_profile.get("education", [])
+        skills = user_profile.get("skills", [])
+        languages = user_profile.get("languages", [])
         job_prefs = user_profile.get("job_preferences", {})
+        achievements = user_profile.get("achievements", [])
+        certificates = user_profile.get("certificates", [])
         
-        # Build clean user data structure
+        # Build comprehensive user data structure
         user_data = {
-            # Personal Information
-            "first_name": basic_info.get("first_name") or contact_info.get("first_name") or user_profile.get("first_name"),
-            "last_name": basic_info.get("last_name") or contact_info.get("last_name") or user_profile.get("last_name"),
-            "full_name": user_profile.get("full_name") or f"{basic_info.get('first_name', '')} {basic_info.get('last_name', '')}".strip(),
+            # === PERSONAL INFORMATION ===
+            "first_name": basic_info.get("first_name") or contact_info.get("first_name") or (user_profile.get("full_name", "").split()[0] if user_profile.get("full_name") else None),
+            "last_name": basic_info.get("last_name") or contact_info.get("last_name") or (" ".join(user_profile.get("full_name", "").split()[1:]) if user_profile.get("full_name") and len(user_profile.get("full_name", "").split()) > 1 else None),
+            "full_name": user_profile.get("full_name") or contact_info.get("full_name") or f"{basic_info.get('first_name', '')} {basic_info.get('last_name', '')}".strip(),
             "email": contact_info.get("email") or user_profile.get("email"),
             "phone": contact_info.get("telephone") or contact_info.get("phone") or user_profile.get("phone"),
+            "gender": user_profile.get("gender"),
             
-            # Current Location (where user lives now)
-            "current_city": address_info.get("city"),
-            "current_state": address_info.get("state"), 
-            "current_country": address_info.get("country"),
-            "current_location": f"{address_info.get('city', '')}, {address_info.get('state', '')}".strip().strip(','),
+            # === ADDRESS INFORMATION ===
+            "address": user_profile.get("address") or address_info.get("street_address"),
+            "city": user_profile.get("city") or address_info.get("city"),
+            "state": user_profile.get("state") or address_info.get("state"),
+            "zip_code": user_profile.get("zip_code") or address_info.get("zip_code"),
+            "country": user_profile.get("country") or address_info.get("country"),
+            "citizenship": user_profile.get("citizenship"),
             
-            # Job/Work Preferences (where user wants to work)
-            "preferred_location": job_prefs.get("location_preference"),  # e.g. "Remote", "New York", etc.
-            "willing_to_relocate": job_prefs.get("willing_to_relocate"),
-            "remote_preference": job_prefs.get("remote_preference"),
-            
-            # Professional Information
+            # === WORK EXPERIENCE (FULL DETAILS) ===
+            "work_experience": work_exp,
             "current_company": work_exp[0].get("company") if work_exp else None,
             "current_title": work_exp[0].get("title") if work_exp else None,
+            "current_job_description": work_exp[0].get("description") if work_exp else None,
+            "years_of_experience": len(work_exp),
+            "total_work_experience": job_prefs.get("total_work_experience"),
+            
+            # === EDUCATION (FULL DETAILS) ===
+            "education": education,
+            "highest_degree": education[0].get("degree") if education else job_prefs.get("highest_education"),
+            "school": education[0].get("school") or (education[0].get("institution") if education else None),
+            "gpa": education[0].get("gpa") if education else None,
+            
+            # === SKILLS & CAPABILITIES ===
+            "skills": skills,
+            "languages": languages,
+            "certificates": certificates,
+            "achievements": achievements,
+            
+            # === JOB PREFERENCES & REQUIREMENTS ===
+            "preferred_location": job_prefs.get("location_preference"),
+            "willing_to_relocate": job_prefs.get("willing_to_relocate"),
+            "remote_preference": job_prefs.get("remote_preference", "Remote"),  # Default to remote
+            "current_salary": job_prefs.get("current_salary"),
+            "expected_salary": job_prefs.get("expected_salary"),
+            "notice_period": job_prefs.get("notice_period"),
+            "visa_requirement": job_prefs.get("visa_requirement"),
+            "driving_license": job_prefs.get("driving_license"),
+            
+            # === PROFESSIONAL LINKS ===
             "linkedin": job_prefs.get("linkedin_link"),
-            "skills": user_profile.get("skills", []),
-            "education_degree": education[0].get("degree") if education else None,
-            "education_school": education[0].get("institution") if education else None
+            "github": job_prefs.get("github_link"), 
+            "portfolio": job_prefs.get("portfolio_link"),
+            
+            # === ADDITIONAL FIELDS (from flat structure) ===
+            "resume_path": user_profile.get("resume_path")
         }
         
-        # Remove None/empty values
-        return {k: v for k, v in user_data.items() if v and v != ", "}
+        # Remove None/empty values but keep False/0 values
+        cleaned_data = {}
+        for k, v in user_data.items():
+            if v is not None and v != "" and v != ", ":
+                cleaned_data[k] = v
+        
+        return cleaned_data
         
     except Exception as e:
         print(f"Error extracting user data: {e}")
         return {}
 
 def clean_form_structure(form_structure: dict) -> list:
-    """Clean form structure to only include essential data for Ollama"""
+    """Create minimal, intelligent form field representation for Ollama"""
     try:
-        clean_fields = []
+        minimal_fields = []
         
         for field in form_structure.get("fields", []):
-            clean_field = {
-                "id": field.get("id", ""),
-                "name": field.get("name", ""),
-                "type": field.get("type", ""),
-                "label": field.get("label", "")
+            # Extract the essential question and field identifier
+            field_id = field.get("name") or field.get("id", f"field_{len(minimal_fields)}")
+            # For radio buttons, prefer the 'question' field over 'label'
+            question = field.get("question") or field.get("label") or field.get("placeholder", "Unknown field")
+            field_type = field.get("type", "text")
+            
+            # Create minimal field representation
+            minimal_field = {
+                "id": field_id,
+                "question": question,
+                "type": field_type
             }
             
-            # Add options for dropdown/radio fields
-            if field.get("options"):
-                clean_field["options"] = [
-                    {"value": opt.get("value", ""), "text": opt.get("text", "")}
-                    for opt in field.get("options", [])
-                    if opt.get("text")  # Only include options with text
-                ]
+            # Handle select/radio fields intelligently
+            if field_type in ["select", "radio", "select-one"] and field.get("options"):
+                options = []
+                for opt in field.get("options", []):
+                    if isinstance(opt, dict):
+                        option_text = opt.get("text", opt.get("value", ""))
+                    else:
+                        option_text = str(opt)
+                    
+                    if option_text.strip():
+                        options.append(option_text.strip())
+                
+                if len(options) <= 10:
+                    # Short list - include all options for precise matching
+                    minimal_field["type"] = "select"
+                    minimal_field["options"] = options
+                else:
+                    # Long dropdown - include first 5 options as examples
+                    minimal_field["type"] = "text_from_dropdown"
+                    minimal_field["sample_options"] = options[:5]  # First 5 options as examples
+                    minimal_field["total_options"] = len(options)
+                    minimal_field["note"] = f"Dropdown with {len(options)} options - provide best match from similar values"
             
-            clean_fields.append(clean_field)
+            minimal_fields.append(minimal_field)
         
-        return clean_fields
+        return minimal_fields
         
     except Exception as e:
-        print(f"Error cleaning form structure: {e}")
+        print(f"Error creating minimal form structure: {e}")
         return []
 
 @app.post("/ai/analyze-form")
@@ -1242,11 +1303,25 @@ async def analyze_form_with_ollama(request: dict):
     try:
         form_structure = request.get('formStructure')
         user_profile = request.get('userProfile')
+        job_url = request.get('jobUrl', '')  # Optional job URL to lookup job description
         
         if not form_structure or not user_profile:
             raise HTTPException(status_code=400, detail="Missing formStructure or userProfile")
         
         print(f"🧠 Backend: Received form analysis request for {len(form_structure.get('fields', []))} fields")
+        
+        # Try to fetch job description from database if URL provided
+        job_description = ""
+        if job_url:
+            try:
+                job = session.query(Job).filter(Job.link == job_url).first()
+                if job and job.description:
+                    job_description = job.description
+                    print(f"🧠 DEBUG: Found job description: {job_description[:100]}...")
+                else:
+                    print(f"🧠 DEBUG: No job description found for URL: {job_url}")
+            except Exception as e:
+                print(f"🧠 DEBUG: Error fetching job description: {e}")
         
         # Extract clean user data from profile
         user_data = extract_user_data_from_profile(user_profile)
@@ -1256,37 +1331,85 @@ async def analyze_form_with_ollama(request: dict):
         clean_form = clean_form_structure(form_structure)
         print(f"🧠 DEBUG: Clean form structure: {json.dumps(clean_form, indent=2)}")
         
-        # Enhanced Ollama prompt that distinguishes between different types of location questions
-        prompt = f"""You are filling out a job application form. Map the user data to the appropriate form fields based on what each field is asking.
+        prompt = f"""You are filling a job application form using a candidate profile and job description.
 
-USER DATA:
+🎯 GOAL:  
+Answer every form field accurately using the profile and job data.  
+Always use real values. Adapt to any form layout or question style.
+
+===========================
+📄 PROFILE DATA:
 {json.dumps(user_data, indent=2)}
+===========================
 
-FORM FIELDS:
+===========================
+🧾 JOB DESCRIPTION (if available):
+{job_description if job_description else "No job description available"}
+===========================
+
+===========================
+📋 FORM FIELDS:
 {json.dumps(clean_form, indent=2)}
+===========================
 
-INSTRUCTIONS:
-1. READ THE FIELD LABEL carefully to understand what it's asking for
-2. Map data accordingly:
-   - "Current location", "Where do you live", "Address" → use current_location from user data
-   - "Which location are you applying for", "Preferred location", "Job location" → use preferred_location OR make intelligent choice from options
-   - "Name", "Full name" → use full_name
-   - "Email" → use email
-   - "Phone" → use phone
-   - For dropdown/radio fields: choose the EXACT option text that matches the user data
-3. For job location preferences, if user has no explicit preference:
-   - Choose "Remote" if available in options
-   - Otherwise choose closest match to user's current location
-   - Return null only if no reasonable choice can be made
-4. If no matching data exists in the user profile, return null
-5. Use the field "name" or "id" as the JSON key
+===========================
+🚨 RULES FOR FORM FILLING:
 
-RESPONSE FORMAT - Return ONLY valid JSON:
+1. ✅ **USE REAL PROFILE VALUES**  
+   - Do not use "null" if profile has valid info  
+   - Never use placeholders like "your_email@example.com"  
+   - Do not invent or guess values not in the profile  
+
+2. ✅ **ANSWER BASED ON QUESTION TEXT (NOT FIELD ID)**  
+   - Read each field's "question" text and interpret its intent  
+   - Match based on meaning, not field naming
+
+3. ✅ **DROPDOWN FIELDS**  
+   - Choose ONLY from listed options  
+   - Match as closely as possible using profile values  
+   - Return `null` if no match is valid  
+
+4. 🧭 **MAP MEANING TO PROFILE FIELDS**  
+   If the question is about:
+
+   - **Full name** → profile.full_name  
+   - **Email** → profile.email  
+   - **Phone** → profile.phone  
+   - **Current location** → profile.city + ", " + profile.state  
+   - **Current company** → profile.current_company  
+   - **LinkedIn** or similar URLs → profile.linkedin  
+   - **Resume** → profile.resume_path  
+   - **Nationality / Country** → use profile.country (e.g. "USA" → "United States")  
+   - **Languages** → use in order from profile.languages  
+   - **Visa or sponsorship** →  
+     - If profile.visa_requirement is "No" → Answer that **no sponsorship is required**  
+     - If profile.visa_requirement is "Yes" → Answer that **sponsorship is required**  
+     - Use the best-matching option from the dropdown  
+
+5. 🧠 **OPEN-ENDED QUESTIONS (e.g. "Additional Info", "Why are you a good fit?", "Tell us more")**  
+   - Generate a short paragraph (2–4 sentences) using relevant parts of:
+     - The job description (if provided)
+     - Profile's work experience, education, skills, and achievements  
+   - Focus on **fit, impact, and relevant experience**  
+   - Avoid vague filler or generic statements  
+   - If no job description is provided, use profile strengths that apply broadly  
+   - If nothing applies, return `null`
+
+6. ❌ **DO NOT:**  
+   - Answer required fields with null unless data is truly missing  
+   - Pick dropdown options that aren't listed  
+   - Make up institutions, job titles, or experience  
+   - Repeat data in open-ended answers that's already covered in other fields unless it adds new context  
+
+===========================
+📤 RESPONSE FORMAT:
+Return ONLY a JSON object mapping field IDs to values:
+
 {{
-  "field_name": "value_or_null"
+{chr(10).join([f'  "{field.get("id") or field.get("name")}": "answer_here",' for field in clean_form])}
 }}
 
-JSON:"""
+ONLY return the JSON object - no explanations:"""
 
         # Call Ollama API
         import requests
@@ -1318,32 +1441,96 @@ JSON:"""
         print(raw_response)
         print("=" * 80)
         
-        # Parse JSON from response - find the first complete JSON object
-        import re
-        
-        # First try to find JSON blocks
-        json_matches = re.findall(r'\{[^{}]*\}', raw_response)
-        if not json_matches:
-            # Try more aggressive matching for nested JSON
-            json_match = re.search(r'\{.*\}', raw_response, re.DOTALL)
-            if json_match:
-                json_matches = [json_match.group()]
-        
-        if not json_matches:
-            raise HTTPException(status_code=500, detail="No valid JSON found in Ollama response")
-        
-        # Try to parse each JSON match
-        answers = None
-        for json_text in json_matches:
+        # Enhanced JSON parsing - properly extract complete JSON objects
+        try:
+            # Try to parse the entire response as JSON first
+            answers = json.loads(raw_response.strip())
+            print(f"🧠 ✅ Direct JSON parse successful: {type(answers)} with {len(answers)} fields")
+        except json.JSONDecodeError:
+            # Fallback: Extract complete JSON object using brace counting
+            import re
+            
+            # Find the start of the JSON object
+            json_start = raw_response.find('{')
+            if json_start == -1:
+                print(f"🧠 ❌ No opening brace found in response: {raw_response[:500]}...")
+                raise HTTPException(status_code=500, detail="No JSON object found in Ollama response")
+            
+            # Count braces to find the complete JSON object
+            brace_count = 0
+            json_end = json_start
+            in_string = False
+            escaped = False
+            
+            for i, char in enumerate(raw_response[json_start:], json_start):
+                if not escaped:
+                    if char == '"' and not in_string:
+                        in_string = True
+                    elif char == '"' and in_string:
+                        in_string = False
+                    elif not in_string:
+                        if char == '{':
+                            brace_count += 1
+                        elif char == '}':
+                            brace_count -= 1
+                            if brace_count == 0:
+                                json_end = i + 1
+                                break
+                
+                escaped = (char == '\\' and not escaped)
+            
+            if brace_count != 0:
+                print(f"🧠 ❌ Unmatched braces in JSON response: {raw_response[:500]}...")
+                raise HTTPException(status_code=500, detail="Malformed JSON in Ollama response")
+            
+            # Extract and parse the complete JSON
+            json_text = raw_response[json_start:json_end]
             try:
-                answers = json.loads(json_text.strip())
-                break
-            except json.JSONDecodeError:
-                continue
+                answers = json.loads(json_text)
+                print(f"🧠 ✅ Brace-counted JSON parse successful: {type(answers)} with {len(answers)} fields")
+                print(f"🧠 📄 Extracted JSON length: {len(json_text)} characters")
+            except json.JSONDecodeError as e:
+                print(f"🧠 ❌ JSON parse failed: {e}")
+                print(f"🧠 Attempted to parse {len(json_text)} chars: {json_text[:500]}...")
+                print(f"🧠 Full JSON text: {json_text}")
+                raise HTTPException(status_code=500, detail=f"Failed to parse JSON: {str(e)}")
         
-        if answers is None:
-            print(f"🧠 Backend: Could not parse any JSON from: {raw_response}")
-            raise HTTPException(status_code=500, detail="Failed to parse JSON from Ollama response")
+        # Validate that we got answers for all fields
+        expected_fields = [field.get("id") or field.get("name") for field in clean_form]
+        received_fields = list(answers.keys())
+        
+        missing_fields = [f for f in expected_fields if f not in received_fields]
+        extra_fields = [f for f in received_fields if f not in expected_fields]
+        
+        print("=" * 80)
+        print("🔍 FIELD VALIDATION:")
+        print("=" * 80)
+        print(f"Expected {len(expected_fields)} fields: {expected_fields}")
+        print(f"Received {len(received_fields)} fields: {received_fields}")
+        
+        if missing_fields:
+            print(f"⚠️ MISSING FIELDS: {missing_fields}")
+        if extra_fields:
+            print(f"⚠️ EXTRA FIELDS: {extra_fields}")
+        
+        # Check dropdown validation
+        dropdown_violations = []
+        for field in clean_form:
+            field_id = field.get("id") or field.get("name")
+            if field_id in answers and field.get("type") == "select" and field.get("options"):
+                answer = answers[field_id]
+                valid_options = field["options"]
+                if answer is not None and answer not in valid_options:
+                    dropdown_violations.append({
+                        "field": field_id,
+                        "answer": answer,
+                        "valid_options": valid_options
+                    })
+        
+        if dropdown_violations:
+            print("❌ DROPDOWN VIOLATIONS:")
+            for violation in dropdown_violations:
+                print(f"  Field '{violation['field']}': answered '{violation['answer']}' but options are {violation['valid_options']}")
         
         print("=" * 80)
         print("✅ FINAL PARSED ANSWERS:")
