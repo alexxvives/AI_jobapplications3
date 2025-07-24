@@ -372,7 +372,7 @@ class JobApplicationAssistant {
                             ${this.userProfile ? 'Profile Active' : 'No Active Profile'}
                         </div>
                         <div class="profile-details-modern">
-                            ${this.userProfile ? `${this.userProfile.full_name || this.userProfile.name || 'Unknown'} • ${this.userProfile.email || 'No email'}` : 'Open dashboard to upload resume'}
+                            ${this.userProfile ? `${this.userProfile.personal_information?.full_name || this.userProfile.full_name || this.userProfile.name || 'Unknown'} • ${this.userProfile.personal_information?.email || this.userProfile.email || 'No email'}` : 'Open dashboard to upload resume'}
                         </div>
                     </div>
                 </div>
@@ -2221,7 +2221,7 @@ class JobApplicationAssistant {
     async updateJobQueueDisplay() {
         try {
             // Get job queue from storage
-            const result = await chrome.storage.local.get(['jobQueue', 'currentJobIndex']);
+            const result = await chrome.storage.local.get(['jobQueue', 'currentJobIndex', 'currentJob', 'automationActive']);
             const jobQueue = result.jobQueue || [];
             const currentJobIndex = result.currentJobIndex || 0;
             
@@ -2230,8 +2230,16 @@ class JobApplicationAssistant {
                 jobQueueLength: jobQueue.length,
                 currentJobIndex: currentJobIndex,
                 jobQueue: jobQueue,
+                currentJob: result.currentJob,
+                automationActive: result.automationActive,
                 storageResult: result
             });
+            
+            // If no job queue but we have a current job, create a single-job queue
+            if (jobQueue.length === 0 && result.currentJob && result.automationActive) {
+                console.log('🔍 DEBUG - Creating single-job queue from currentJob:', result.currentJob);
+                jobQueue.push(result.currentJob);
+            }
             
             const jobQueueDiv = document.getElementById('job-queue-modern');
             const queueCount = document.getElementById('queue-count');
