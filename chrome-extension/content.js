@@ -340,37 +340,91 @@ class JobApplicationAssistant {
         } else {
             this.floatingUI.className = '';
             this.floatingUI.innerHTML = `
-                <div class="assistant-header">
-                    <div class="assistant-logo">🤖</div>
-                    <div class="assistant-title">AI Job Assistant</div>
-                    <div class="assistant-controls">
-                        <div class="assistant-minimize" id="assistant-minimize">➖</div>
-                        <div class="assistant-close" id="assistant-close">×</div>
+                <!-- Modern Professional Floating UI -->
+                <div class="assistant-header-modern">
+                    <div class="assistant-logo-modern">🤖</div>
+                    <div class="assistant-title-modern">
+                        <h3>AI Job Assistant</h3>
+                        <p>Application Automation</p>
+                    </div>
+                    <div class="assistant-controls-modern">
+                        <div class="assistant-minimize-modern" id="assistant-minimize">➖</div>
+                        <div class="assistant-close-modern" id="assistant-close">×</div>
                     </div>
                 </div>
-                <div class="assistant-content" id="assistant-content">
-                    <div class="assistant-status" id="assistant-status">
-                        ${this.userProfile ? 'Profile loaded ✅' : 'No profile found ❌'}
+                
+                <!-- Profile Status Card -->
+                <div class="profile-status-card">
+                    <div class="status-indicator-modern ${this.userProfile ? 'active' : 'inactive'}">
+                        ${this.userProfile ? '✅' : '❌'}
                     </div>
-                    <div class="automation-status" id="automation-status" ${this.automationMode ? '' : 'style="display: none;"'}>
-                        <div class="status-indicator ${this.automationMode ? 'active' : ''}"></div>
-                        <span>Automation ${this.automationMode ? 'Active' : 'Inactive'}</span>
+                    <div class="status-info-modern">
+                        <div class="status-text-modern">
+                            ${this.userProfile ? 'Profile Active' : 'No Active Profile'}
+                        </div>
+                        <div class="profile-details-modern">
+                            ${this.userProfile ? `${this.userProfile.full_name || 'Unknown'} • ${this.userProfile.email || 'No email'}` : 'Open dashboard to upload resume'}
+                        </div>
                     </div>
-                    <div class="assistant-actions">
-                        <button id="fill-form-btn" ${!this.userProfile ? 'disabled' : ''}>
-                            🚀 Fill Form Now
+                </div>
+
+                <!-- Job Queue Info -->
+                <div class="job-queue-modern" id="job-queue-modern" style="display: none;">
+                    <div class="queue-header-modern">
+                        <span class="queue-icon">📋</span>
+                        <span class="queue-title">Application Queue</span>
+                        <span class="queue-count" id="queue-count">0 jobs remaining</span>
+                    </div>
+                    <div class="current-job-modern" id="current-job-modern" style="display: none;">
+                        <div class="job-label-modern">Current Job</div>
+                        <div class="job-title-modern" id="current-job-title-modern">Loading...</div>
+                        <div class="job-company-modern" id="current-job-company-modern">Loading...</div>
+                    </div>
+                    <div class="next-job-modern" id="next-job-modern" style="display: none;">
+                        <div class="job-label-modern next">Next Up</div>
+                        <div class="job-title-modern" id="next-job-title-modern">Loading...</div>
+                        <div class="job-company-modern" id="next-job-company-modern">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Form Controls -->
+                <div class="form-controls-modern">
+                    <div class="form-status-modern" id="form-status-modern">
+                        ${this.userProfile ? 'Ready to fill' : 'Upload profile first'}
+                    </div>
+                    <div class="control-buttons-modern">
+                        <button id="fill-form-btn" class="primary-btn-modern" ${!this.userProfile ? 'disabled' : ''}>
+                            <span class="btn-icon-modern">✨</span>
+                            Fill Form Now
                         </button>
-                        <!-- Update Profile button removed as requested -->
+                        <button id="next-job-btn" class="secondary-btn-modern" style="display: none;">
+                            <span class="btn-icon-modern">⏭️</span>
+                            Next Job
+                        </button>
                     </div>
-                    <div class="assistant-progress" id="assistant-progress" style="display: ${this.progressActive ? 'block' : 'none'};">
-                        <div class="progress-header">
-                            <div class="progress-title">🚀 Automation Progress</div>
-                            <div class="progress-summary" id="progress-summary">Starting automation...</div>
-                        </div>
-                        <div class="progress-steps" id="progress-steps">
-                            <!-- Progress steps will be added here dynamically -->
-                        </div>
+                </div>
+
+                <!-- Progress Tracker -->
+                <div class="assistant-progress-modern" id="assistant-progress" style="display: ${this.progressActive ? 'block' : 'none'};">
+                    <div class="progress-header-modern">
+                        <div class="progress-title-modern">⚡ Processing</div>
+                        <div class="progress-summary-modern" id="progress-summary">Starting automation...</div>
                     </div>
+                    <div class="progress-steps-modern" id="progress-steps">
+                        <!-- Progress steps will be added here dynamically -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-modern">
+                    <button id="open-dashboard-btn" class="action-btn-modern">
+                        <span class="btn-icon-modern">🚀</span>
+                        Dashboard
+                    </button>
+                    <button id="reset-session-btn" class="action-btn-modern danger">
+                        <span class="btn-icon-modern">🔄</span>
+                        Reset
+                    </button>
                 </div>
             `;
         }
@@ -391,6 +445,9 @@ class JobApplicationAssistant {
         
         // Re-attach event listeners after rendering
         this.attachEventListeners();
+        
+        // Update job queue display
+        this.updateJobQueueDisplay();
         
         // Setup dragging functionality after elements exist
         this.makeDraggable();
@@ -448,7 +505,29 @@ class JobApplicationAssistant {
             });
         }
         
-        // Setup profile button removed as requested
+        // Next job button
+        const nextJobBtn = document.getElementById('next-job-btn');
+        if (nextJobBtn) {
+            nextJobBtn.addEventListener('click', () => {
+                this.goToNextJob();
+            });
+        }
+        
+        // Dashboard button
+        const dashboardBtn = document.getElementById('open-dashboard-btn');
+        if (dashboardBtn) {
+            dashboardBtn.addEventListener('click', () => {
+                window.open('http://localhost:3000', '_blank');
+            });
+        }
+        
+        // Reset session button
+        const resetBtn = document.getElementById('reset-session-btn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                this.resetSession();
+            });
+        }
         
         // Automation event listeners
         const startAutomationBtn = document.getElementById('start-automation-btn');
@@ -2113,6 +2192,131 @@ class JobApplicationAssistant {
         }
         
         await this.startAutomatedFormFilling();
+    }
+
+    async updateJobQueueDisplay() {
+        try {
+            // Get job queue from storage
+            const result = await chrome.storage.local.get(['jobQueue', 'currentJobIndex']);
+            const jobQueue = result.jobQueue || [];
+            const currentJobIndex = result.currentJobIndex || 0;
+            
+            const jobQueueDiv = document.getElementById('job-queue-modern');
+            const queueCount = document.getElementById('queue-count');
+            const currentJobDiv = document.getElementById('current-job-modern');
+            const nextJobDiv = document.getElementById('next-job-modern');
+            const nextJobBtn = document.getElementById('next-job-btn');
+            
+            if (jobQueue.length > 0 && jobQueueDiv) {
+                jobQueueDiv.style.display = 'block';
+                
+                // Update queue count
+                const remainingJobs = jobQueue.length - currentJobIndex;
+                if (queueCount) {
+                    queueCount.textContent = `${remainingJobs} jobs remaining`;
+                }
+                
+                // Show current job
+                const currentJob = jobQueue[currentJobIndex];
+                if (currentJob && currentJobDiv) {
+                    currentJobDiv.style.display = 'block';
+                    const titleEl = document.getElementById('current-job-title-modern');
+                    const companyEl = document.getElementById('current-job-company-modern');
+                    if (titleEl) titleEl.textContent = currentJob.title || 'Unknown Title';
+                    if (companyEl) companyEl.textContent = currentJob.company || 'Unknown Company';
+                }
+                
+                // Show next job
+                const nextJob = jobQueue[currentJobIndex + 1];
+                if (nextJob && nextJobDiv) {
+                    nextJobDiv.style.display = 'block';
+                    const titleEl = document.getElementById('next-job-title-modern');
+                    const companyEl = document.getElementById('next-job-company-modern');
+                    if (titleEl) titleEl.textContent = nextJob.title || 'Unknown Title';
+                    if (companyEl) companyEl.textContent = nextJob.company || 'Unknown Company';
+                } else if (nextJobDiv) {
+                    nextJobDiv.style.display = 'none';
+                }
+                
+                // Show Next Job button only if there are more jobs
+                if (nextJobBtn) {
+                    if (currentJobIndex < jobQueue.length - 1) {
+                        nextJobBtn.style.display = 'block';
+                    } else {
+                        nextJobBtn.style.display = 'none';
+                    }
+                }
+                
+            } else if (jobQueueDiv) {
+                jobQueueDiv.style.display = 'none';
+                if (nextJobBtn) {
+                    nextJobBtn.style.display = 'none';
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ Error updating job queue display:', error);
+        }
+    }
+
+    async goToNextJob() {
+        try {
+            console.log('⏭️ Next Job button clicked - navigating to next application');
+            
+            // Get job queue from storage
+            const result = await chrome.storage.local.get(['jobQueue', 'currentJobIndex']);
+            const jobQueue = result.jobQueue || [];
+            let currentJobIndex = result.currentJobIndex || 0;
+            
+            if (currentJobIndex < jobQueue.length - 1) {
+                currentJobIndex++;
+                
+                // Store updated index
+                await chrome.storage.local.set({ currentJobIndex: currentJobIndex });
+                
+                // Get next job URL and navigate
+                const nextJob = jobQueue[currentJobIndex];
+                if (nextJob && nextJob.link) {
+                    console.log(`🚀 Navigating to: ${nextJob.title} at ${nextJob.company}`);
+                    window.location.href = nextJob.link;
+                } else {
+                    console.error('❌ Next job URL not found');
+                }
+            } else {
+                console.log('🏁 No more jobs in queue');
+                alert('No more jobs in the application queue!');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error navigating to next job:', error);
+        }
+    }
+
+    async resetSession() {
+        if (confirm('Reset automation session? This will clear all data and stop any active processes.')) {
+            try {
+                // Clear Chrome storage
+                await chrome.storage.local.clear();
+                
+                // Reset local state
+                this.userProfile = null;
+                this.currentSessionId = null;
+                this.automationMode = false;
+                this.progressActive = false;
+                
+                console.log('✅ Session reset successfully');
+                
+                // Update UI
+                this.renderUI();
+                
+                // Show success message
+                alert('Session reset successfully!');
+                
+            } catch (error) {
+                console.error('❌ Error resetting session:', error);
+                alert('Error resetting session. Please try again.');
+            }
+        }
     }
 
     async startAutomatedFormFilling() {

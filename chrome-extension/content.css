@@ -309,3 +309,477 @@
 .job-assistant-modal button:hover {
   transform: translateY(-1px);
 }
+/* Progress Tracker Styles */
+.assistant-progress {
+    padding: 16px;
+    border-top: 1px solid #e1e5e9;
+    background: #f8f9fa;
+}
+
+.progress-header {
+    margin-bottom: 12px;
+}
+
+.progress-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.progress-summary {
+    font-size: 12px;
+    color: #6b7280;
+    opacity: 0.9;
+}
+
+.progress-steps {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.progress-step {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 6px 0;
+    border-left: 3px solid transparent;
+    padding-left: 8px;
+    transition: all 0.3s ease;
+}
+
+.progress-step:last-child {
+    margin-bottom: 0;
+}
+
+.progress-step.active {
+    border-left-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 4px;
+    margin-left: -8px;
+    padding-left: 16px;
+}
+
+.progress-step.completed {
+    border-left-color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+    border-radius: 4px;
+    margin-left: -8px;
+    padding-left: 16px;
+}
+
+.progress-step.error {
+    border-left-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+    border-radius: 4px;
+    margin-left: -8px;
+    padding-left: 16px;
+}
+
+.step-icon {
+    font-size: 14px;
+    margin-right: 8px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.step-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.step-text {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 1px;
+}
+
+.step-subtext {
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+.step-timing {
+    font-size: 10px;
+    color: #9ca3af;
+    margin-left: auto;
+    padding-left: 6px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.progress-step.completed .step-timing {
+    color: #10b981;
+}
+
+.progress-step.error .step-timing {
+    color: #ef4444;
+}
+
+/* Progress Step Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.progress-step {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Spinning animation for active steps */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.progress-step.active .step-icon {
+    animation: spin 1s linear infinite;
+}
+
+/* Custom scrollbar for progress steps */
+.progress-steps::-webkit-scrollbar {
+    width: 3px;
+}
+
+.progress-steps::-webkit-scrollbar-track {
+    background: #f1f3f4;
+    border-radius: 2px;
+}
+
+.progress-steps::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 2px;
+}
+
+.progress-steps::-webkit-scrollbar-thumb:hover {
+    background: #5a67d8;
+}
+
+/* ========================================
+   MODERN FLOATING UI STYLES 
+   ======================================== */
+
+/* Modern Header */
+.assistant-header-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    cursor: move;
+    user-select: none;
+    border-radius: 12px 12px 0 0;
+}
+
+.assistant-logo-modern {
+    font-size: 24px;
+    margin-right: 12px;
+    animation: pulse 2s infinite;
+}
+
+.assistant-title-modern h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 2px 0;
+    letter-spacing: -0.3px;
+}
+
+.assistant-title-modern p {
+    font-size: 12px;
+    opacity: 0.9;
+    margin: 0;
+    font-weight: 400;
+}
+
+.assistant-controls-modern {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+}
+
+.assistant-minimize-modern,
+.assistant-close-modern {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.assistant-minimize-modern:hover,
+.assistant-close-modern:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* Profile Status Card */
+.profile-status-card {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    background: white;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.status-indicator-modern {
+    font-size: 18px;
+    margin-right: 12px;
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.2));
+}
+
+.status-info-modern {
+    flex: 1;
+}
+
+.status-text-modern {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 2px;
+}
+
+.profile-details-modern {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 400;
+}
+
+/* Job Queue */
+.job-queue-modern {
+    background: white;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.queue-header-modern {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.queue-icon {
+    font-size: 14px;
+}
+
+.queue-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    flex: 1;
+}
+
+.queue-count {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.current-job-modern,
+.next-job-modern {
+    padding: 12px 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.current-job-modern {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.next-job-modern {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.job-label-modern {
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+.job-label-modern.next {
+    color: #d97706;
+}
+
+.job-title-modern {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 2px;
+    line-height: 1.3;
+}
+
+.job-company-modern {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Form Controls */
+.form-controls-modern {
+    padding: 16px 20px;
+    background: white;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.form-status-modern {
+    font-size: 12px;
+    color: #10b981;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.control-buttons-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.primary-btn-modern {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.primary-btn-modern:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.primary-btn-modern:disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.secondary-btn-modern {
+    background: white;
+    color: #4c1d95;
+    border: 2px solid #8b5cf6;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.secondary-btn-modern:hover {
+    background: #8b5cf6;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-icon-modern {
+    font-size: 14px;
+}
+
+/* Progress Tracker Modern */
+.assistant-progress-modern {
+    background: white;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.progress-header-modern {
+    padding: 12px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.progress-title-modern {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 2px;
+}
+
+.progress-summary-modern {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.progress-steps-modern {
+    padding: 12px 20px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Quick Actions */
+.quick-actions-modern {
+    padding: 12px 20px;
+    display: flex;
+    gap: 8px;
+    background: #f8fafc;
+}
+
+.action-btn-modern {
+    flex: 1;
+    background: white;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.action-btn-modern:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+    transform: translateY(-1px);
+}
+
+.action-btn-modern.danger {
+    color: #e53e3e;
+    border-color: #fed7d7;
+}
+
+.action-btn-modern.danger:hover {
+    background: #fed7d7;
+    border-color: #feb2b2;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
