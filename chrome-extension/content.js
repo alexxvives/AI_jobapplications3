@@ -207,6 +207,7 @@ class JobApplicationAssistant {
                 // 🔍 DEBUG: Show what profile data we received for form filling
                 console.log('🔍 Profile loaded:', this.userProfile.full_name || this.userProfile.email);
                 console.log('🔍 Full profile structure:', this.userProfile);
+                console.log('🔍 DEBUG - Profile personal_information:', this.userProfile.personal_information);
                 console.log('🔍 DEBUG - All Chrome Storage Data:', result);
                 
                 // 🚀 AUTO-START FORM FILLING
@@ -372,7 +373,7 @@ class JobApplicationAssistant {
                             ${this.userProfile ? 'Profile Active' : 'No Active Profile'}
                         </div>
                         <div class="profile-details-modern">
-                            ${this.userProfile ? `${this.userProfile.personal_information?.full_name || this.userProfile.full_name || this.userProfile.name || 'Unknown'} • ${this.userProfile.personal_information?.email || this.userProfile.email || 'No email'}` : 'Open dashboard to upload resume'}
+                            ${this.userProfile ? this.getProfileDisplayText() : 'Open dashboard to upload resume'}
                         </div>
                     </div>
                 </div>
@@ -2218,6 +2219,38 @@ class JobApplicationAssistant {
         await this.startAutomatedFormFilling();
     }
 
+    getProfileDisplayText() {
+        if (!this.userProfile) return 'No profile';
+        
+        // Try multiple possible structures for name
+        const name = this.userProfile.personal_information?.full_name || 
+                    this.userProfile.full_name || 
+                    this.userProfile.name || 
+                    this.userProfile.personal_information?.name ||
+                    'Unknown';
+        
+        // Try multiple possible structures for email  
+        const email = this.userProfile.personal_information?.email ||
+                     this.userProfile.email ||
+                     'No email';
+        
+        console.log('🔍 DEBUG - Profile name extraction:', {
+            personal_info_full_name: this.userProfile.personal_information?.full_name,
+            full_name: this.userProfile.full_name,
+            name: this.userProfile.name,
+            personal_info_name: this.userProfile.personal_information?.name,
+            final_name: name
+        });
+        
+        console.log('🔍 DEBUG - Profile email extraction:', {
+            personal_info_email: this.userProfile.personal_information?.email,
+            email: this.userProfile.email,
+            final_email: email
+        });
+        
+        return `${name} • ${email}`;
+    }
+
     async updateJobQueueDisplay() {
         try {
             // Get job queue from storage
@@ -2239,6 +2272,26 @@ class JobApplicationAssistant {
             if (jobQueue.length === 0 && result.currentJob && result.automationActive) {
                 console.log('🔍 DEBUG - Creating single-job queue from currentJob:', result.currentJob);
                 jobQueue.push(result.currentJob);
+            }
+            
+            // Also check localStorage for additional job queue data
+            const localStorageSession = localStorage.getItem('currentAutomationSession');
+            if (localStorageSession) {
+                try {
+                    const sessionData = JSON.parse(localStorageSession);
+                    console.log('🔍 DEBUG - localStorage session data for jobs:', sessionData);
+                    if (sessionData.selectedJobs && sessionData.selectedJobs.length > 0) {
+                        console.log('🔍 DEBUG - Found additional jobs in localStorage:', sessionData.selectedJobs.length);
+                        // Use localStorage jobs if Chrome storage is empty or has fewer jobs
+                        if (jobQueue.length < sessionData.selectedJobs.length) {
+                            jobQueue.length = 0; // Clear existing
+                            jobQueue.push(...sessionData.selectedJobs);
+                            console.log('🔍 DEBUG - Updated job queue from localStorage:', jobQueue.length, 'jobs');
+                        }
+                    }
+                } catch (error) {
+                    console.error('🔍 DEBUG - Error parsing localStorage session:', error);
+                }
             }
             
             const jobQueueDiv = document.getElementById('job-queue-modern');
