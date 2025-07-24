@@ -21,6 +21,7 @@ class JobApplicationAssistant {
         this.submissionMonitor = null;
         this.currentSessionId = null;
         this.automationMode = false;
+        this.progressActive = false; // Track if progress tracker is active
         
         // Initialize on page load
         this.init();
@@ -84,10 +85,12 @@ class JobApplicationAssistant {
                         this.currentSessionId = automationData.currentSessionId;
                         this.automationMode = true;
                         
-                        // Update UI if it exists
-                        if (this.floatingUI && this.isJobApplicationPage()) {
+                        // Update UI if it exists (but avoid interrupting active progress)
+                        if (this.floatingUI && this.isJobApplicationPage() && !this.progressActive) {
                             this.renderUI();
                             console.log('🔄 UI updated with new profile data');
+                        } else if (this.progressActive) {
+                            console.log('🔄 Skipping UI render - progress tracker is active');
                         }
                         
                         // Profile data loaded via message
@@ -110,12 +113,34 @@ class JobApplicationAssistant {
                     this.currentSessionId = request.data.currentSessionId;
                     this.automationMode = true;
                     
-                    if (this.floatingUI) {
+                    if (this.floatingUI && !this.progressActive) {
                         this.renderUI();
                         console.log('🔄 UI updated with runtime profile data');
+                    } else if (this.progressActive) {
+                        console.log('🔄 Skipping UI render - progress tracker is active');
                     }
                     
                     sendResponse({ success: true });
+                }
+                
+                // Handle manual form filling request from popup
+                if (request.action === 'START_FORM_FILLING') {
+                    console.log('🎯 Manual form filling requested from popup');
+                    
+                    if (this.userProfile) {
+                        // Start manual form filling
+                        this.startAutomatedFormFilling().then(() => {
+                            sendResponse({ success: true, message: 'Form filling started' });
+                        }).catch((error) => {
+                            console.error('❌ Manual form filling failed:', error);
+                            sendResponse({ success: false, error: error.message });
+                        });
+                    } else {
+                        console.error('❌ No user profile found for manual form filling');
+                        sendResponse({ success: false, error: 'No user profile found' });
+                    }
+                    
+                    return true; // Keep message channel open for async response
                 }
                 
                 return true; // Keep message channel open
@@ -127,19 +152,16 @@ class JobApplicationAssistant {
     // This eliminates unnecessary background checking every 2 seconds
 
     stopPollingAndStartAutomation() {
-        // Update UI
-        if (this.floatingUI) {
+        // Update UI (but avoid interrupting active progress)
+        if (this.floatingUI && !this.progressActive) {
             this.renderUI();
             console.log('🔄 UI updated with profile data');
+        } else if (this.progressActive) {
+            console.log('🔄 Skipping UI render - progress tracker is active');
         }
         
-        // Start automated form filling if in automation mode
-        if (this.automationMode) {
-            setTimeout(() => {
-                console.log('🚀 Starting automated form filling...');
-                this.startAutomatedFormFilling();
-            }, 1000);
-        }
+        // Manual form filling only - automatic filling disabled
+        console.log('📋 Form filling ready - waiting for user to click "Fill Form Now" button');
         
         // Data found and automation started
     }
@@ -290,6 +312,20 @@ class JobApplicationAssistant {
     }
 
     renderUI() {
+        // Save progress content before re-rendering if active
+        let savedProgressContent = '';
+        let savedProgressSummary = '';
+        if (this.progressActive) {
+            const progressSteps = document.getElementById('progress-steps');
+            const progressSummary = document.getElementById('progress-summary');
+            if (progressSteps) {
+                savedProgressContent = progressSteps.innerHTML;
+            }
+            if (progressSummary) {
+                savedProgressSummary = progressSummary.textContent;
+            }
+        }
+
         if (this.isMinimized) {
             this.floatingUI.className = 'minimized';
             this.floatingUI.innerHTML = `
@@ -328,14 +364,31 @@ class JobApplicationAssistant {
                             ⚙️ ${this.userProfile ? 'Update Profile' : 'Setup Profile'}
                         </button>
                     </div>
-                    <div class="assistant-progress" id="assistant-progress" style="display: none;">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progress-fill"></div>
+                    <div class="assistant-progress" id="assistant-progress" style="display: ${this.progressActive ? 'block' : 'none'};">
+                        <div class="progress-header">
+                            <div class="progress-title">🚀 Automation Progress</div>
+                            <div class="progress-summary" id="progress-summary">Starting automation...</div>
                         </div>
-                        <div class="progress-text" id="progress-text">Filling forms...</div>
+                        <div class="progress-steps" id="progress-steps">
+                            <!-- Progress steps will be added here dynamically -->
+                        </div>
                     </div>
                 </div>
             `;
+        }
+        
+        // Restore progress content if it was active
+        if (this.progressActive && savedProgressContent) {
+            setTimeout(() => {
+                const progressSteps = document.getElementById('progress-steps');
+                const progressSummary = document.getElementById('progress-summary');
+                if (progressSteps) {
+                    progressSteps.innerHTML = savedProgressContent;
+                }
+                if (progressSummary && savedProgressSummary) {
+                    progressSummary.textContent = savedProgressSummary;
+                }
+            }, 10); // Small delay to ensure DOM is ready
         }
         
         // Re-attach event listeners after rendering
@@ -2025,11 +2078,8 @@ class JobApplicationAssistant {
                 // Update UI for automation mode
                 this.showAutomationUI();
                 
-                // Start automated form filling immediately
-                setTimeout(() => {
-                    console.log('🚀 Starting automated form filling...');
-                    this.startAutomatedFormFilling();
-                }, 2000); // Give page time to load
+                // Manual form filling only - automatic filling disabled
+                console.log('📋 Profile loaded - waiting for user to click "Fill Form Now" button');
                 
                 return;
             }
@@ -2045,10 +2095,8 @@ class JobApplicationAssistant {
                 // Update UI for automation mode
                 this.showAutomationUI();
                 
-                // Get current job from session and start form filling
-                setTimeout(() => {
-                    this.startAutomatedFormFilling();
-                }, 2000);
+                // Manual form filling only - automatic filling disabled
+                console.log('📋 Session loaded - waiting for user to click "Fill Form Now" button');
             }
         } catch (error) {
             console.error('❌ Error checking automation mode:', error);
@@ -2110,9 +2158,23 @@ class JobApplicationAssistant {
             
             console.log('✅ Automated form filling completed:', fillResult);
             
+            // Notify popup of successful form filling
+            chrome.runtime.sendMessage({
+                action: 'formFillComplete',
+                success: true,
+                message: 'Form filled successfully!'
+            });
+            
         } catch (error) {
             console.error('❌ Error in automated form filling:', error);
             this.updateAutomationStatus('Error occurred during automation', 0);
+            
+            // Notify popup of form filling error
+            chrome.runtime.sendMessage({
+                action: 'formFillError',
+                success: false,
+                error: error.message
+            });
         }
     }
 
@@ -2187,6 +2249,102 @@ class JobApplicationAssistant {
             setTimeout(() => {
                 automationStatus.style.display = 'none';
             }, 5000);
+        }
+    }
+
+    // Progress Tracker Methods
+    showProgressTracker() {
+        this.progressActive = true; // Set flag to preserve state across UI re-renders
+        const progressSection = document.getElementById('assistant-progress');
+        if (progressSection) {
+            progressSection.style.display = 'block';
+            this.initProgressTracker();
+        }
+    }
+
+    initProgressTracker() {
+        const progressSteps = document.getElementById('progress-steps');
+        const progressSummary = document.getElementById('progress-summary');
+        
+        if (progressSteps) {
+            progressSteps.innerHTML = ''; // Clear existing steps
+        }
+        if (progressSummary) {
+            progressSummary.textContent = 'Initializing automation...';
+        }
+    }
+
+    addProgressStep(stepId, icon, text, subtext = '', status = 'active') {
+        const progressSteps = document.getElementById('progress-steps');
+        const startTime = Date.now();
+        
+        if (!progressSteps) return;
+
+        // Check if step already exists
+        let stepElement = document.getElementById(`step-${stepId}`);
+        
+        if (!stepElement) {
+            // Create new step
+            stepElement = document.createElement('div');
+            stepElement.className = `progress-step ${status}`;
+            stepElement.id = `step-${stepId}`;
+            stepElement.dataset.startTime = startTime;
+            
+            stepElement.innerHTML = `
+                <div class="step-icon">${icon}</div>
+                <div class="step-content">
+                    <div class="step-text">${text}</div>
+                    <div class="step-subtext">${subtext}</div>
+                </div>
+                <div class="step-timing" id="timing-${stepId}">
+                    ${status === 'active' ? '⏳' : ''}
+                </div>
+            `;
+            
+            progressSteps.appendChild(stepElement);
+            
+            // Auto-scroll to bottom
+            progressSteps.scrollTop = progressSteps.scrollHeight;
+        }
+        
+        return stepElement;
+    }
+
+    updateProgressStep(stepId, status, timing = '') {
+        const stepElement = document.getElementById(`step-${stepId}`);
+        const timingElement = document.getElementById(`timing-${stepId}`);
+        
+        if (!stepElement) return;
+        
+        // Remove old status classes and add new one
+        stepElement.classList.remove('active', 'completed', 'error');
+        stepElement.classList.add(status);
+        
+        // Update timing
+        if (timingElement) {
+            if (status === 'completed' && stepElement.dataset.startTime) {
+                const duration = Date.now() - parseInt(stepElement.dataset.startTime);
+                timingElement.textContent = `${(duration / 1000).toFixed(1)}s`;
+            } else if (status === 'error') {
+                timingElement.textContent = '❌';
+            } else if (status === 'active') {
+                timingElement.textContent = '⏳';
+            }
+        }
+    }
+
+    updateProgressSummary(text) {
+        const progressSummary = document.getElementById('progress-summary');
+        if (progressSummary) {
+            progressSummary.textContent = text;
+        }
+    }
+
+    hideProgressTracker() {
+        this.progressActive = false; // Clear flag so future UI renders hide it
+        const progressSection = document.getElementById('assistant-progress');
+        if (progressSection) {
+            progressSection.style.display = 'none';
         }
     }
 }

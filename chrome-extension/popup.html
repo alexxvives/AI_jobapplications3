@@ -13,56 +13,122 @@
             <div class="logo">🤖</div>
             <div class="title">
                 <h1>AI Job Assistant</h1>
-                <p>Status Dashboard</p>
+                <p>Application Automation</p>
             </div>
         </div>
 
-        <!-- Profile Status -->
-        <div class="profile-status" id="profile-status">
-            <div class="status-indicator" id="status-indicator">❌</div>
-            <div class="status-text" id="status-text">No Active Profile</div>
+        <!-- Profile Status Card -->
+        <div class="profile-card" id="profile-card">
+            <div class="card-header">
+                <div class="status-indicator" id="status-indicator">❌</div>
+                <div class="status-info">
+                    <div class="status-text" id="status-text">No Active Profile</div>
+                    <div class="profile-details" id="profile-details"></div>
+                </div>
+            </div>
         </div>
 
-        <!-- Profile Information -->
-        <div class="profile-info" id="profile-info" style="display: none;">
-            <!-- Profile details will be displayed here -->
+        <!-- Job Queue Card -->
+        <div class="job-queue-card" id="job-queue-card" style="display: none;">
+            <div class="card-header">
+                <h3>📋 Application Queue</h3>
+                <div class="queue-stats" id="queue-stats">0 jobs remaining</div>
+            </div>
+            
+            <!-- Current Job -->
+            <div class="current-job" id="current-job" style="display: none;">
+                <div class="job-label">Current Job</div>
+                <div class="job-info">
+                    <div class="job-title" id="current-job-title">Loading...</div>
+                    <div class="job-company" id="current-job-company">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Next Job Preview -->
+            <div class="next-job" id="next-job" style="display: none;">
+                <div class="job-label">Next Up</div>
+                <div class="job-info">
+                    <div class="job-title" id="next-job-title">Loading...</div>
+                    <div class="job-company" id="next-job-company">Loading...</div>
+                </div>
+            </div>
         </div>
 
-        <!-- Session Information -->
-        <div class="session-info" id="session-info" style="display: none;">
-            <!-- Session details will be displayed here -->
+        <!-- Form Filling Controls -->
+        <div class="form-controls" id="form-controls" style="display: none;">
+            <div class="card-header">
+                <h3>🎯 Form Automation</h3>
+                <div class="form-status" id="form-status">Ready to fill</div>
+            </div>
+            
+            <div class="control-buttons">
+                <button id="fill-form-btn" class="primary-btn">
+                    <span class="btn-icon">✨</span>
+                    Fill Form Now
+                </button>
+                <button id="next-job-btn" class="secondary-btn" style="display: none;">
+                    <span class="btn-icon">⏭️</span>
+                    Next Job
+                </button>
+            </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button id="frontend-btn" class="primary-btn">
-                🚀 Open Frontend
+        <!-- Progress Tracker -->
+        <div class="progress-tracker" id="progress-tracker" style="display: none;">
+            <div class="card-header">
+                <h3>⚡ Processing</h3>
+                <div class="progress-summary" id="progress-summary">Initializing...</div>
+            </div>
+            <div class="progress-steps" id="progress-steps">
+                <!-- Progress steps will be added here dynamically -->
+            </div>
+        </div>
+
+        <!-- AI Thinking Indicator -->
+        <div class="ai-thinking" id="ai-thinking" style="display: none;">
+            <div class="thinking-animation">
+                <div class="dot dot1"></div>
+                <div class="dot dot2"></div>
+                <div class="dot dot3"></div>
+            </div>
+            <div class="thinking-text">
+                🧠 AI is analyzing form fields...
+            </div>
+            <div class="thinking-subtext" id="thinking-subtext">
+                Processing with Ollama
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button id="frontend-btn" class="action-btn">
+                <span class="btn-icon">🚀</span>
+                Open Dashboard
             </button>
-            <button id="clear-data-btn" class="danger-btn">
-                🗑️ Clear Data
+            <button id="clear-data-btn" class="action-btn danger">
+                <span class="btn-icon">🔄</span>
+                Reset Session
             </button>
         </div>
 
-        <!-- Instructions -->
-        <div class="instructions">
-            <h4>How to Use:</h4>
-            <ol>
-                <li>Open the frontend (localhost:3000)</li>
-                <li>Upload your resume to create a profile</li>
-                <li>Select jobs and start automation</li>
-                <li>Extension auto-fills forms on job pages</li>
-            </ol>
+        <!-- Stats Footer -->
+        <div class="stats-footer">
+            <div class="stat-item">
+                <div class="stat-number" id="filled-count">0</div>
+                <div class="stat-label">Forms Filled</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <div class="stat-number" id="success-rate">100%</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
         </div>
 
-        <!-- Footer -->
-        <div class="popup-footer">
-            <div class="stats" id="stats">
-                <span id="filled-count">0</span> applications auto-filled
-            </div>
-            <div class="links">
-                <a href="#" id="help-link">Help</a>
-                <a href="#" id="feedback-link">Feedback</a>
-            </div>
+        <!-- Help Links -->
+        <div class="help-links">
+            <a href="#" id="help-link">Help & Support</a>
+            <span class="link-divider">•</span>
+            <a href="#" id="feedback-link">Send Feedback</a>
         </div>
     </div>
 
