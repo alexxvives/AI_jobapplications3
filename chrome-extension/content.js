@@ -360,9 +360,7 @@ class JobApplicationAssistant {
                         <button id="fill-form-btn" ${!this.userProfile ? 'disabled' : ''}>
                             🚀 Fill Form Now
                         </button>
-                        <button id="setup-profile-btn">
-                            ⚙️ ${this.userProfile ? 'Update Profile' : 'Setup Profile'}
-                        </button>
+                        <!-- Update Profile button removed as requested -->
                     </div>
                     <div class="assistant-progress" id="assistant-progress" style="display: ${this.progressActive ? 'block' : 'none'};">
                         <div class="progress-header">
@@ -450,13 +448,7 @@ class JobApplicationAssistant {
             });
         }
         
-        // Setup profile button
-        const setupBtn = document.getElementById('setup-profile-btn');
-        if (setupBtn) {
-            setupBtn.addEventListener('click', () => {
-                this.openProfileSetup();
-            });
-        }
+        // Setup profile button removed as requested
         
         // Automation event listeners
         const startAutomationBtn = document.getElementById('start-automation-btn');
