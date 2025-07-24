@@ -7,6 +7,8 @@ import uvicorn
 import os
 import time
 import json
+import subprocess
+import requests
 from datetime import timedelta
 from pydantic import BaseModel
 
@@ -52,6 +54,64 @@ app.add_middleware(
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
+
+# Ollama management functions
+def check_ollama_running():
+    """Check if Ollama service is running"""
+    try:
+        response = requests.get('http://localhost:11434/api/tags', timeout=5)
+        return response.status_code == 200
+    except requests.exceptions.RequestException:
+        return False
+
+def start_ollama_service():
+    """Start Ollama service if not running"""
+    try:
+        if check_ollama_running():
+            print("🤖 Ollama is already running")
+            return True
+        
+        print("🤖 Starting Ollama service...")
+        
+        # Try different Ollama paths
+        ollama_paths = [
+            "/home/alexxvives/ollama/bin/ollama",  # Custom installation path
+            "/usr/local/bin/ollama",              # Standard Linux path
+            "/opt/homebrew/bin/ollama",           # macOS Homebrew path
+            "ollama"                              # System PATH
+        ]
+        
+        for ollama_path in ollama_paths:
+            try:
+                # Start Ollama service in background
+                print(f"🤖 Trying to start Ollama at: {ollama_path}")
+                subprocess.Popen([ollama_path, "serve"], 
+                               stdout=subprocess.DEVNULL, 
+                               stderr=subprocess.DEVNULL,
+                               start_new_session=True)
+                
+                # Wait for service to start (up to 15 seconds)
+                for i in range(15):
+                    time.sleep(1)
+                    if check_ollama_running():
+                        print(f"🤖 ✅ Ollama started successfully at {ollama_path}")
+                        return True
+                
+                print(f"🤖 ❌ Ollama didn't start at {ollama_path}")
+                
+            except FileNotFoundError:
+                print(f"🤖 ❌ Ollama not found at {ollama_path}")
+                continue
+            except Exception as e:
+                print(f"🤖 ❌ Error starting Ollama at {ollama_path}: {e}")
+                continue
+        
+        print("🤖 ❌ Failed to start Ollama service")
+        return False
+        
+    except Exception as e:
+        print(f"🤖 ❌ Error in start_ollama_service: {e}")
+        return False
 
 # Initialize components
 agent_orchestrator = AgentOrchestrator()
@@ -422,6 +482,12 @@ async def start_automation_session(
     """Start a new job application automation session with profile selection"""
     try:
         print("DEBUG: /automation/start endpoint reached")
+        
+        # Start Ollama service if not running
+        print("🤖 Checking Ollama service...")
+        if not start_ollama_service():
+            print("🤖 ⚠️ Warning: Ollama service failed to start - AI form filling may not work")
+        
         print(f"DEBUG: Current user: {current_user.email if current_user else 'None'}")
         print(f"DEBUG: Current user ID: {current_user.id if current_user else 'None'}")
         data = await request.json()
@@ -997,61 +1063,46 @@ async def delete_user_profile(
 # Chrome Extension API Bridge Endpoints
 @app.post("/api/chrome-extension/analyze-form")
 async def analyze_form_fields(
-    request: Request,
-    current_user: User = Depends(get_current_user)
+    request: Request
 ):
     """
     Analyze form fields extracted by Chrome extension
     Returns AI-generated field mappings
     """
+    # Redirect to modern AI endpoint logic - no authentication required for Chrome extension
     try:
-        data = await request.json()
-        form_fields = data.get('form_fields', [])
-        profile_id = data.get('profile_id')
+        request_data = await request.json()
         
-        if not form_fields:
-            raise HTTPException(status_code=400, detail="No form fields provided")
-        
-        # Get user profile
-        db = SessionLocal()
-        try:
-            profile = db.query(Profile).filter(
-                Profile.id == profile_id,
-                Profile.user_id == current_user.id
-            ).first()
+        # Check if request is in new format (formStructure/userProfile) or old format  
+        if 'formStructure' in request_data and 'userProfile' in request_data:
+            # New format - pass through to modern AI logic
+            return await analyze_form_with_ollama(request_data)
+        else:
+            # Old format - convert and redirect
+            form_fields = request_data.get('form_fields', [])
+            profile_id = request_data.get('profile_id')
             
-            if not profile:
-                raise HTTPException(status_code=404, detail="Profile not found")
+            if not form_fields:
+                raise HTTPException(status_code=400, detail="No form fields provided")
             
-            # Convert profile to dict for AI processing
-            profile_data = {
-                'personal_information': {
-                    'full_name': profile.full_name,
-                    'email': profile.email,
-                    'phone': profile.phone,
-                    'address': profile.address,
-                    'city': profile.city,
-                    'state': profile.state,
-                    'zip_code': profile.zip_code,
-                    'country': profile.country
-                },
-                'work_experience': profile.work_experience or [],
-                'education': profile.education or [],
-                'skills': profile.skills or [],
-                'languages': profile.languages or []
+            # Convert to new format and call modern endpoint
+            converted_request = {
+                'formStructure': {'fields': form_fields},
+                'userProfile': {'id': profile_id},  # Minimal profile for now
+                'jobUrl': request_data.get('jobUrl', '')
             }
             
-            # Generate field mappings using AI (placeholder for Ollama integration)
-            field_mappings = await generate_field_mappings(profile_data, form_fields)
+            # Create new request object
+            from fastapi import Request
+            import json
             
-            return {
-                "success": True,
-                "field_mappings": field_mappings,
-                "profile_id": profile_id
-            }
+            class MockRequest:
+                def __init__(self, data):
+                    self._data = data
+                async def json(self):
+                    return self._data
             
-        finally:
-            db.close()
+            return await analyze_form_with_ollama(converted_request)
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Form analysis failed: {str(e)}")
@@ -1283,6 +1334,7 @@ def clean_form_structure(form_structure: dict) -> list:
                     # Long dropdown - include first 5 options as examples
                     minimal_field["type"] = "text_from_dropdown"
                     minimal_field["sample_options"] = options[:5]  # First 5 options as examples
+                    minimal_field["all_options"] = options  # Store all options for validation
                     minimal_field["total_options"] = len(options)
                     minimal_field["note"] = f"Dropdown with {len(options)} options - provide best match from similar values"
             
@@ -1293,6 +1345,124 @@ def clean_form_structure(form_structure: dict) -> list:
     except Exception as e:
         print(f"Error creating minimal form structure: {e}")
         return []
+
+def create_semantic_field_mapping(clean_form):
+    """
+    Create semantic field names for Ollama to avoid UUID confusion.
+    Returns: (mapping_dict, llm_form_structure)
+    """
+    semantic_mapping = {}  # semantic_name -> html_field_id
+    llm_form = []
+    
+    # Counters for duplicate semantic names
+    counters = {}
+    
+    for field in clean_form:
+        html_field_id = field.get("id") or field.get("name")
+        question = field.get("question", "").lower().strip()
+        field_type = field.get("type", "")
+        
+        # Generate semantic name based on question content
+        semantic_name = generate_semantic_name(question, field_type, counters)
+        
+        # Store mapping
+        semantic_mapping[semantic_name] = html_field_id
+        
+        # Create LLM field structure with semantic name
+        llm_field = {
+            "id": semantic_name,  # Use semantic name instead of HTML ID
+            "question": field.get("question"),
+            "type": field_type
+        }
+        
+        # Copy relevant field properties (but not all_options to avoid confusing LLM)
+        if "options" in field:
+            llm_field["options"] = field["options"]
+        if "sample_options" in field:
+            llm_field["sample_options"] = field["sample_options"]
+            llm_field["total_options"] = field.get("total_options", len(field["sample_options"]))
+            llm_field["note"] = field.get("note", "")
+            # Don't send all_options to LLM - keep only in clean_form for validation
+            
+        llm_form.append(llm_field)
+    
+    return semantic_mapping, llm_form
+
+def generate_semantic_name(question, field_type, counters):
+    """Generate clean semantic field names based on question content."""
+    question = question.lower().strip().replace("✱", "").replace("*", "")
+    
+    # Define semantic mappings based on question keywords
+    semantic_mappings = {
+        # Personal info
+        ("full name", "name"): "full_name",
+        ("first name",): "first_name", 
+        ("last name",): "last_name",
+        ("email",): "email",
+        ("phone", "telephone"): "phone",
+        
+        # Location/Address
+        ("current location", "where do you live", "location"): "current_location",
+        ("address",): "address",
+        ("city",): "city",
+        ("state",): "state",
+        ("zip", "postal"): "zip_code",
+        ("country", "nationality", "what is your nationality"): "nationality",
+        
+        # Work/Company
+        ("current company", "company", "organization", "org"): "current_company",
+        ("current position", "current title", "position", "title"): "current_title",
+        
+        # Social/Links
+        ("linkedin", "social", "links", "urls", "url"): "linkedin_url",
+        ("website", "portfolio"): "website",
+        
+        # Visa/Legal
+        ("visa", "sponsorship", "sponsor", "work authorization"): "visa_sponsorship",
+        
+        # Languages
+        ("language",): "language",
+        
+        # Location preference
+        ("which location", "applying for", "office location", "location preference", "opportunity location"): "job_location_preference",
+        
+        # Files
+        ("resume", "cv"): "resume_file",
+        ("cover letter",): "cover_letter_file",
+        
+        # Open-ended
+        ("additional", "comments", "tell us", "why", "describe", "information"): "additional_info"
+    }
+    
+    # Find matching semantic name (check longer patterns first for better matching)
+    semantic_name = None
+    # Sort by longest keyword first to prioritize more specific matches
+    sorted_mappings = sorted(semantic_mappings.items(), key=lambda x: max(len(kw) for kw in x[0]), reverse=True)
+    
+    for keywords, name in sorted_mappings:
+        if any(keyword in question for keyword in keywords):
+            semantic_name = name
+            break
+    
+    # Default fallback based on field type
+    if not semantic_name:
+        if field_type == "file":
+            semantic_name = "file_upload"
+        elif field_type in ["select", "text_from_dropdown"]:
+            semantic_name = "dropdown_field"
+        elif field_type == "textarea":
+            semantic_name = "text_area"
+        else:
+            semantic_name = "text_field"
+    
+    # Handle duplicates by adding counter
+    if semantic_name in counters:
+        counters[semantic_name] += 1
+        semantic_name = f"{semantic_name}_{counters[semantic_name]}"
+    else:
+        counters[semantic_name] = 1
+        
+    return semantic_name
 
 @app.post("/ai/analyze-form")
 async def analyze_form_with_ollama(request: dict):
@@ -1314,12 +1484,14 @@ async def analyze_form_with_ollama(request: dict):
         job_description = ""
         if job_url:
             try:
-                job = session.query(Job).filter(Job.link == job_url).first()
+                db_session = SessionLocal()
+                job = db_session.query(Job).filter(Job.link == job_url).first()
                 if job and job.description:
                     job_description = job.description
                     print(f"🧠 DEBUG: Found job description: {job_description[:100]}...")
                 else:
                     print(f"🧠 DEBUG: No job description found for URL: {job_url}")
+                db_session.close()
             except Exception as e:
                 print(f"🧠 DEBUG: Error fetching job description: {e}")
         
@@ -1330,6 +1502,17 @@ async def analyze_form_with_ollama(request: dict):
         # Clean form structure (remove positioning and unnecessary data)
         clean_form = clean_form_structure(form_structure)
         print(f"🧠 DEBUG: Clean form structure: {json.dumps(clean_form, indent=2)}")
+        
+        # Create semantic field mapping for Ollama (to avoid UUID confusion)
+        semantic_mapping, llm_form = create_semantic_field_mapping(clean_form)
+        print("🔄 SEMANTIC FIELD MAPPING:")
+        print("=" * 40)
+        for semantic_name, html_id in semantic_mapping.items():
+            # Find the question for this field
+            question = next((f.get('question', '') for f in clean_form if f.get('id', f.get('name')) == html_id), '')
+            print(f"  {semantic_name} -> {html_id}")
+            print(f"    Question: \"{question}\"")
+        print("=" * 40)
         
         prompt = f"""You are filling a job application form using a candidate profile and job description.
 
@@ -1349,7 +1532,7 @@ Always use real values. Adapt to any form layout or question style.
 
 ===========================
 📋 FORM FIELDS:
-{json.dumps(clean_form, indent=2)}
+{json.dumps(llm_form, indent=2)}
 ===========================
 
 ===========================
@@ -1406,10 +1589,15 @@ Always use real values. Adapt to any form layout or question style.
 Return ONLY a JSON object mapping field IDs to values:
 
 {{
-{chr(10).join([f'  "{field.get("id") or field.get("name")}": "answer_here",' for field in clean_form])}
+{chr(10).join([f'  "{field.get("id")}": "answer_here",' for field in llm_form])}
 }}
 
 ONLY return the JSON object - no explanations:"""
+
+        # Ensure Ollama is running before calling API
+        print("🤖 Ensuring Ollama service is running...")
+        if not start_ollama_service():
+            raise HTTPException(status_code=503, detail="Ollama service is not available. Please ensure Ollama is installed and running.")
 
         # Call Ollama API
         import requests
@@ -1420,15 +1608,29 @@ ONLY return the JSON object - no explanations:"""
         print(prompt)
         print("=" * 80)
         
-        ollama_response = requests.post(
-            'http://localhost:11434/api/generate',
-            json={
-                'model': 'llama3.2',
-                'prompt': prompt,
-                'stream': False
-            },
-            timeout=30
-        )
+        try:
+            print("🧠 Backend: Starting Ollama API call...")
+            start_time = time.time()
+            
+            ollama_response = requests.post(
+                'http://localhost:11434/api/generate',
+                json={
+                    'model': 'llama3.2',
+                    'prompt': prompt,
+                    'stream': False
+                },
+                timeout=120
+            )
+            
+            end_time = time.time()
+            print(f"🧠 Backend: Ollama API call completed in {end_time - start_time:.2f} seconds")
+            
+        except requests.exceptions.Timeout as e:
+            print(f"🧠 Backend: ❌ Ollama API timeout after 120 seconds")
+            raise HTTPException(status_code=500, detail="Ollama AI service timed out. Please try again with a simpler form or check if Ollama is running properly.")
+        except requests.exceptions.RequestException as e:
+            print(f"🧠 Backend: ❌ Ollama API connection error: {e}")
+            raise HTTPException(status_code=500, detail=f"Ollama AI service connection error: {str(e)}")
         
         if ollama_response.status_code != 200:
             raise HTTPException(status_code=500, detail=f"Ollama API error: {ollama_response.status_code}")
@@ -1495,7 +1697,19 @@ ONLY return the JSON object - no explanations:"""
                 print(f"🧠 Full JSON text: {json_text}")
                 raise HTTPException(status_code=500, detail=f"Failed to parse JSON: {str(e)}")
         
-        # Validate that we got answers for all fields
+        # Map semantic field names back to HTML field IDs
+        html_answers = {}
+        for semantic_name, answer in answers.items():
+            if semantic_name in semantic_mapping:
+                html_field_id = semantic_mapping[semantic_name]
+                html_answers[html_field_id] = answer
+            else:
+                print(f"⚠️ Semantic field '{semantic_name}' not found in mapping")
+        
+        # Replace answers with mapped HTML field IDs
+        answers = html_answers
+        
+        # Validate that we got answers for expected fields
         expected_fields = [field.get("id") or field.get("name") for field in clean_form]
         received_fields = list(answers.keys())
         
@@ -1513,19 +1727,114 @@ ONLY return the JSON object - no explanations:"""
         if extra_fields:
             print(f"⚠️ EXTRA FIELDS: {extra_fields}")
         
-        # Check dropdown validation
+        # Check dropdown validation and auto-correct violations
         dropdown_violations = []
         for field in clean_form:
             field_id = field.get("id") or field.get("name")
-            if field_id in answers and field.get("type") == "select" and field.get("options"):
+            field_type = field.get("type")
+            
+            # Check both "select" and "text_from_dropdown" fields
+            if field_id in answers and field_type in ["select", "text_from_dropdown"]:
                 answer = answers[field_id]
-                valid_options = field["options"]
-                if answer is not None and answer not in valid_options:
+                # Use all_options if available (for large dropdowns), otherwise use options or sample_options
+                valid_options = field.get("all_options") or field.get("options") or field.get("sample_options", [])
+                
+                if answer is not None and valid_options and answer not in valid_options:
                     dropdown_violations.append({
                         "field": field_id,
                         "answer": answer,
-                        "valid_options": valid_options
+                        "valid_options": valid_options,
+                        "question": field.get("question", "")
                     })
+                    
+                    # AUTO-CORRECT: Try to find best match
+                    print(f"🔧 AUTO-CORRECTING dropdown violation for '{field_id}':")
+                    print(f"   Question: {field.get('question', '')}")
+                    print(f"   Bad answer: '{answer}'")
+                    print(f"   Using {len(valid_options)} validation options: {valid_options[:10]}{'...' if len(valid_options) > 10 else ''}")
+                    
+                    # Smart matching based on common patterns
+                    corrected_answer = None
+                    answer_lower = str(answer).lower()
+                    question_lower = field.get('question', '').lower()
+                    
+                    # Special handling for visa/sponsorship questions
+                    if 'visa' in question_lower or 'sponsor' in question_lower:
+                        if 'no' in answer_lower or answer_lower == 'usa' or answer_lower == 'us':
+                            # User probably doesn't need sponsorship
+                            for option in valid_options:
+                                if 'no' in option.lower() and ('visa' in option.lower() or 'sponsor' in option.lower()):
+                                    corrected_answer = option
+                                    break
+                        elif 'yes' in answer_lower:
+                            # User needs sponsorship
+                            for option in valid_options:
+                                if 'yes' in option.lower() and 'sponsor' in option.lower():
+                                    corrected_answer = option
+                                    break
+                    
+                    # Special handling for country/nationality questions
+                    elif 'nationality' in question_lower or 'country' in question_lower:
+                        # Map common country codes/names
+                        country_mappings = {
+                            'usa': ['united states', 'america', 'usa', 'us'],
+                            'uk': ['united kingdom', 'britain', 'uk', 'england'],
+                            'spain': ['spain', 'spanish'],
+                            'france': ['france', 'french'],
+                            'germany': ['germany', 'german'],
+                            'canada': ['canada', 'canadian'],
+                            'australia': ['australia', 'australian']
+                        }
+                        
+                        for country_group in country_mappings.values():
+                            if answer_lower in country_group:
+                                for option in valid_options:
+                                    if any(country in option.lower() for country in country_group):
+                                        corrected_answer = option
+                                        break
+                                if corrected_answer:
+                                    break
+                    
+                    # Special handling for language questions
+                    elif 'language' in question_lower:
+                        # Map common language names
+                        language_mappings = {
+                            'english': ['english', 'en'],
+                            'spanish': ['spanish', 'español', 'es'],
+                            'french': ['french', 'français', 'fr'],
+                            'german': ['german', 'deutsch', 'de'],
+                            'italian': ['italian', 'italiano', 'it'],
+                            'portuguese': ['portuguese', 'português', 'pt'],
+                            'chinese': ['chinese', 'mandarin', 'zh'],
+                            'japanese': ['japanese', 'ja'],
+                            'korean': ['korean', 'ko'],
+                            'arabic': ['arabic', 'ar'],
+                            'russian': ['russian', 'ru']
+                        }
+                        
+                        for lang_variants in language_mappings.values():
+                            if answer_lower in lang_variants:
+                                for option in valid_options:
+                                    if any(variant in option.lower() for variant in lang_variants):
+                                        corrected_answer = option
+                                        break
+                                if corrected_answer:
+                                    break
+                    
+                    # General partial matching
+                    if not corrected_answer:
+                        for option in valid_options:
+                            if option.lower() != 'select...' and answer_lower in option.lower():
+                                corrected_answer = option
+                                break
+                    
+                    # If still no match, set to null
+                    if corrected_answer:
+                        answers[field_id] = corrected_answer
+                        print(f"   ✅ Corrected to: '{corrected_answer}'")
+                    else:
+                        answers[field_id] = None
+                        print(f"   ❌ No match found, set to null (will be skipped)")
         
         if dropdown_violations:
             print("❌ DROPDOWN VIOLATIONS:")
