@@ -207,6 +207,7 @@ class JobApplicationAssistant {
                 // 🔍 DEBUG: Show what profile data we received for form filling
                 console.log('🔍 Profile loaded:', this.userProfile.full_name || this.userProfile.email);
                 console.log('🔍 Full profile structure:', this.userProfile);
+                console.log('🔍 DEBUG - All Chrome Storage Data:', result);
                 
                 // 🚀 AUTO-START FORM FILLING
                 console.log('🚀 Form filling handled by modern system - legacy disabled - TEST_ID: DISABLE_LEGACY_v16');
@@ -214,12 +215,17 @@ class JobApplicationAssistant {
                 
                 return; // Early return if we found data
             } else {
+                // 🔍 DEBUG: No profile found in Chrome storage
+                console.log('🔍 DEBUG - No profile in Chrome storage:', result);
+                
                 // Fallback 1: Check localStorage automation session (original format)
                 const sessionData = localStorage.getItem('currentAutomationSession');
                 
                 if (sessionData) {
                     console.log('🔄 Loading profile from localStorage session');
+                    console.log('🔍 DEBUG - localStorage session data:', sessionData);
                     const session = JSON.parse(sessionData);
+                    console.log('🔍 DEBUG - Parsed session:', session);
                     this.userProfile = session.userProfile;
                     this.currentSessionId = session.sessionId;
                     this.automationMode = true;
@@ -228,6 +234,7 @@ class JobApplicationAssistant {
                 
                 // Fallback 2: Check for Chrome extension automation data in localStorage
                 const extensionData = localStorage.getItem('chromeExtensionAutomationData');
+                console.log('🔍 DEBUG - Extension data in localStorage:', extensionData);
                 
                 if (extensionData) {
                     const data = JSON.parse(extensionData);
@@ -251,6 +258,7 @@ class JobApplicationAssistant {
                 }
                 
                 // No profile data found
+                console.log('🔍 DEBUG - Final state: userProfile =', this.userProfile, 'automationMode =', this.automationMode);
             }
             
             // Profile loading complete
@@ -2217,6 +2225,14 @@ class JobApplicationAssistant {
             const jobQueue = result.jobQueue || [];
             const currentJobIndex = result.currentJobIndex || 0;
             
+            // 🔍 DEBUG: Job queue information
+            console.log('🔍 DEBUG - Job Queue Data:', {
+                jobQueueLength: jobQueue.length,
+                currentJobIndex: currentJobIndex,
+                jobQueue: jobQueue,
+                storageResult: result
+            });
+            
             const jobQueueDiv = document.getElementById('job-queue-modern');
             const queueCount = document.getElementById('queue-count');
             const currentJobDiv = document.getElementById('current-job-modern');
@@ -2225,6 +2241,7 @@ class JobApplicationAssistant {
             const jobListItems = document.getElementById('job-list-items');
             
             if (jobQueue.length > 0 && jobQueueDiv) {
+                console.log('🔍 DEBUG - Displaying job queue with', jobQueue.length, 'jobs');
                 jobQueueDiv.style.display = 'block';
                 
                 // Update queue count
@@ -2291,10 +2308,13 @@ class JobApplicationAssistant {
                 }
                 
             } else if (jobQueueDiv) {
+                console.log('🔍 DEBUG - Hiding job queue - no jobs found');
                 jobQueueDiv.style.display = 'none';
                 if (nextJobBtn) {
                     nextJobBtn.style.display = 'none';
                 }
+            } else {
+                console.log('🔍 DEBUG - Job queue div not found in DOM');
             }
             
         } catch (error) {
