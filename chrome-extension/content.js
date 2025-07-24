@@ -206,6 +206,7 @@ class JobApplicationAssistant {
                 
                 // 🔍 DEBUG: Show what profile data we received for form filling
                 console.log('🔍 Profile loaded:', this.userProfile.full_name || this.userProfile.email);
+                console.log('🔍 Full profile structure:', this.userProfile);
                 
                 // 🚀 AUTO-START FORM FILLING
                 console.log('🚀 Form filling handled by modern system - legacy disabled - TEST_ID: DISABLE_LEGACY_v16');
@@ -363,7 +364,7 @@ class JobApplicationAssistant {
                             ${this.userProfile ? 'Profile Active' : 'No Active Profile'}
                         </div>
                         <div class="profile-details-modern">
-                            ${this.userProfile ? `${this.userProfile.full_name || 'Unknown'} • ${this.userProfile.email || 'No email'}` : 'Open dashboard to upload resume'}
+                            ${this.userProfile ? `${this.userProfile.full_name || this.userProfile.name || 'Unknown'} • ${this.userProfile.email || 'No email'}` : 'Open dashboard to upload resume'}
                         </div>
                     </div>
                 </div>
@@ -375,15 +376,22 @@ class JobApplicationAssistant {
                         <span class="queue-title">Application Queue</span>
                         <span class="queue-count" id="queue-count">0 jobs remaining</span>
                     </div>
+                    
+                    <!-- Current Job Highlight -->
                     <div class="current-job-modern" id="current-job-modern" style="display: none;">
-                        <div class="job-label-modern">Current Job</div>
+                        <div class="job-label-modern">📍 Current Job</div>
                         <div class="job-title-modern" id="current-job-title-modern">Loading...</div>
                         <div class="job-company-modern" id="current-job-company-modern">Loading...</div>
                     </div>
-                    <div class="next-job-modern" id="next-job-modern" style="display: none;">
-                        <div class="job-label-modern next">Next Up</div>
-                        <div class="job-title-modern" id="next-job-title-modern">Loading...</div>
-                        <div class="job-company-modern" id="next-job-company-modern">Loading...</div>
+                    
+                    <!-- Complete Job List -->
+                    <div class="job-list-modern" id="job-list-modern">
+                        <div class="job-list-header">
+                            <span class="list-toggle" id="list-toggle">📝 View All Jobs (<span id="total-jobs">0</span>)</span>
+                        </div>
+                        <div class="job-list-items" id="job-list-items" style="display: none;">
+                            <!-- Jobs will be populated here -->
+                        </div>
                     </div>
                 </div>
 
@@ -526,6 +534,14 @@ class JobApplicationAssistant {
         if (resetBtn) {
             resetBtn.addEventListener('click', () => {
                 this.resetSession();
+            });
+        }
+        
+        // Job list toggle
+        const listToggle = document.getElementById('list-toggle');
+        if (listToggle) {
+            listToggle.addEventListener('click', () => {
+                this.toggleJobList();
             });
         }
         
@@ -2204,8 +2220,9 @@ class JobApplicationAssistant {
             const jobQueueDiv = document.getElementById('job-queue-modern');
             const queueCount = document.getElementById('queue-count');
             const currentJobDiv = document.getElementById('current-job-modern');
-            const nextJobDiv = document.getElementById('next-job-modern');
             const nextJobBtn = document.getElementById('next-job-btn');
+            const totalJobsSpan = document.getElementById('total-jobs');
+            const jobListItems = document.getElementById('job-list-items');
             
             if (jobQueue.length > 0 && jobQueueDiv) {
                 jobQueueDiv.style.display = 'block';
@@ -2214,6 +2231,11 @@ class JobApplicationAssistant {
                 const remainingJobs = jobQueue.length - currentJobIndex;
                 if (queueCount) {
                     queueCount.textContent = `${remainingJobs} jobs remaining`;
+                }
+                
+                // Update total jobs count
+                if (totalJobsSpan) {
+                    totalJobsSpan.textContent = jobQueue.length;
                 }
                 
                 // Show current job
@@ -2226,16 +2248,37 @@ class JobApplicationAssistant {
                     if (companyEl) companyEl.textContent = currentJob.company || 'Unknown Company';
                 }
                 
-                // Show next job
-                const nextJob = jobQueue[currentJobIndex + 1];
-                if (nextJob && nextJobDiv) {
-                    nextJobDiv.style.display = 'block';
-                    const titleEl = document.getElementById('next-job-title-modern');
-                    const companyEl = document.getElementById('next-job-company-modern');
-                    if (titleEl) titleEl.textContent = nextJob.title || 'Unknown Title';
-                    if (companyEl) companyEl.textContent = nextJob.company || 'Unknown Company';
-                } else if (nextJobDiv) {
-                    nextJobDiv.style.display = 'none';
+                // Populate complete job list
+                if (jobListItems) {
+                    jobListItems.innerHTML = '';
+                    jobQueue.forEach((job, index) => {
+                        const jobItem = document.createElement('div');
+                        jobItem.className = `job-item-modern ${index === currentJobIndex ? 'current' : index < currentJobIndex ? 'completed' : 'pending'}`;
+                        
+                        const statusIcon = index < currentJobIndex ? '✅' : index === currentJobIndex ? '📍' : '⏳';
+                        const statusText = index < currentJobIndex ? 'Completed' : index === currentJobIndex ? 'Current' : 'Pending';
+                        
+                        jobItem.innerHTML = `
+                            <div class="job-item-header">
+                                <span class="job-status-icon">${statusIcon}</span>
+                                <span class="job-item-number">${index + 1}/${jobQueue.length}</span>
+                                <span class="job-status-text">${statusText}</span>
+                            </div>
+                            <div class="job-item-title">${job.title || 'Unknown Title'}</div>
+                            <div class="job-item-company">${job.company || 'Unknown Company'}</div>
+                            <div class="job-item-location">${job.location || 'Remote'}</div>
+                        `;
+                        
+                        // Add click handler to navigate to job
+                        if (index !== currentJobIndex && job.link) {
+                            jobItem.style.cursor = 'pointer';
+                            jobItem.addEventListener('click', () => {
+                                this.navigateToJob(index);
+                            });
+                        }
+                        
+                        jobListItems.appendChild(jobItem);
+                    });
                 }
                 
                 // Show Next Job button only if there are more jobs
@@ -2256,6 +2299,47 @@ class JobApplicationAssistant {
             
         } catch (error) {
             console.error('❌ Error updating job queue display:', error);
+        }
+    }
+
+    toggleJobList() {
+        const jobListItems = document.getElementById('job-list-items');
+        const listToggle = document.getElementById('list-toggle');
+        
+        if (jobListItems && listToggle) {
+            const isVisible = jobListItems.style.display === 'block';
+            jobListItems.style.display = isVisible ? 'none' : 'block';
+            
+            // Update toggle text
+            const totalJobs = document.getElementById('total-jobs')?.textContent || '0';
+            listToggle.innerHTML = isVisible ? 
+                `📝 View All Jobs (${totalJobs})` : 
+                `📝 Hide Job List (${totalJobs})`;
+        }
+    }
+
+    async navigateToJob(jobIndex) {
+        try {
+            console.log(`🎯 Navigating to job ${jobIndex + 1}`);
+            
+            // Get job queue from storage
+            const result = await chrome.storage.local.get(['jobQueue']);
+            const jobQueue = result.jobQueue || [];
+            
+            if (jobIndex < jobQueue.length && jobQueue[jobIndex].link) {
+                // Update current job index
+                await chrome.storage.local.set({ currentJobIndex: jobIndex });
+                
+                // Navigate to the job
+                const job = jobQueue[jobIndex];
+                console.log(`🚀 Going to: ${job.title} at ${job.company}`);
+                window.location.href = job.link;
+            } else {
+                console.error('❌ Invalid job index or missing job link');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error navigating to job:', error);
         }
     }
 
