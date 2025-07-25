@@ -155,6 +155,13 @@ class JobAutomationService:
         if not session:
             raise ValueError(f"Session {session_id} not found")
         
+        # Bounds checking
+        if session.current_job_index >= len(session.jobs):
+            raise ValueError(f"Current job index {session.current_job_index} is out of bounds for session with {len(session.jobs)} jobs")
+        
+        if len(session.jobs) == 0:
+            raise ValueError(f"Session {session_id} has no jobs")
+        
         current_job = session.jobs[session.current_job_index]
         current_job.status = JobApplicationStatus.WAITING_FOR_USER
         current_job.form_data = form_data
