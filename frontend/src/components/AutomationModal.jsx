@@ -65,6 +65,8 @@ function AutomationModal({
 
 
   const startAutomation = async () => {
+    console.log('🔍 DEBUG - startAutomation called with selectedJobs:', selectedJobs);
+    console.log('🔍 DEBUG - selectedJobsArray:', selectedJobsArray);
     
     try {
       if (!userProfile) {
