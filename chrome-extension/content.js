@@ -2224,29 +2224,30 @@ class JobApplicationAssistant {
     getProfileDisplayText() {
         if (!this.userProfile) return 'No profile';
         
-        // Try multiple possible structures for name
-        const name = this.userProfile.personal_information?.full_name || 
+        // Use the correct structure based on your profile data
+        const firstName = this.userProfile.personal_information?.basic_information?.first_name || '';
+        const lastName = this.userProfile.personal_information?.basic_information?.last_name || '';
+        const name = firstName && lastName ? `${firstName} ${lastName}` : 
+                    this.userProfile.personal_information?.full_name || 
                     this.userProfile.full_name || 
                     this.userProfile.name || 
-                    this.userProfile.personal_information?.name ||
                     'Unknown';
         
-        // Try multiple possible structures for email  
-        const email = this.userProfile.personal_information?.email ||
+        // Use the correct email structure
+        const email = this.userProfile.personal_information?.contact_information?.email ||
+                     this.userProfile.personal_information?.email ||
                      this.userProfile.email ||
                      'No email';
         
-        console.log('🔍 DEBUG - Profile name extraction:', {
-            personal_info_full_name: this.userProfile.personal_information?.full_name,
-            full_name: this.userProfile.full_name,
-            name: this.userProfile.name,
-            personal_info_name: this.userProfile.personal_information?.name,
+        console.log('🔍 DEBUG - Profile name extraction (FIXED):', {
+            firstName: firstName,
+            lastName: lastName,
+            combinedName: `${firstName} ${lastName}`,
             final_name: name
         });
         
-        console.log('🔍 DEBUG - Profile email extraction:', {
-            personal_info_email: this.userProfile.personal_information?.email,
-            email: this.userProfile.email,
+        console.log('🔍 DEBUG - Profile email extraction (FIXED):', {
+            contact_email: this.userProfile.personal_information?.contact_information?.email,
             final_email: email
         });
         
@@ -2278,6 +2279,8 @@ class JobApplicationAssistant {
             
             // Also check localStorage for additional job queue data
             const localStorageSession = localStorage.getItem('currentAutomationSession');
+            console.log('🔍 DEBUG - localStorage currentAutomationSession:', localStorageSession);
+            
             if (localStorageSession) {
                 try {
                     const sessionData = JSON.parse(localStorageSession);
@@ -2290,9 +2293,26 @@ class JobApplicationAssistant {
                             jobQueue.push(...sessionData.selectedJobs);
                             console.log('🔍 DEBUG - Updated job queue from localStorage:', jobQueue.length, 'jobs');
                         }
+                    } else {
+                        console.log('🔍 DEBUG - No selectedJobs in localStorage session');
                     }
                 } catch (error) {
                     console.error('🔍 DEBUG - Error parsing localStorage session:', error);
+                }
+            } else {
+                console.log('🔍 DEBUG - No currentAutomationSession in localStorage');
+            }
+            
+            // Also check for other possible localStorage keys
+            const extensionData = localStorage.getItem('chromeExtensionAutomationData');
+            console.log('🔍 DEBUG - chromeExtensionAutomationData:', extensionData);
+            
+            // Check all localStorage keys for job data
+            console.log('🔍 DEBUG - All localStorage keys:', Object.keys(localStorage));
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('job') || key.includes('automation') || key.includes('session'))) {
+                    console.log(`🔍 DEBUG - localStorage[${key}]:`, localStorage.getItem(key));
                 }
             }
             
