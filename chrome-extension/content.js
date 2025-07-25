@@ -47,7 +47,12 @@ class JobApplicationAssistant {
                         action: event.data.action,
                         hasData: !!messageData.data,
                         hasProfile: !!messageData.data?.userProfile,
-                        profileName: messageData.data?.userProfile?.full_name
+                        profileName: messageData.data?.userProfile?.full_name,
+                        hasSelectedJobs: !!messageData.data?.selectedJobs,
+                        selectedJobsCount: messageData.data?.selectedJobs?.length || 0,
+                        hasJobQueue: !!messageData.data?.jobQueue,
+                        jobQueueCount: messageData.data?.jobQueue?.length || 0,
+                        fullData: messageData.data
                     });
                     
                     try {
@@ -58,8 +63,17 @@ class JobApplicationAssistant {
                             userProfile: automationData.userProfile,
                             currentSessionId: automationData.currentSessionId,
                             automationActive: automationData.automationActive || true,
-                            currentJob: automationData.currentJob
+                            currentJob: automationData.currentJob,
+                            jobQueue: automationData.selectedJobs || automationData.jobQueue || [],
+                            currentJobIndex: automationData.currentJobIndex || 0
                         };
+                        
+                        console.log('🔍 DEBUG - Storing job queue from automation data:', {
+                            selectedJobs: automationData.selectedJobs,
+                            jobQueue: automationData.jobQueue,
+                            storedJobQueue: storageData.jobQueue,
+                            jobCount: storageData.jobQueue.length
+                        });
                         
                         console.log('📨 Storing automation data:', {
                             hasProfile: !!storageData.userProfile,
