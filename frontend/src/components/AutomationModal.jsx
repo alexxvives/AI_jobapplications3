@@ -10,6 +10,10 @@ function AutomationModal({
   selectedProfile,
   onComplete 
 }) {
+  console.log('🔥🔥🔥 LATEST VERSION AutomationModal LOADED - v2.0 🔥🔥🔥');
+  console.log('🔥 Selected jobs passed to modal:', selectedJobs);
+  console.log('🔥 Jobs array length:', selectedJobs?.length || 0);
+  
   const [automationStatus, setAutomationStatus] = useState('setup') // setup, running, completed, error
   const [applicationResults, setApplicationResults] = useState([])
   const [userProfile, setUserProfile] = useState(null)
@@ -65,6 +69,7 @@ function AutomationModal({
 
 
   const startAutomation = async () => {
+    console.log('🔥🔥🔥 START AUTOMATION BUTTON CLICKED! 🔥🔥🔥');
     console.log('🔍 DEBUG - startAutomation called with selectedJobs:', selectedJobs);
     console.log('🔍 DEBUG - selectedJobsArray:', selectedJobsArray);
     
