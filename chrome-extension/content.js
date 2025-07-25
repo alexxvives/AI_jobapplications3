@@ -36,6 +36,7 @@ class JobApplicationAssistant {
         // Listen for automation data from web page (AutomationModal.jsx)
         window.addEventListener('message', async (event) => {
             console.log('📨 Received window message:', event.data.type, 'from:', event.origin);
+            console.log('📨 DEBUG - Full window message data:', event.data);
             
             // Handle both old format and new format messages
             if (event.data.type === 'STORE_AUTOMATION_DATA' || event.data.type === 'CHROME_EXTENSION_MESSAGE') {
@@ -57,6 +58,15 @@ class JobApplicationAssistant {
                     
                     try {
                         const automationData = messageData.data;
+                        console.log('🔍 DEBUG - Raw automation data keys:', Object.keys(automationData));
+                        console.log('🔍 DEBUG - Check for job-related keys:', {
+                            hasSelectedJobs: 'selectedJobs' in automationData,
+                            hasJobQueue: 'jobQueue' in automationData,
+                            hasJobs: 'jobs' in automationData,
+                            hasJobList: 'jobList' in automationData,
+                            selectedJobsValue: automationData.selectedJobs,
+                            jobQueueValue: automationData.jobQueue
+                        });
                         
                         // Store in Chrome storage for cross-origin access
                         const storageData = {
@@ -84,6 +94,10 @@ class JobApplicationAssistant {
                         
                         await chrome.storage.local.set(storageData);
                         console.log('✅ Automation data stored in Chrome storage via window message!');
+                        
+                        // Verify what was actually stored
+                        const verificationCheck = await chrome.storage.local.get(['jobQueue', 'selectedJobs', 'currentJob']);
+                        console.log('🔍 DEBUG - Post-storage verification:', verificationCheck);
                         
                         // Verify storage
                         const verification = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive']);
@@ -123,6 +137,10 @@ class JobApplicationAssistant {
                 
                 if (request.action === 'SET_AUTOMATION_DATA') {
                     console.log('📨 Received automation data via runtime:', request.data);
+                    console.log('📨 DEBUG - Runtime message has selectedJobs?', !!request.data.selectedJobs);
+                    console.log('📨 DEBUG - Runtime message selectedJobs count:', request.data.selectedJobs?.length || 0);
+                    console.log('📨 DEBUG - Full runtime data:', request.data);
+                    
                     this.userProfile = request.data.userProfile;
                     this.currentSessionId = request.data.currentSessionId;
                     this.automationMode = true;
