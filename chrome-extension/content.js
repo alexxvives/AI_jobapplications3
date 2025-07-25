@@ -645,8 +645,10 @@ class JobApplicationAssistant {
         // Update UI with detected fields count
         if (this.floatingUI) {
             const statusEl = document.getElementById('assistant-status');
-            const profileStatus = this.userProfile ? 'Profile loaded ✅' : 'No profile found ❌';
-            statusEl.innerHTML = `${profileStatus}<br>Found ${this.totalFields} form fields`;
+            if (statusEl) {
+                const profileStatus = this.userProfile ? 'Profile loaded ✅' : 'No profile found ❌';
+                statusEl.innerHTML = `${profileStatus}<br>Found ${this.totalFields} form fields`;
+            }
         }
     }
 
