@@ -10,9 +10,6 @@ function AutomationModal({
   selectedProfile,
   onComplete 
 }) {
-  console.log('🔥🔥🔥 LATEST VERSION AutomationModal LOADED - v2.0 🔥🔥🔥');
-  console.log('🔥 Selected jobs passed to modal:', selectedJobs);
-  console.log('🔥 Jobs array length:', selectedJobs?.length || 0);
   
   const [automationStatus, setAutomationStatus] = useState('setup') // setup, running, completed, error
   const [applicationResults, setApplicationResults] = useState([])
@@ -69,9 +66,7 @@ function AutomationModal({
 
 
   const startAutomation = async () => {
-    console.log('🔥🔥🔥 START AUTOMATION BUTTON CLICKED! 🔥🔥🔥');
-    console.log('🔍 DEBUG - startAutomation called with selectedJobs:', selectedJobs);
-    console.log('🔍 DEBUG - selectedJobsArray:', selectedJobsArray);
+    console.log('🚀 Starting automation for', selectedJobsArray.length, 'jobs');
     
     try {
       if (!userProfile) {
@@ -99,17 +94,13 @@ function AutomationModal({
         throw new Error('No authentication token found. Please refresh and log in again.')
       }
       
-      // Sync token to Chrome storage for cross-domain access - TEST_ID: TOKEN_SYNC_v1
-      console.log('📎 TEST_ID: TOKEN_SYNC_v1 - Syncing auth token to Chrome storage...')
+      // Sync token to Chrome storage for cross-domain access
       if (chrome && chrome.storage) {
         try {
           await chrome.storage.local.set({ authToken: actualToken })
-          console.log('📎 TEST_ID: TOKEN_SYNC_v1 - Token successfully synced to Chrome storage')
         } catch (error) {
-          console.warn('📎 TEST_ID: TOKEN_SYNC_v1 - Failed to sync token to Chrome storage:', error)
+          console.warn('Failed to sync token to Chrome storage:', error)
         }
-      } else {
-        console.warn('📎 TEST_ID: TOKEN_SYNC_v1 - Chrome storage not available')
       }
       
       // Create automation session with new API

@@ -90,9 +90,10 @@ function JobSearch() {
   }
 
   const handleStartAutomation = () => {
-    console.log('Starting automation with selectedProfile:', selectedProfile)
+    console.log('🚀 Starting automation for', selectedJobs.size, 'jobs')
+    
     if (!selectedProfile) {
-      console.error('No profile selected! selectedProfile is:', selectedProfile)
+      console.error('No profile selected')
       alert('Please select a profile first.')
       return
     }

@@ -21,7 +21,6 @@ function ProfileSelector({ selectedProfile, onProfileSelect }) {
       
       // Auto-select first profile if none selected  
       if (!selectedProfile && userProfiles.length > 0) {
-        console.log('🔥🔥🔥 PROFILE SELECTOR v2.0 UPDATED - NO MORE SPAM 🔥🔥🔥')
         onProfileSelect(userProfiles[0])
       }
     } catch (err) {
