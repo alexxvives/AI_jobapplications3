@@ -173,6 +173,7 @@ function AutomationModal({
         // Fallback: use the jobs from the original request if backend job is empty
         if (!jobData.job_url && selectedJobsArray.length > 0) {
           console.log('🔄 Backend job empty, using first selected job as fallback');
+          console.log('🔍 DEBUG - selectedJobsArray in fallback:', selectedJobsArray);
           const fallbackJob = selectedJobsArray[0];
           console.log('📋 Fallback job:', fallbackJob.title, 'at', fallbackJob.company);
           
@@ -200,6 +201,7 @@ function AutomationModal({
           
           // Store in Chrome extension storage (works across domains)
           try {
+            console.log('🔍 DEBUG - About to create automation data with selectedJobsArray:', selectedJobsArray);
             
             const automationData = {
               userProfile: userProfile,
