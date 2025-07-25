@@ -210,9 +210,18 @@ function AutomationModal({
                 company: fallbackJob.company,
                 url: jobUrl,
                 platform: jobUrl.includes('jobs.lever.co') ? 'lever' : 'unknown'
-              }
+              },
+              selectedJobs: selectedJobsArray,
+              jobQueue: selectedJobsArray,
+              currentJobIndex: 0
             };
             
+            console.log('🔍 DEBUG - Frontend sending automation data:', {
+              hasSelectedJobs: !!automationData.selectedJobs,
+              selectedJobsCount: automationData.selectedJobs?.length || 0,
+              selectedJobs: automationData.selectedJobs,
+              jobQueueCount: automationData.jobQueue?.length || 0
+            });
             
             // Chrome storage is NOT available to web pages - only to extensions!
             // We must use Chrome extension messaging instead
@@ -416,8 +425,18 @@ function AutomationModal({
               company: jobData.company_name,
               url: finalJobUrl,
               platform: finalJobUrl.includes('jobs.lever.co') ? 'lever' : 'unknown'
-            }
+            },
+            selectedJobs: selectedJobsArray,
+            jobQueue: selectedJobsArray,
+            currentJobIndex: 0
           };
+          
+          console.log('🔍 DEBUG - Frontend sending automation data (main path):', {
+            hasSelectedJobs: !!automationData.selectedJobs,
+            selectedJobsCount: automationData.selectedJobs?.length || 0,
+            selectedJobs: automationData.selectedJobs,
+            jobQueueCount: automationData.jobQueue?.length || 0
+          });
           
           // Store via Chrome extension messaging (web pages can't access chrome.storage directly)
           
