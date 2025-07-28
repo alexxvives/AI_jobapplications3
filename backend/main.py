@@ -880,7 +880,8 @@ async def get_user_profile_by_id(
             "personal_information": {
                 "basic_information": {
                     "first_name": profile.full_name.split()[0] if profile.full_name else "",
-                    "last_name": " ".join(profile.full_name.split()[1:]) if profile.full_name and len(profile.full_name.split()) > 1 else ""
+                    "last_name": " ".join(profile.full_name.split()[1:]) if profile.full_name and len(profile.full_name.split()) > 1 else "",
+                    "gender": profile.gender or ""
                 },
                 "contact_information": {
                     "email": profile.email or "",
@@ -892,7 +893,8 @@ async def get_user_profile_by_id(
                     "state": profile.state or "",
                     "zip_code": profile.zip_code or "",
                     "country": profile.country or ""
-                }
+                },
+                "citizenship": profile.citizenship or ""
             },
             "work_experience": profile.work_experience or [],
             "education": profile.education or [],
@@ -1018,6 +1020,184 @@ async def get_user_profile(db: Session = Depends(get_db)):
             "_is_mock_data": True,
             "_error": str(e)
         }
+
+@app.put("/user/profile/{profile_id}")
+async def update_user_profile(
+    profile_id: int,
+    profile_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update a specific user profile by ID (only user's own profiles)"""
+    print(f"🔍 PUT /user/profile/{profile_id} called by user {current_user.id}")
+    print(f"📋 Received profile_data: {json.dumps(profile_data, indent=2, default=str)}")
+    
+    # Debug specific field locations
+    personal_info = profile_data.get('personal_information', {})
+    basic_info = personal_info.get('basic_information', {})
+    contact_info = personal_info.get('contact_information', {})
+    address_info = personal_info.get('address', {})
+    
+    print(f"🔍 DEBUG - basic_info: {basic_info}")
+    print(f"🔍 DEBUG - contact_info: {contact_info}")
+    print(f"🔍 DEBUG - address_info: {address_info}")
+    print(f"🔍 DEBUG - personal_info citizenship: {personal_info.get('citizenship')}")
+    print(f"🔍 DEBUG - personal_info gender: {personal_info.get('gender')}")
+    try:
+        # Find the profile that belongs to the current user
+        profile = db.query(Profile).filter(
+            Profile.id == profile_id,
+            Profile.user_id == current_user.id
+        ).first()
+        
+        if not profile:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        # Extract and update basic profile fields
+        personal_info = profile_data.get('personal_information', {})
+        basic_info = personal_info.get('basic_information', {})
+        contact_info = personal_info.get('contact_information', {})
+        address_info = personal_info.get('address', {})
+        
+        # Update individual fields with detailed logging
+        if basic_info:
+            first_name = basic_info.get('first_name', '')
+            last_name = basic_info.get('last_name', '')
+            if first_name or last_name:
+                old_name = profile.full_name
+                profile.full_name = f"{first_name} {last_name}".strip()
+                print(f"🔍 Name: '{old_name}' → '{profile.full_name}'")
+        
+        if contact_info:
+            if 'email' in contact_info:
+                old_email = profile.email
+                profile.email = contact_info['email']
+                print(f"🔍 Email: '{old_email}' → '{profile.email}'")
+            if 'telephone' in contact_info:
+                old_phone = profile.phone
+                profile.phone = contact_info['telephone']
+                print(f"🔍 Phone: '{old_phone}' → '{profile.phone}'")
+        
+        if address_info:
+            if 'address' in address_info:
+                old_address = profile.address
+                profile.address = address_info['address']
+                print(f"🔍 Address: '{old_address}' → '{profile.address}'")
+            if 'city' in address_info:
+                old_city = profile.city
+                profile.city = address_info['city']
+                print(f"🔍 City: '{old_city}' → '{profile.city}'")
+            if 'state' in address_info:
+                old_state = profile.state
+                profile.state = address_info['state']
+                print(f"🔍 State: '{old_state}' → '{profile.state}'")
+            if 'zip_code' in address_info:
+                old_zip = profile.zip_code
+                profile.zip_code = address_info['zip_code']
+                print(f"🔍 Zip: '{old_zip}' → '{profile.zip_code}'")
+            if 'country' in address_info:
+                old_country = profile.country
+                profile.country = address_info['country']
+                print(f"🔍 Country: '{old_country}' → '{profile.country}'")
+        
+        # Update structured data fields (JSON fields)
+        if 'work_experience' in profile_data:
+            profile.work_experience = profile_data['work_experience']
+        
+        if 'education' in profile_data:
+            profile.education = profile_data['education']
+        
+        if 'skills' in profile_data:
+            profile.skills = profile_data['skills']
+        
+        if 'languages' in profile_data:
+            profile.languages = profile_data['languages']
+        
+        if 'job_preferences' in profile_data:
+            profile.job_preferences = profile_data['job_preferences']
+        
+        if 'achievements' in profile_data:
+            profile.achievements = profile_data['achievements']
+        
+        if 'certificates' in profile_data:
+            profile.certificates = profile_data['certificates']
+        
+        # Update profile title if provided
+        if 'title' in profile_data:
+            profile.title = profile_data['title']
+        
+        # Update gender if provided (should be in basic_information)
+        if basic_info.get('gender'):
+            profile.gender = basic_info['gender']
+            print(f"🔍 Setting gender to: {basic_info['gender']}")
+        
+        # Update citizenship if provided (prioritize personal_information over address)
+        citizenship_value = None
+        if personal_info.get('citizenship'):
+            citizenship_value = personal_info['citizenship']
+        elif address_info.get('citizenship'):
+            citizenship_value = address_info['citizenship']
+        
+        if citizenship_value:
+            profile.citizenship = citizenship_value
+            print(f"🔍 Setting citizenship to: {citizenship_value}")
+        elif 'citizenship' in address_info or 'citizenship' in personal_info:
+            # Field was provided but empty, so clear it
+            profile.citizenship = None
+            print(f"🔍 Clearing citizenship (was empty)")
+        
+        # Set updated timestamp
+        from datetime import datetime
+        profile.updated_at = datetime.utcnow()
+        
+        # Commit changes to database
+        print(f"💾 Committing changes to database...")
+        print(f"📝 Profile before commit - Gender: {profile.gender}, Updated_at: {profile.updated_at}")
+        db.commit()
+        db.refresh(profile)
+        print(f"✅ Database committed and refreshed")
+        print(f"📝 Profile after commit - Gender: {profile.gender}, Updated_at: {profile.updated_at}")
+        
+        # Return updated profile in the same format as get_user_profile_by_id
+        return {
+            "id": profile.id,
+            "title": profile.title,
+            "personal_information": {
+                "basic_information": {
+                    "first_name": profile.full_name.split()[0] if profile.full_name else "",
+                    "last_name": " ".join(profile.full_name.split()[1:]) if profile.full_name and len(profile.full_name.split()) > 1 else "",
+                    "gender": profile.gender or ""
+                },
+                "contact_information": {
+                    "email": profile.email or "",
+                    "telephone": profile.phone or ""
+                },
+                "address": {
+                    "address": profile.address or "",
+                    "city": profile.city or "",
+                    "state": profile.state or "",
+                    "zip_code": profile.zip_code or "",
+                    "country": profile.country or ""
+                },
+                "citizenship": profile.citizenship or ""
+            },
+            "work_experience": profile.work_experience or [],
+            "education": profile.education or [],
+            "skills": profile.skills or [],
+            "languages": profile.languages or [],
+            "job_preferences": profile.job_preferences or {},
+            "achievements": profile.achievements or [],
+            "certificates": profile.certificates or [],
+            "resume_path": profile.resume_path,
+            "has_resume": bool(profile.resume_path and os.path.exists(profile.resume_path) if profile.resume_path else False),
+            "updated_at": profile.updated_at.isoformat() if profile.updated_at else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Profile update error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update profile: {str(e)}")
 
 @app.delete("/user/profile/{profile_id}")
 async def delete_user_profile(
@@ -1485,15 +1665,36 @@ async def analyze_form_with_ollama(request: dict):
         if job_url:
             try:
                 db_session = SessionLocal()
-                job = db_session.query(Job).filter(Job.link == job_url).first()
+                
+                # Clean the job URL to match database format (remove /apply if present)
+                clean_job_url = job_url.replace('/apply', '').rstrip('/')
+                
+                # Try exact match first
+                job = db_session.query(Job).filter(Job.link == clean_job_url).first()
+                
+                # If no exact match, try partial match (for URLs with different query params)
+                if not job:
+                    job = db_session.query(Job).filter(Job.link.like(f'%{clean_job_url.split("/")[-1]}%')).first()
+                
                 if job and job.description:
                     job_description = job.description
-                    print(f"🧠 DEBUG: Found job description: {job_description[:100]}...")
+                    print(f"🧠 ✅ Found job description ({len(job_description)} chars): {job_description[:100]}...")
+                    print(f"🧠 📋 Job title: {job.title}")
+                    print(f"🧠 🏢 Company: {job.company}")
                 else:
-                    print(f"🧠 DEBUG: No job description found for URL: {job_url}")
+                    print(f"🧠 ❌ No job description found for URL: {job_url}")
+                    print(f"🧠 🔍 Cleaned URL: {clean_job_url}")
+                    # Debug: show some example URLs from database
+                    sample_jobs = db_session.query(Job).limit(3).all()
+                    print(f"🧠 📊 Sample URLs in database:")
+                    for sample in sample_jobs:
+                        print(f"🧠   - {sample.link}")
+                
                 db_session.close()
             except Exception as e:
-                print(f"🧠 DEBUG: Error fetching job description: {e}")
+                print(f"🧠 ❌ Error fetching job description: {e}")
+                if 'db_session' in locals():
+                    db_session.close()
         
         # Extract clean user data from profile
         user_data = extract_user_data_from_profile(user_profile)
@@ -1570,13 +1771,23 @@ Always use real values. Adapt to any form layout or question style.
      - Use the best-matching option from the dropdown  
 
 5. 🧠 **OPEN-ENDED QUESTIONS (e.g. "Additional Info", "Why are you a good fit?", "Tell us more")**  
-   - Generate a short paragraph (2–4 sentences) using relevant parts of:
-     - The job description (if provided)
-     - Profile's work experience, education, skills, and achievements  
-   - Focus on **fit, impact, and relevant experience**  
+   - Generate a tailored response (2–4 sentences) by analyzing:
+     - **Job requirements** from the description (keywords, skills, responsibilities)
+     - **Matching profile strengths** (work experience, education, skills, achievements)
+     - **Specific alignment** between candidate background and role needs
+   - Focus on **concrete fit, quantifiable impact, and relevant experience**  
+   - Highlight specific skills/experience mentioned in job description
+   - Use job title/company context to tailor the response
    - Avoid vague filler or generic statements  
    - If no job description is provided, use profile strengths that apply broadly  
    - If nothing applies, return `null`
+
+6. 📊 **USE JOB DESCRIPTION FOR CONTEXT**  
+   - **Skills questions**: Prioritize skills mentioned in job description
+   - **Experience questions**: Emphasize relevant work experience that matches job requirements
+   - **Location preferences**: Consider job location vs. candidate location
+   - **Salary expectations**: Use job-appropriate ranges based on role level
+   - **Additional info**: Connect candidate strengths to specific job needs
 
 6. ❌ **DO NOT:**  
    - Answer required fields with null unless data is truly missing  
