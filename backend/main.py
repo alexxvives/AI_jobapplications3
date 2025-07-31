@@ -219,11 +219,10 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 # Job-related endpoints
 @app.get("/jobs/search", response_model=List[JobResult])
 def search_jobs(
-    title: str = Query(..., description="Job title to search for"),
+    title: str = Query("", description="Job title to search for"),
     location: str = Query("", description="Location filter"),
     limit: int = Query(50, description="Maximum number of results"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     """Search for jobs in the database"""
     try:
@@ -234,9 +233,50 @@ def search_jobs(
         if title:
             query = query.filter(Job.title.ilike(f"%{title}%"))
         
-        # Filter by location if provided
+        # Filter by location/country if provided
         if location:
-            query = query.filter(Job.location.ilike(f"%{location}%"))
+            if location == "Remote":
+                # Match actual remote jobs and continent-only locations
+                from sqlalchemy import or_
+                query = query.filter(or_(
+                    Job.location.ilike("%Remote%"),
+                    Job.location.ilike("%Asia%"),
+                    Job.location.ilike("%Europe%"),
+                    Job.location.ilike("%South East Asia%"),
+                    Job.location.ilike("%North America%"),
+                    Job.location.ilike("%South America%"),
+                    Job.location.ilike("%Africa%"),
+                    Job.location.ilike("%Oceania%")
+                ))
+            else:
+                # For specific countries, match both the country name and common city patterns
+                location_patterns = [
+                    f"%{location}%",  # Direct country match
+                    f"%{location.split()[0]}%" if len(location.split()) > 1 else f"%{location}%"  # First word for compound names
+                ]
+                
+                # Add common city patterns for major countries
+                if location == "United States":
+                    location_patterns.extend(["%US%", "%USA%", "%New York%", "%San Francisco%", "%Los Angeles%", "%Chicago%"])
+                elif location == "United Kingdom":
+                    location_patterns.extend(["%UK%", "%London%", "%Manchester%", "%Edinburgh%"])
+                elif location == "France":
+                    location_patterns.extend(["%Paris%", "%Lyon%", "%Marseille%"])
+                elif location == "Germany":
+                    location_patterns.extend(["%Berlin%", "%Munich%", "%Hamburg%"])
+                elif location == "Japan":
+                    location_patterns.extend(["%Tokyo%", "%Osaka%", "%Kyoto%"])
+                elif location == "Canada":
+                    location_patterns.extend(["%Toronto%", "%Vancouver%", "%Montreal%"])
+                elif location == "Australia":
+                    location_patterns.extend(["%Sydney%", "%Melbourne%", "%Brisbane%"])
+                elif location == "United Arab Emirates":
+                    location_patterns.extend(["%UAE%", "%Dubai%", "%Abu Dhabi%"])
+                
+                # Build OR condition for all patterns  
+                from sqlalchemy import or_
+                location_conditions = [Job.location.ilike(pattern) for pattern in location_patterns]
+                query = query.filter(or_(*location_conditions))
         
         # Order by most recent and limit results
         jobs = query.order_by(Job.fetched_at.desc()).limit(limit).all()
@@ -304,9 +344,137 @@ def test_jobs(db: Session = Depends(get_db)):
         return {"error": str(e)}
 
 @app.get("/jobs/stats")
-def get_job_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def get_job_stats(db: Session = Depends(get_db)):
     """Get comprehensive job and company statistics"""
     return get_comprehensive_stats(db)
+
+@app.get("/jobs/countries")
+def get_job_countries(db: Session = Depends(get_db)):
+    """Get all countries with job counts"""
+    try:
+        from sqlalchemy import func
+        
+        # Complete list of countries (Remote will be added separately at the top)
+        all_countries = [
+            "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia", 
+            "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", 
+            "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", 
+            "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", 
+            "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", 
+            "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", 
+            "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", 
+            "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", 
+            "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", 
+            "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", 
+            "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", 
+            "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", 
+            "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", 
+            "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", 
+            "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", 
+            "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", 
+            "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", 
+            "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", 
+            "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", 
+            "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", 
+            "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", 
+            "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", 
+            "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", 
+            "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", 
+            "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", 
+            "Yemen", "Zambia", "Zimbabwe"
+        ]
+        
+        # Get job counts by country from database
+        location_counts = db.query(
+            Job.location,
+            func.count(Job.id).label('count')
+        ).filter(
+            Job.location.isnot(None),
+            Job.location != ''
+        ).group_by(Job.location).all()
+        
+        # Create country job count mapping
+        country_counts = {}
+        for location, count in location_counts:
+            # Extract country from location
+            if 'Remote' in location:
+                country = 'Remote'
+            elif ',' in location:
+                country = location.split(',')[-1].strip()
+            else:
+                country = location.strip()
+            
+            # Map common variations to standard country names
+            # Continents/regions without specific countries are classified as Remote
+            country_mapping = {
+                'US': 'United States',
+                'USA': 'United States',
+                'UK': 'United Kingdom',
+                'UAE': 'United Arab Emirates',
+                'United Arab Emirates': 'United Arab Emirates',
+                'Korea': 'South Korea',
+                'Republic of Korea': 'South Korea',
+                # Continents/regions → Remote
+                'Asia': 'Remote',
+                'South East Asia': 'Remote', 
+                'Europe': 'Remote',
+                'North America': 'Remote',
+                'South America': 'Remote',
+                'Africa': 'Remote',
+                'Oceania': 'Remote',
+                # Cities → Countries
+                'Dubai': 'United Arab Emirates',
+                'Taiwan': 'Taiwan',
+                'Taipei': 'Taiwan',
+                'Paris': 'France',
+                'London': 'United Kingdom',
+                'Singapore': 'Singapore',
+                'Hong Kong': 'China',
+                'Tokyo': 'Japan',
+                'Berlin': 'Germany',
+                'Amsterdam': 'Netherlands',
+                'Sydney': 'Australia',
+                'Toronto': 'Canada',
+                'Vancouver': 'Canada'
+            }
+            
+            country = country_mapping.get(country, country)
+            
+            # Only add if it's a recognized country or Remote
+            if country in all_countries or country == 'Remote':
+                if country in country_counts:
+                    country_counts[country] += count
+                else:
+                    country_counts[country] = count
+        
+        # Create final list with Remote at the top, then alphabetical countries
+        countries = []
+        
+        # Add Remote first
+        remote_count = country_counts.get('Remote', 0)
+        countries.append({
+            "country": "Remote",
+            "count": remote_count,
+            "has_jobs": remote_count > 0
+        })
+        
+        # Add all other countries alphabetically
+        for country in sorted(all_countries):
+            job_count = country_counts.get(country, 0)
+            countries.append({
+                "country": country,
+                "count": job_count,
+                "has_jobs": job_count > 0
+            })
+        
+        return {
+            "countries": countries,
+            "total_countries": len(countries),
+            "countries_with_jobs": len([c for c in countries if c["has_jobs"]])
+        }
+        
+    except Exception as e:
+        return {"error": str(e), "countries": [], "total_countries": 0}
 
 @app.get("/jobs/stats/simple")
 def get_simple_job_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
