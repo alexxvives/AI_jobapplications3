@@ -1,0 +1,69 @@
+{
+  "mappings": {
+    "activecampaign": {
+      "url": "https://worldvectorlogo.com/logo/activecampaign-logo",
+      "verified": false
+    },
+    "airbnb": {
+      "url": "https://worldvectorlogo.com/logo/airbnb-logo",
+      "verified": false
+    },
+    "back market": {
+      "url": "https://worldvectorlogo.com/logo/back-market-logo",
+      "verified": false
+    },
+    "bazaarvoice": {
+      "url": "https://worldvectorlogo.com/logo/bazaarvoice-logo",
+      "verified": false
+    },
+    "binance": {
+      "url": "https://worldvectorlogo.com/logo/binance-logo",
+      "verified": false
+    },
+    "figma": {
+      "url": "https://worldvectorlogo.com/logo/figma-logo",
+      "verified": false
+    },
+    "google": {
+      "url": "https://worldvectorlogo.com/logo/google-logo",
+      "verified": false
+    },
+    "microsoft": {
+      "url": "https://worldvectorlogo.com/logo/microsoft-logo",
+      "verified": false
+    },
+    "netflix": {
+      "url": "https://worldvectorlogo.com/logo/netflix-logo",
+      "verified": false
+    },
+    "notion": {
+      "url": "https://worldvectorlogo.com/logo/notion-logo",
+      "verified": false
+    },
+    "openai": {
+      "url": "https://worldvectorlogo.com/logo/openai-logo",
+      "verified": false
+    },
+    "shopify": {
+      "url": "https://worldvectorlogo.com/logo/shopify-logo",
+      "verified": false
+    },
+    "slack": {
+      "url": "https://worldvectorlogo.com/logo/slack-logo",
+      "verified": false
+    },
+    "stripe": {
+      "url": "https://worldvectorlogo.com/logo/stripe-logo",
+      "verified": false
+    }
+  },
+  "last_updated": "2025-07-31",
+  "total_mappings": 14,
+  "auto_generation_enabled": true,
+  "notes": [
+    "This file contains company name to WorldVectorLogo URL mappings",
+    "You can edit the URLs manually if the auto-generated ones are incorrect",
+    "Set verified: true after manually checking a logo",
+    "New companies will be automatically added when encountered in job listings"
+  ]
+}
