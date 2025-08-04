@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { searchJobs, fetchJobsManually, getJobStats, getJobCountries } from '../utils/apiWithAuth'
+import { searchJobs, fetchJobsManually, getJobStats, getJobCountries, fetchUserProfiles } from '../utils/apiWithAuth'
 import { getCompanyLogoUrl, handleLogoErrorWithFallbacks, getLogoColorFilter } from '../utils/companyLogos'
+import AutomationModal from './AutomationModal'
 import '../utils/logoMappingManager.js' // Load logo management utilities
 
 function ModernJobSearch() {
@@ -13,6 +14,7 @@ function ModernJobSearch() {
     workType: 'all',
     remote: 'all'
   })
+  const [selectedProfile, setSelectedProfile] = useState(null)
 
   // Data state
   const [jobs, setJobs] = useState([])
@@ -20,16 +22,20 @@ function ModernJobSearch() {
   const [selectedJobs, setSelectedJobs] = useState(new Set())
   const [stats, setStats] = useState(null)
   const [countries, setCountries] = useState([])
+  const [profiles, setProfiles] = useState([])
 
   // UI state
   const [loading, setLoading] = useState(false)
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState(null)
+  const [showAutomationModal, setShowAutomationModal] = useState(false)
+  const [profilesLoading, setProfilesLoading] = useState(true)
 
   // Load initial data (but not jobs - wait for user search)
   useEffect(() => {
     loadJobStats()
     loadCountries()
+    loadProfiles()
   }, [])
 
   const loadJobStats = async () => {
@@ -47,6 +53,61 @@ function ModernJobSearch() {
       setCountries(countryData.countries || [])
     } catch (err) {
       console.error('Failed to load countries:', err)
+    }
+  }
+
+  const loadProfiles = async () => {
+    try {
+      setProfilesLoading(true)
+      setProfiles([]) // Start with empty array
+      setSelectedProfile(null) // Clear selected profile
+      
+      const response = await fetchUserProfiles()
+      console.log('🔍 Loaded profiles response:', response)
+      console.log('🔍 Response type:', typeof response)
+      console.log('🔍 Response structure:', Object.keys(response || {}))
+      
+      // API returns {profiles: [...], count: n}
+      let profilesArray = []
+      
+      if (response && typeof response === 'object') {
+        if (Array.isArray(response.profiles)) {
+          profilesArray = response.profiles
+        } else if (Array.isArray(response)) {
+          // Fallback if response is directly an array
+          profilesArray = response
+        }
+      }
+      
+      console.log('🔍 Extracted profiles array:', profilesArray)
+      console.log('🔍 Is array?', Array.isArray(profilesArray))
+      console.log('🔍 Length:', profilesArray.length)
+      
+      // Ensure we always set an array
+      setProfiles(Array.isArray(profilesArray) ? profilesArray : [])
+      
+      // Auto-select first profile if available
+      if (Array.isArray(profilesArray) && profilesArray.length > 0) {
+        setSelectedProfile(profilesArray[0])
+        console.log('✅ Auto-selected profile:', profilesArray[0])
+      }
+    } catch (err) {
+      console.error('❌ Failed to load profiles:', err)
+      console.error('❌ Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      })
+      
+      // Handle specific errors
+      if (err.response?.status === 401) {
+        console.warn('❌ Authentication error - user may need to log in again')
+      }
+      
+      setProfiles([]) // Ensure it's always an array
+      setSelectedProfile(null)
+    } finally {
+      setProfilesLoading(false)
     }
   }
 
@@ -258,6 +319,65 @@ function ModernJobSearch() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-24">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Filters</h3>
               
+              {/* Profile Selection - Required for Automation */}
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <label className="block text-sm font-medium text-blue-900 mb-3">
+                  <span className="flex items-center">
+                    Profile for Applications
+                    <span className="text-red-500 ml-1">*</span>
+                  </span>
+                </label>
+                
+                {profilesLoading && (
+                  <div className="flex items-center p-3 text-blue-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent mr-2"></div>
+                    Loading profiles...
+                  </div>
+                )}
+                
+                {!profilesLoading && (
+                <select
+                  value={selectedProfile?.id || ''}
+                  onChange={(e) => {
+                    console.log('Profile select onChange triggered with:', e.target.value)
+                    console.log('Current profiles state:', profiles)
+                    console.log('Is profiles an array?', Array.isArray(profiles))
+                    
+                    if (!Array.isArray(profiles) || profiles.length === 0) {
+                      console.warn('Profiles is not an array or is empty:', profiles)
+                      setSelectedProfile(null)
+                      return
+                    }
+                    
+                    const profileId = parseInt(e.target.value)
+                    if (isNaN(profileId)) {
+                      setSelectedProfile(null)
+                      return
+                    }
+                    
+                    const profile = profiles.find(p => p && p.id === profileId)
+                    console.log('Found profile:', profile)
+                    setSelectedProfile(profile || null)
+                  }}
+                  className="w-full p-3 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="">Select a profile...</option>
+                  {Array.isArray(profiles) && profiles.map(profile => (
+                    <option key={profile.id} value={profile.id}>
+                      {profile.title || profile.full_name || `Profile ${profile.id}`}
+                    </option>
+                  ))}
+                </select>
+                )}
+                
+                {!profilesLoading && (!Array.isArray(profiles) || profiles.length === 0) && (
+                  <p className="text-sm text-blue-600 mt-2">
+                    No profiles found. <a href="/resume" className="underline">Create a profile first</a>.
+                  </p>
+                )}
+              </div>
+
               {/* Selected Jobs Counter */}
               {selectedJobs.size > 0 && (
                 <div className="mb-6 p-4 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl border border-teal-200">
@@ -265,7 +385,16 @@ function ModernJobSearch() {
                     <span className="text-sm font-medium text-teal-900">
                       {selectedJobs.size} job{selectedJobs.size !== 1 ? 's' : ''} selected
                     </span>
-                    <button className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors">
+                    <button 
+                      onClick={() => setShowAutomationModal(true)}
+                      disabled={!selectedProfile}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        selectedProfile 
+                          ? 'bg-teal-600 text-white hover:bg-teal-700' 
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      }`}
+                      title={!selectedProfile ? 'Please select a profile first' : 'Start job application automation'}
+                    >
                       Apply Now
                     </button>
                   </div>
@@ -502,6 +631,19 @@ function ModernJobSearch() {
           </div>
         </div>
       </div>
+
+      {/* Automation Modal */}
+      <AutomationModal
+        isOpen={showAutomationModal}
+        onClose={() => setShowAutomationModal(false)}
+        selectedJobs={selectedJobs}
+        jobs={jobs}
+        selectedProfile={selectedProfile}
+        onComplete={() => {
+          setShowAutomationModal(false)
+          setSelectedJobs(new Set()) // Clear selection after automation
+        }}
+      />
     </div>
   )
 }

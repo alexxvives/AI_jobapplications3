@@ -766,25 +766,41 @@ class BackgroundService {
                 profileKeys: data.userProfile ? Object.keys(data.userProfile) : [],
                 sessionId: data.currentSessionId,
                 active: data.automationActive,
-                hasJob: !!data.currentJob
+                hasJob: !!data.currentJob,
+                hasSelectedJobs: !!data.selectedJobs,
+                selectedJobsCount: data.selectedJobs?.length || 0,
+                hasJobQueue: !!data.jobQueue,
+                jobQueueCount: data.jobQueue?.length || 0
+            });
+            
+            console.log('🔍 DEBUG - Background: Job queue data being stored:', {
+                selectedJobs: data.selectedJobs,
+                jobQueue: data.jobQueue,
+                selectedJobsLength: data.selectedJobs?.length,
+                jobQueueLength: data.jobQueue?.length
             });
             
             const storageData = {
                 userProfile: data.userProfile,
                 currentSessionId: data.currentSessionId,
                 automationActive: data.automationActive,
-                currentJob: data.currentJob
+                currentJob: data.currentJob,
+                jobQueue: data.selectedJobs || data.jobQueue || [],
+                currentJobIndex: data.currentJobIndex || 0
             };
             
             console.log('📱 Background: About to store:', storageData);
             await chrome.storage.local.set(storageData);
             
             // Verify storage worked
-            const verification = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive']);
+            const verification = await chrome.storage.local.get(['userProfile', 'currentSessionId', 'automationActive', 'jobQueue', 'currentJobIndex']);
             console.log('📱 Background: ✅ Automation data stored and verified:', {
                 storedProfile: !!verification.userProfile,
                 storedSession: !!verification.currentSessionId,
                 storedActive: verification.automationActive,
+                storedJobQueue: !!verification.jobQueue,
+                jobQueueCount: verification.jobQueue?.length || 0,
+                currentJobIndex: verification.currentJobIndex,
                 profileName: verification.userProfile?.full_name || verification.userProfile?.email
             });
             

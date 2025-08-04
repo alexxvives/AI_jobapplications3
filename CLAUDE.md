@@ -40,8 +40,9 @@ This platform has **3 core modules** that work together:
 │   ├── main.py               # API routes
 │   ├── models.py             # Database models
 │   ├── database.py           # Database connection
-│   ├── job_automation.db     # Main database
-│   ├── multi_platform_jobs.db # Job scraping data
+│   ├── db_config.py          # Centralized database configuration
+│   ├── job_automation.db     # SINGLE database (2,746 jobs, 84 companies)
+│   ├── enhanced_scraper.py   # Current scraper (maintains both tables)
 │   ├── services/             # All business logic modules
 │   │   ├── profile_parsing/   # Resume → JSON conversion
 │   │   │   ├── ai_parser.py   # Ollama integration
@@ -50,12 +51,16 @@ This platform has **3 core modules** that work together:
 │   │   │   └── prompts/       # Ollama prompts + examples
 │   │   ├── job_scraping/      # ATS platform scraping
 │   │   │   └── scrapers/      # Platform-specific scrapers
+│   │   │       ├── lever_scraper.py # Lever API integration
+│   │   │       └── shared_utils.py # Common scraping utilities
 │   │   ├── job_application/   # Form automation logic
 │   │   │   ├── instruction_generator.py # Profile → form mapping
 │   │   │   ├── intelligent_form_filler.py
 │   │   │   └── prompts/       # Form filling prompts
 │   │   └── cover_letters/     # Cover letter generation
-│   ├── data/                 # Company lists & aliases
+│   ├── data/                 # Company data & tracking
+│   │   ├── company_job_tracker.json # 84 validated Lever companies
+│   │   └── consolidated_companies.json # Frontend company data
 │   └── storage/              # User resumes & data
 ├── frontend/                 # React dashboard
 │   └── src/components/       # UI components
@@ -77,8 +82,9 @@ This platform has **3 core modules** that work together:
    - Profile stored in backend database for editing
 
 2. **Job Discovery**
-   - `job_scraping` runs daily to fetch from Lever, Greenhouse, Workday
-   - Jobs displayed in React frontend with filters
+   - WebSearch discovery finds companies using `site:jobs.lever.co`
+   - `enhanced_scraper.py` fetches jobs from 84 validated Lever companies
+   - Jobs displayed in React frontend with filters (2,746 active jobs)
 
 3. **Application Automation**
    - User selects jobs to apply to
@@ -337,7 +343,7 @@ python3 lever_scraper.py
 ## 🔧 Development Commands
 
 ```bash
-# Backend
+# Backend - NOTE: Requires PyPDF2, mammoth, ollama packages (pip3 install --break-system-packages PyPDF2 mammoth ollama)
 cd backend && uvicorn main:app --reload
 
 # Frontend  
@@ -351,11 +357,11 @@ cd backend
 python3 -c "from services.job_scraping.scrapers.lever_scraper import LeverScraper; ..."
 
 # Database inspection
-cd backend && python3 temp_db_inspection.py
+cd backend && python3 check_actual_database.py
 
-# Ollama (local)
-ollama serve
-ollama pull mistral
+# Ollama (local) - NOTE: Ollama is installed at /home/alexxvives/ollama/bin/ollama
+/home/alexxvives/ollama/bin/ollama serve
+/home/alexxvives/ollama/bin/ollama pull mistral
 
 # Chrome Extension
 Load unpacked from chrome-extension/ directory
@@ -366,6 +372,12 @@ Load unpacked from chrome-extension/ directory
 ## 📋 Current Implementation Status
 
 ✅ **Completed**:
+- ✅ **WebSearch Company Discovery** (2025-08-04): Found 84 validated Lever companies using `site:jobs.lever.co` strategy
+- ✅ **Enhanced Scraper System**: `enhanced_scraper.py` maintains both jobs AND companies tables automatically
+- ✅ **Database Consolidation**: Single `job_automation.db` with 2,746 jobs from 84 companies (all with valid URLs)
+- ✅ **Data Quality Control**: Removed companies without URLs, fixed duplicates, synchronized table relationships
+- ✅ **Centralized Database Configuration**: `db_config.py` ensures consistent database paths regardless of working directory
+- ✅ **Codebase Cleanup**: Removed 78+ outdated discovery/testing files, streamlined project structure
 - ✅ **Database schema cleanup** (2025-07-13): Simplified tables, renamed fields, fixed parsing issues
 - ✅ **Lever scraper working**: Successfully tested with Activecampaign (33+ jobs)
 - ✅ **Unified database architecture**: Single SQLite file, consistent schema
@@ -384,10 +396,38 @@ Load unpacked from chrome-extension/ directory
   - **Enhanced Debugging**: Full prompt/response logging with user feedback during AI processing
   - **No Smart Defaults**: Returns null when data unavailable instead of guessing
   - **Fixed Authentication**: Temporarily bypassed auth issues for profile loading
+- ✅ **Major Ollama Integration Fixes** (2025-07-16): Complete rewrite of form processing and validation
+  - **Enhanced JSON Parsing**: Robust brace counting algorithm for multiline JSON responses
+  - **Radio Button Deduplication**: Fixed duplicate question extraction for radio button groups
+  - **Dropdown Option Enforcement**: Strict validation ensuring exact option matching from provided lists
+  - **Complete Profile Integration**: All work experience, education, skills, certificates sent to Ollama
+  - **Advanced Prompt Engineering**: Clear examples with ✅/❌ indicators and mandatory field requirements
+  - **Field Validation System**: Comprehensive logging of missing fields and dropdown violations
+  - **Sample Options for Large Dropdowns**: Show first 5 options as examples for 10+ option dropdowns
 
 🔄 **In Progress**:
-- **Backend API 500 Error**: Final debugging of Ollama integration endpoint
 - **Chrome Extension Testing**: End-to-end testing with real job application forms
+- **Session Management**: Debugging automation session endpoint issues
+
+## 🔍 Current Job Scraping Approach (2025-08-04)
+
+### **WebSearch-Based Company Discovery**
+- **Strategy**: Use `site:jobs.lever.co` searches to find companies actually using Lever
+- **Discovery Tool**: Claude's WebSearch with job-related search terms
+- **Success Rate**: 100% - all discovered companies have working Lever APIs
+- **Current Database**: 84 validated companies with 2,746 active jobs
+
+### **Lever API Integration**
+- **Endpoint**: `https://api.lever.co/v0/postings/{company_slug}?mode=json`
+- **Data Source**: `backend/data/company_job_tracker.json` - 84 companies with job links
+- **Scraper**: `backend/enhanced_scraper.py` - maintains both jobs AND companies tables
+- **Database**: Single `backend/job_automation.db` with synchronized tables
+
+### **Data Quality Standards**
+- ✅ **URL Validation**: Only companies with valid Lever URLs are kept
+- ✅ **Duplicate Prevention**: Enhanced scraper checks for existing jobs before insertion
+- ✅ **Table Synchronization**: Job counts automatically maintained in companies table
+- ✅ **Clean Data**: Companies without URLs and their jobs are removed
 
 🗓️ **Planned**:
 - **Application status tracking**

@@ -230,7 +230,7 @@ function ResumeUpload() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Citizenship</label>
-                  <p className="text-gray-900">{result.personal_information?.address?.citizenship || 'Not provided'}</p>
+                  <p className="text-gray-900">{result.personal_information?.citizenship || 'Not provided'}</p>
                 </div>
               </div>
             </div>
@@ -323,11 +323,17 @@ function ResumeUpload() {
             <div className="mb-6">
               <h3 className="text-lg font-medium text-gray-900 mb-3">Languages</h3>
               <div className="flex flex-wrap gap-2">
-                {result.languages.map((language, index) => (
-                  <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                    {language}
-                  </span>
-                ))}
+                {result.languages.map((language, index) => {
+                  const languageName = typeof language === 'string' ? language : language.name
+                  const proficiency = typeof language === 'object' ? language.proficiency : ''
+                  
+                  return (
+                    <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                      {languageName}
+                      {proficiency && <span className="text-green-600 text-xs ml-1">({proficiency})</span>}
+                    </span>
+                  )
+                })}
               </div>
             </div>
           )}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchUserProfiles, deleteProfile, parseResume, fetchProfileById } from '../utils/apiWithAuth'
+import { fetchUserProfiles, deleteProfile, parseResume, fetchProfileById, updateProfile } from '../utils/apiWithAuth'
 import SectionEditForm from './SectionEditForm'
 
 function ProfileManager() {
@@ -154,10 +154,38 @@ function ProfileManager() {
     setEditedData(viewingProfile)
   }
 
-  const handleSaveSection = (updatedData) => {
-    setViewingProfile(updatedData)
-    setEditedData(updatedData)
-    setEditingSection(null)
+  const handleSaveSection = async (updatedData) => {
+    console.log('🔍 handleSaveSection called with:', updatedData)
+    console.log('📋 Profile ID being updated:', viewingProfile.id)
+    try {
+      // Save changes to database
+      console.log('📡 Calling updateProfile API...')
+      const updatedProfile = await updateProfile(viewingProfile.id, updatedData)
+      console.log('✅ Profile update successful:', updatedProfile)
+      console.log('🔍 Response details:', JSON.stringify(updatedProfile, null, 2))
+      
+      // Update local state with returned data
+      setViewingProfile(updatedProfile)
+      setEditedData(updatedProfile)
+      setEditingSection(null)
+      
+      // Update the profiles list with updated data
+      const updatedProfiles = profiles.map(profile => 
+        profile.id === updatedProfile.id 
+          ? { ...profile, title: updatedProfile.title, updated_at: updatedProfile.updated_at }
+          : profile
+      )
+      setProfiles(updatedProfiles)
+      
+      // Show success message
+      setMessage('Profile updated successfully!')
+      setTimeout(() => setMessage(null), 3000)
+      
+    } catch (err) {
+      setError('Failed to save profile changes')
+      console.error('❌ Profile update error:', err)
+      console.error('❌ Error details:', err.response?.data || err.message)
+    }
   }
 
   const handleCancelEdit = () => {
@@ -288,26 +316,40 @@ function ProfileManager() {
 
       {/* Profile Details View */}
       {viewingProfile && !editingSection && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Profile Details</h2>
-            <button
-              onClick={() => setViewingProfile(null)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕ Close
-            </button>
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-bold text-white">Profile Details</h2>
+                <p className="text-blue-100 text-sm mt-1">
+                  {viewingProfile.personal_information?.basic_information?.first_name} {viewingProfile.personal_information?.basic_information?.last_name}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingProfile(null)}
+                className="text-white hover:text-blue-200 bg-blue-800 hover:bg-blue-900 px-3 py-1 rounded-md text-sm transition-colors"
+              >
+                ✕ Close
+              </button>
+            </div>
           </div>
           
+          {/* Content */}
+          <div className="p-6">
+          
           {/* Personal Information */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-medium text-gray-900">Personal Information</h3>
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <span className="text-blue-600">👤</span>
+                <span>Personal Information</span>
+              </h3>
               <button
                 onClick={() => handleEditSection('personal')}
-                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm"
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors shadow-sm"
               >
-                Edit
+                ✏️ Edit
               </button>
             </div>
             
@@ -369,119 +411,191 @@ function ProfileManager() {
                   <label className="block text-sm font-medium text-gray-700">Country</label>
                   <p className="text-gray-900">{viewingProfile.personal_information?.address?.country || 'Not provided'}</p>
                 </div>
-                <div>
+                <div key={`citizenship-${viewingProfile.updated_at}`}>
                   <label className="block text-sm font-medium text-gray-700">Citizenship</label>
-                  <p className="text-gray-900">{viewingProfile.personal_information?.address?.citizenship || 'Not provided'}</p>
+                  <p className="text-gray-900">{viewingProfile.personal_information?.citizenship || 'Not provided'}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Work Experience */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-medium text-gray-900">Work Experience</h3>
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <span className="text-blue-600">💼</span>
+                <span>Work Experience</span>
+              </h3>
               <button
                 onClick={() => handleEditSection('work')}
-                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm"
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors shadow-sm"
               >
-                Edit
+                ✏️ Edit
               </button>
             </div>
             {viewingProfile.work_experience && viewingProfile.work_experience.length > 0 ? (
               <div className="space-y-4">
                 {viewingProfile.work_experience.map((exp, index) => (
-                  <div key={index} className="border-l-4 border-blue-500 pl-4">
-                    <h4 className="font-medium text-gray-900">{exp.title} at {exp.company}</h4>
-                    <p className="text-sm text-gray-600">
-                      {exp.start_date} - {exp.end_date || 'Present'}
-                      {exp.location && ` • ${exp.location}`}
-                    </p>
-                    {exp.description && <p className="text-sm text-gray-700 mt-1">{exp.description}</p>}
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gradient-to-r from-blue-50 to-blue-100 hover:shadow-md transition-shadow">
+                    <div className="flex items-start space-x-3">
+                      <div className="text-blue-600 text-xl mt-1">💼</div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">{exp.title}</h4>
+                        <p className="text-blue-700 font-medium">{exp.company}</p>
+                        <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                          <span>📅 {exp.start_date} - {exp.end_date || 'Present'}</span>
+                          {exp.location && <span>📍 {exp.location}</span>}
+                        </div>
+                        {exp.description && (
+                          <p className="text-sm text-gray-700 mt-2 leading-relaxed">{exp.description}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No work experience found</p>
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="text-gray-400 text-4xl mb-2">💼</div>
+                <p className="text-gray-500 text-sm">No work experience added yet</p>
+                <p className="text-gray-400 text-xs mt-1">Click Edit to add your professional experience</p>
+              </div>
             )}
           </div>
 
           {/* Education */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-medium text-gray-900">Education</h3>
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <span className="text-green-600">🎓</span>
+                <span>Education</span>
+              </h3>
               <button
                 onClick={() => handleEditSection('education')}
-                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm"
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors shadow-sm"
               >
-                Edit
+                ✏️ Edit
               </button>
             </div>
             {viewingProfile.education && viewingProfile.education.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {viewingProfile.education.map((edu, index) => (
-                  <div key={index} className="border-l-4 border-green-500 pl-4">
-                    <h4 className="font-medium text-gray-900">{edu.degree}</h4>
-                    <p className="text-sm text-gray-600">
-                      {edu.school} • {edu.start_date} - {edu.end_date || 'Present'}
-                      {edu.gpa && ` • GPA: ${edu.gpa}`}
-                    </p>
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gradient-to-r from-green-50 to-green-100 hover:shadow-md transition-shadow">
+                    <div className="flex items-start space-x-3">
+                      <div className="text-green-600 text-xl mt-1">🎓</div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">{edu.degree}</h4>
+                        <p className="text-green-700 font-medium">{edu.school}</p>
+                        <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                          <span>📅 {edu.start_date} - {edu.end_date || 'Present'}</span>
+                          {edu.gpa && <span>🏅 GPA: {edu.gpa}</span>}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No education information found</p>
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="text-gray-400 text-4xl mb-2">🎓</div>
+                <p className="text-gray-500 text-sm">No education added yet</p>
+                <p className="text-gray-400 text-xs mt-1">Click Edit to add your educational background</p>
+              </div>
             )}
           </div>
 
           {/* Skills */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-medium text-gray-900">Skills</h3>
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <span className="text-purple-600">🚀</span>
+                <span>Skills</span>
+              </h3>
               <button
                 onClick={() => handleEditSection('skills')}
-                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm"
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors shadow-sm"
               >
-                Edit
+                ✏️ Edit
               </button>
             </div>
             {viewingProfile.skills && viewingProfile.skills.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {viewingProfile.skills.map((skill, index) => (
-                  <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                    {typeof skill === 'object' ? skill.name : skill}
-                    {typeof skill === 'object' && skill.years && ` (${skill.years} years)`}
-                  </span>
+                  <div key={index} className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 px-4 py-2 rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-shadow">
+                    <span className="flex items-center space-x-1">
+                      <span>🚀</span>
+                      <span>{typeof skill === 'object' ? skill.name : skill}</span>
+                      {typeof skill === 'object' && skill.years && (
+                        <span className="text-purple-600 text-xs">({skill.years}y)</span>
+                      )}
+                    </span>
+                  </div>
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No skills found</p>
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="text-gray-400 text-4xl mb-2">🚀</div>
+                <p className="text-gray-500 text-sm">No skills added yet</p>
+                <p className="text-gray-400 text-xs mt-1">Click Edit to add your technical and soft skills</p>
+              </div>
             )}
           </div>
 
           {/* Languages */}
-          {viewingProfile.languages && viewingProfile.languages.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">Languages</h3>
-              <div className="flex flex-wrap gap-2">
-                {viewingProfile.languages.map((language, index) => (
-                  <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                    {language}
-                  </span>
-                ))}
-              </div>
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <span className="text-teal-600">🌍</span>
+                <span>Languages</span>
+              </h3>
+              <button
+                onClick={() => handleEditSection('languages')}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors shadow-sm"
+              >
+                ✏️ Edit
+              </button>
             </div>
-          )}
+            {viewingProfile.languages && viewingProfile.languages.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {viewingProfile.languages.map((language, index) => {
+                  // Handle both old string format and new object format
+                  const languageName = typeof language === 'string' ? language : language.name
+                  const proficiency = typeof language === 'object' ? language.proficiency : ''
+                  
+                  return (
+                    <div key={index} className="bg-gradient-to-r from-teal-100 to-teal-200 text-teal-800 px-4 py-2 rounded-full text-sm font-medium shadow-sm flex items-center space-x-1">
+                      <span>🌍</span>
+                      <span>{languageName}</span>
+                      {proficiency && (
+                        <span className="text-teal-600 text-xs bg-teal-200 px-2 py-0.5 rounded-full ml-2">
+                          {proficiency}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="text-gray-400 text-4xl mb-2">🌍</div>
+                <p className="text-gray-500 text-sm">No languages added yet</p>
+                <p className="text-gray-400 text-xs mt-1">Click Edit to add the languages you speak</p>
+              </div>
+            )}
+          </div>
 
           {/* Job Preferences */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-medium text-gray-900">Job Preferences</h3>
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <span className="text-indigo-600">⚙️</span>
+                <span>Job Preferences</span>
+              </h3>
               <button
                 onClick={() => handleEditSection('preferences')}
-                className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm"
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors shadow-sm"
               >
-                Edit
+                ✏️ Edit
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -534,6 +648,127 @@ function ProfileManager() {
                 <p className="text-gray-900 break-all">{viewingProfile.job_preferences?.other_url || 'Not provided'}</p>
               </div>
             </div>
+          </div>
+
+          {/* Achievements */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <span className="text-yellow-600">🏆</span>
+                <span>Achievements & Awards</span>
+              </h3>
+              <button
+                onClick={() => handleEditSection('achievements')}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors shadow-sm"
+              >
+                ✏️ Edit
+              </button>
+            </div>
+            {viewingProfile.achievements && viewingProfile.achievements.length > 0 ? (
+              <div className="space-y-4">
+                {viewingProfile.achievements.map((achievement, index) => (
+                  <div key={index} className="border-l-4 border-yellow-500 pl-4 bg-yellow-50 p-4 rounded-r-lg">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 flex items-center">
+                          🏆 {achievement.title}
+                        </h4>
+                        {achievement.issuer && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            <span className="font-medium">Issued by:</span> {achievement.issuer}
+                          </p>
+                        )}
+                        {achievement.date && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            <span className="font-medium">Date:</span> {achievement.date}
+                          </p>
+                        )}
+                        {achievement.description && (
+                          <p className="text-sm text-gray-700 mt-2 italic">
+                            {achievement.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="text-gray-400 text-4xl mb-2">🏆</div>
+                <p className="text-gray-500 text-sm">No achievements added yet</p>
+                <p className="text-gray-400 text-xs mt-1">Click Edit to add your achievements and awards</p>
+              </div>
+            )}
+          </div>
+
+          {/* Certificates */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <span className="text-blue-600">📜</span>
+                <span>Certificates & Credentials</span>
+              </h3>
+              <button
+                onClick={() => handleEditSection('certificates')}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm font-medium transition-colors shadow-sm"
+              >
+                ✏️ Edit
+              </button>
+            </div>
+            {viewingProfile.certificates && viewingProfile.certificates.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {viewingProfile.certificates.map((cert, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
+                    <div className="flex items-start space-x-3">
+                      <div className="text-blue-600 text-2xl mt-1">📜</div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">{cert.name}</h4>
+                        
+                        {(cert.organization || cert.school) && (
+                          <p className="text-sm text-gray-600 mt-1">
+                            <span className="font-medium">Issued by:</span> {cert.organization || cert.school}
+                          </p>
+                        )}
+                        
+                        <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-500">
+                          {cert.issue_date && (
+                            <span>📅 Issued: {cert.issue_date}</span>
+                          )}
+                          {cert.expiry_date && (
+                            <span>⏰ Expires: {cert.expiry_date}</span>
+                          )}
+                        </div>
+                        
+                        {cert.credential_id && (
+                          <p className="text-xs text-gray-500 mt-2">
+                            <span className="font-medium">ID:</span> {cert.credential_id}
+                          </p>
+                        )}
+                        
+                        {cert.credential_url && (
+                          <a 
+                            href={cert.credential_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-block mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                          >
+                            🔗 View Credential
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="text-gray-400 text-4xl mb-2">📜</div>
+                <p className="text-gray-500 text-sm">No certificates added yet</p>
+                <p className="text-gray-400 text-xs mt-1">Click Edit to add your professional certificates</p>
+              </div>
+            )}
+          </div>
           </div>
         </div>
       )}

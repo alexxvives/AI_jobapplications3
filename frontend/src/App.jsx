@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom'
 import JobSearch from './components/JobSearch'
+import ModernJobSearch from './components/ModernJobSearch'
 import ProfileManager from './components/ProfileManager'
 import CoverLetterGenerator from './components/CoverLetterGenerator'
 import ApplicationInstructions from './components/ApplicationInstructions'
@@ -29,6 +30,12 @@ function NavBar({ onLogout, userEmail }) {
               className={`px-3 py-2 rounded ${isActive('/jobs') ? 'bg-blue-800' : 'hover:bg-blue-500'}`}
             >
               Job Search
+            </Link>
+            <Link 
+              to="/jobs-modern" 
+              className={`px-3 py-2 rounded ${isActive('/jobs-modern') ? 'bg-blue-800' : 'hover:bg-blue-500'}`}
+            >
+              Modern Search
             </Link>
             <Link 
               to="/resume" 
@@ -90,26 +97,34 @@ function App() {
   // Check for existing token on app load
   useEffect(() => {
     const savedToken = localStorage.getItem('authToken')
-    if (savedToken) {
-      // Verify token
-      fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${savedToken}`
-        }
-      })
-      .then(response => {
-        if (response.ok) {
-          return response.json()
-        } else {
-          throw new Error('Token invalid')
-        }
-      })
-      .then(userData => {
-        handleAuthSuccess(userData, savedToken)
-      })
-      .catch(() => {
-        localStorage.removeItem('authToken')
-      })
+    if (savedToken && savedToken.trim() !== '') {
+      // Add a small delay to ensure backend is ready
+      const timeoutId = setTimeout(() => {
+        fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${savedToken}`
+          }
+        })
+        .then(response => {
+          if (response.ok) {
+            return response.json()
+          } else {
+            throw new Error(`Auth failed: ${response.status}`)
+          }
+        })
+        .then(userData => {
+          handleAuthSuccess(userData, savedToken)
+        })
+        .catch((error) => {
+          // Only log if it's not a connection refused error
+          if (!error.message.includes('ECONNREFUSED')) {
+            console.debug('Auth check failed:', error.message)
+          }
+          localStorage.removeItem('authToken')
+        })
+      }, 100) // Small delay to let backend start
+
+      return () => clearTimeout(timeoutId)
     }
   }, [])
 
@@ -125,6 +140,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/jobs" element={<JobSearch />} />
+            <Route path="/jobs-modern" element={<ModernJobSearch />} />
             <Route path="/resume" element={<ProfileManager />} />
             <Route path="/cover-letter" element={<CoverLetterGenerator />} />
             <Route path="/instructions" element={<ApplicationInstructions />} />

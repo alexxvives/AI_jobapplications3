@@ -201,6 +201,20 @@ function AutomationModal({
           try {
             console.log('🔍 DEBUG - About to create automation data with selectedJobsArray:', selectedJobsArray);
             
+            // Fix Lever URLs in all selected jobs before sending to Chrome extension
+            const fixedJobsArray = selectedJobsArray.map(job => {
+              let fixedUrl = job.link;
+              if (fixedUrl && fixedUrl.includes('jobs.lever.co') && !fixedUrl.endsWith('/apply')) {
+                fixedUrl = fixedUrl.replace(/\/$/, '') + '/apply';
+                console.log('🔧 Frontend: Fixed Lever URL for job queue:', job.link, '→', fixedUrl);
+              }
+              return {
+                ...job,
+                link: fixedUrl,
+                url: fixedUrl
+              };
+            });
+            
             const automationData = {
               userProfile: userProfile,
               currentSessionId: result.sessionId,
@@ -211,8 +225,8 @@ function AutomationModal({
                 url: jobUrl,
                 platform: jobUrl.includes('jobs.lever.co') ? 'lever' : 'unknown'
               },
-              selectedJobs: selectedJobsArray,
-              jobQueue: selectedJobsArray,
+              selectedJobs: fixedJobsArray,
+              jobQueue: fixedJobsArray,
               currentJobIndex: 0
             };
             
@@ -220,7 +234,8 @@ function AutomationModal({
               hasSelectedJobs: !!automationData.selectedJobs,
               selectedJobsCount: automationData.selectedJobs?.length || 0,
               selectedJobs: automationData.selectedJobs,
-              jobQueueCount: automationData.jobQueue?.length || 0
+              jobQueueCount: automationData.jobQueue?.length || 0,
+              fixedUrlsCount: fixedJobsArray.length
             });
             
             // Chrome storage is NOT available to web pages - only to extensions!
@@ -395,6 +410,10 @@ function AutomationModal({
             console.log('📱 ❌ Chrome storage error:', e.message);
           }
           
+          console.log('🚀 OPENING JOB TAB WITH URL:', jobUrl);
+          console.log('🔍 URL Check - Contains lever.co?', jobUrl.includes('jobs.lever.co'));
+          console.log('🔍 URL Check - Ends with /apply?', jobUrl.endsWith('/apply'));
+          
           const jobTab = window.open(jobUrl, '_blank');
           if (!jobTab) {
             throw new Error('Popup blocked. Please allow popups for this site.');
@@ -415,6 +434,19 @@ function AutomationModal({
         
         // Store in Chrome storage for MAIN PATH too (not just fallback)
         try {
+          // Fix Lever URLs in all selected jobs for main path as well
+          const fixedJobsArrayMain = selectedJobsArray.map(job => {
+            let fixedUrl = job.link;
+            if (fixedUrl && fixedUrl.includes('jobs.lever.co') && !fixedUrl.endsWith('/apply')) {
+              fixedUrl = fixedUrl.replace(/\/$/, '') + '/apply';
+              console.log('🔧 Frontend Main Path: Fixed Lever URL for job queue:', job.link, '→', fixedUrl);
+            }
+            return {
+              ...job,
+              link: fixedUrl,
+              url: fixedUrl
+            };
+          });
           
           const automationData = {
             userProfile: userProfile,
@@ -426,8 +458,8 @@ function AutomationModal({
               url: finalJobUrl,
               platform: finalJobUrl.includes('jobs.lever.co') ? 'lever' : 'unknown'
             },
-            selectedJobs: selectedJobsArray,
-            jobQueue: selectedJobsArray,
+            selectedJobs: fixedJobsArrayMain,
+            jobQueue: fixedJobsArrayMain,
             currentJobIndex: 0
           };
           
@@ -472,6 +504,10 @@ function AutomationModal({
         }));
         
         // Open the job application URL
+        console.log('🚀 MAIN PATH - OPENING JOB TAB WITH URL:', finalJobUrl);
+        console.log('🔍 Main Path URL Check - Contains lever.co?', finalJobUrl.includes('jobs.lever.co'));
+        console.log('🔍 Main Path URL Check - Ends with /apply?', finalJobUrl.endsWith('/apply'));
+        
         const jobTab = window.open(finalJobUrl, '_blank');
         if (!jobTab) {
           throw new Error('Popup blocked. Please allow popups for this site.');

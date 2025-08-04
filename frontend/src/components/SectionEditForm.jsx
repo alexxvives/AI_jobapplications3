@@ -1,8 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { COUNTRIES, VISA_OPTIONS } from '../utils/countries'
 
 function SectionEditForm({ section, data, onSave, onCancel }) {
   const [formData, setFormData] = useState(data)
+  
+  // Sync formData with data prop changes
+  useEffect(() => {
+    setFormData(data)
+  }, [data])
 
   const handleInputChange = (path, value) => {
     const newData = { ...formData }
@@ -33,6 +38,15 @@ function SectionEditForm({ section, data, onSave, onCancel }) {
     
     const array = current[keys[keys.length - 1]]
     if (array && array[index]) {
+      // Special handling for languages to ensure object format
+      if (arrayPath === 'languages' && typeof array[index] === 'string') {
+        // Convert string to object if needed
+        array[index] = {
+          name: array[index],
+          proficiency: ''
+        }
+      }
+      
       array[index] = { ...array[index], [field]: value }
     }
     
@@ -199,8 +213,8 @@ function SectionEditForm({ section, data, onSave, onCancel }) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Citizenship</label>
             <select
-              value={formData.personal_information?.address?.citizenship || ''}
-              onChange={(e) => handleInputChange('personal_information.address.citizenship', e.target.value)}
+              value={formData.personal_information?.citizenship || ''}
+              onChange={(e) => handleInputChange('personal_information.citizenship', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select citizenship...</option>
@@ -574,6 +588,253 @@ function SectionEditForm({ section, data, onSave, onCancel }) {
     </div>
   )
 
+  const renderAchievementsSection = () => (
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium text-gray-900">Edit Achievements & Awards</h3>
+      
+      {formData.achievements?.map((achievement, index) => (
+        <div key={index} className="border border-gray-200 rounded-lg p-4 bg-yellow-50">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-md font-medium text-gray-800">Achievement {index + 1}</h4>
+            <button
+              type="button"
+              onClick={() => removeArrayItem('achievements', index)}
+              className="text-red-600 hover:text-red-800 text-sm px-2 py-1 rounded border border-red-300 hover:bg-red-50"
+            >
+              Remove
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+              <input
+                type="text"
+                value={achievement.title || ''}
+                onChange={(e) => handleArrayChange('achievements', index, 'title', e.target.value)}
+                placeholder="e.g., Best Innovation Award"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Issued By</label>
+              <input
+                type="text"
+                value={achievement.issuer || ''}
+                onChange={(e) => handleArrayChange('achievements', index, 'issuer', e.target.value)}
+                placeholder="e.g., Tech Corp, University"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="text"
+                value={achievement.date || ''}
+                onChange={(e) => handleArrayChange('achievements', index, 'date', e.target.value)}
+                placeholder="e.g., 2024-06, June 2024"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                value={achievement.description || ''}
+                onChange={(e) => handleArrayChange('achievements', index, 'description', e.target.value)}
+                placeholder="Brief description of the achievement..."
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+      
+      <button
+        type="button"
+        onClick={() => addArrayItem('achievements', {
+          title: '',
+          issuer: '',
+          date: '',
+          description: ''
+        })}
+        className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 flex items-center space-x-2"
+      >
+        <span>🏆</span>
+        <span>Add Achievement</span>
+      </button>
+    </div>
+  )
+
+  const renderCertificatesSection = () => (
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium text-gray-900">Edit Certificates & Credentials</h3>
+      
+      {formData.certificates?.map((cert, index) => (
+        <div key={index} className="border border-gray-200 rounded-lg p-4 bg-blue-50">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-md font-medium text-gray-800">Certificate {index + 1}</h4>
+            <button
+              type="button"
+              onClick={() => removeArrayItem('certificates', index)}
+              className="text-red-600 hover:text-red-800 text-sm px-2 py-1 rounded border border-red-300 hover:bg-red-50"
+            >
+              Remove
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Certificate Name *</label>
+              <input
+                type="text"
+                value={cert.name || ''}
+                onChange={(e) => handleArrayChange('certificates', index, 'name', e.target.value)}
+                placeholder="e.g., AWS Solutions Architect"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+              <input
+                type="text"
+                value={cert.organization || ''}
+                onChange={(e) => handleArrayChange('certificates', index, 'organization', e.target.value)}
+                placeholder="e.g., Amazon, Microsoft"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">School/Institution</label>
+              <input
+                type="text"
+                value={cert.school || ''}
+                onChange={(e) => handleArrayChange('certificates', index, 'school', e.target.value)}
+                placeholder="e.g., Stanford University"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Issue Date</label>
+              <input
+                type="text"
+                value={cert.issue_date || ''}
+                onChange={(e) => handleArrayChange('certificates', index, 'issue_date', e.target.value)}
+                placeholder="e.g., 2024-06, June 2024"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+              <input
+                type="text"
+                value={cert.expiry_date || ''}
+                onChange={(e) => handleArrayChange('certificates', index, 'expiry_date', e.target.value)}
+                placeholder="e.g., 2027-06, Never expires"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Credential ID</label>
+              <input
+                type="text"
+                value={cert.credential_id || ''}
+                onChange={(e) => handleArrayChange('certificates', index, 'credential_id', e.target.value)}
+                placeholder="e.g., ABC123456"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Credential URL</label>
+              <input
+                type="url"
+                value={cert.credential_url || ''}
+                onChange={(e) => handleArrayChange('certificates', index, 'credential_url', e.target.value)}
+                placeholder="https://..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+      
+      <button
+        type="button"
+        onClick={() => addArrayItem('certificates', {
+          name: '',
+          organization: '',
+          school: '',
+          issue_date: '',
+          expiry_date: '',
+          credential_id: '',
+          credential_url: ''
+        })}
+        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center space-x-2"
+      >
+        <span>📜</span>
+        <span>Add Certificate</span>
+      </button>
+    </div>
+  )
+
+  const renderLanguagesSection = () => (
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium text-gray-900">Edit Languages</h3>
+      
+      <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+        <div className="flex items-center space-x-2 mb-3">
+          <span className="text-teal-600 text-xl">🌍</span>
+          <h4 className="font-medium text-teal-800">Your Languages</h4>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Languages (comma-separated)</label>
+            <textarea
+              value={formData.languages?.join(', ') || ''}
+              onChange={(e) => {
+                const languages = e.target.value.split(',').map(lang => lang.trim()).filter(lang => lang)
+                const newData = { ...formData }
+                newData.languages = languages
+                setFormData(newData)
+              }}
+              placeholder="e.g., English, Spanish, French, German, Mandarin"
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              💡 Tip: Separate each language with a comma. Include proficiency levels if desired (e.g., "English (Native), Spanish (Fluent)")
+            </p>
+          </div>
+          
+          {formData.languages && formData.languages.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+              <div className="flex flex-wrap gap-2">
+                {formData.languages.map((language, index) => (
+                  <div key={index} className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm flex items-center space-x-1">
+                    <span>🌍</span>
+                    <span>{language}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="bg-gray-50 rounded-lg p-4">
+        <h5 className="font-medium text-gray-800 mb-2">💡 Language Tips:</h5>
+        <ul className="text-sm text-gray-600 space-y-1">
+          <li>• Include your native language(s)</li>
+          <li>• Add proficiency levels: Native, Fluent, Conversational, Basic</li>
+          <li>• List languages you use professionally</li>
+          <li>• Consider including programming languages if relevant</li>
+        </ul>
+      </div>
+    </div>
+  )
+
   const renderSection = () => {
     switch (section) {
       case 'personal':
@@ -584,8 +845,14 @@ function SectionEditForm({ section, data, onSave, onCancel }) {
         return renderEducationSection()
       case 'skills':
         return renderSkillsSection()
+      case 'languages':
+        return renderLanguagesSection()
       case 'preferences':
         return renderPreferencesSection()
+      case 'achievements':
+        return renderAchievementsSection()
+      case 'certificates':
+        return renderCertificatesSection()
       default:
         return <div>Unknown section</div>
     }

@@ -18,9 +18,9 @@ function EditableResumeForm({ initialData, onSave, onCancel }) {
         city: '',
         state: '',
         zip_code: '',
-        country: '',
-        citizenship: ''
-      }
+        country: ''
+      },
+      citizenship: ''
     },
     work_experience: [],
     education: [],
@@ -104,7 +104,10 @@ function EditableResumeForm({ initialData, onSave, onCancel }) {
   }
 
   const handleLanguagesChange = (value) => {
-    const languages = value.split(',').map(lang => lang.trim()).filter(lang => lang)
+    const languages = value.split(',').map(lang => ({
+      name: lang.trim(),
+      proficiency: ''
+    })).filter(lang => lang.name)
     setFormData(prev => ({ ...prev, languages }))
   }
 
@@ -243,8 +246,8 @@ function EditableResumeForm({ initialData, onSave, onCancel }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Citizenship</label>
                 <select
-                  value={formData.personal_information?.address?.citizenship || ''}
-                  onChange={(e) => handleInputChange('personal_information', 'address', 'citizenship', e.target.value)}
+                  value={formData.personal_information?.citizenship || ''}
+                  onChange={(e) => handleInputChange('personal_information', '', 'citizenship', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select citizenship...</option>
@@ -456,7 +459,7 @@ function EditableResumeForm({ initialData, onSave, onCancel }) {
             <label className="block text-sm font-medium text-gray-700 mb-1">Languages (comma-separated)</label>
             <input
               type="text"
-              value={formData.languages?.join(', ') || ''}
+              value={formData.languages?.map(lang => typeof lang === 'string' ? lang : lang.name).join(', ') || ''}
               onChange={(e) => handleLanguagesChange(e.target.value)}
               placeholder="e.g., English, Spanish, French"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -43,18 +43,7 @@ class JobApplicationAssistant {
                 const messageData = event.data.type === 'CHROME_EXTENSION_MESSAGE' ? event.data : { data: event.data.data };
                 
                 if (event.data.action === 'STORE_AUTOMATION_DATA' || event.data.type === 'STORE_AUTOMATION_DATA') {
-                    console.log('📨 🔥 AUTOMATION DATA MESSAGE RECEIVED!', {
-                        type: event.data.type,
-                        action: event.data.action,
-                        hasData: !!messageData.data,
-                        hasProfile: !!messageData.data?.userProfile,
-                        profileName: messageData.data?.userProfile?.full_name,
-                        hasSelectedJobs: !!messageData.data?.selectedJobs,
-                        selectedJobsCount: messageData.data?.selectedJobs?.length || 0,
-                        hasJobQueue: !!messageData.data?.jobQueue,
-                        jobQueueCount: messageData.data?.jobQueue?.length || 0,
-                        fullData: messageData.data
-                    });
+                    console.log('🚀 Automation data received - Jobs:', messageData.data?.selectedJobs?.length || 0);
                     
                     try {
                         const automationData = messageData.data;
@@ -68,13 +57,30 @@ class JobApplicationAssistant {
                             jobQueueValue: automationData.jobQueue
                         });
                         
+                        // Fix Lever URLs in job queue - ensure all have /apply suffix
+                        const fixLeverUrl = (url) => {
+                            if (url && url.includes('jobs.lever.co') && !url.endsWith('/apply')) {
+                                const fixedUrl = url.replace(/\/$/, '') + '/apply';
+                                console.log('🔧 Fixed Lever URL:', url, '→', fixedUrl);
+                                return fixedUrl;
+                            }
+                            return url;
+                        };
+                        
+                        // Fix URLs in job queue
+                        const jobQueue = (automationData.selectedJobs || automationData.jobQueue || []).map(job => ({
+                            ...job,
+                            url: fixLeverUrl(job.url || job.link),
+                            link: fixLeverUrl(job.url || job.link)
+                        }));
+                        
                         // Store in Chrome storage for cross-origin access
                         const storageData = {
                             userProfile: automationData.userProfile,
                             currentSessionId: automationData.currentSessionId,
                             automationActive: automationData.automationActive || true,
                             currentJob: automationData.currentJob,
-                            jobQueue: automationData.selectedJobs || automationData.jobQueue || [],
+                            jobQueue: jobQueue,
                             currentJobIndex: automationData.currentJobIndex || 0
                         };
                         
@@ -2468,7 +2474,19 @@ class JobApplicationAssistant {
                 // Navigate to the job
                 const job = jobQueue[jobIndex];
                 console.log(`🚀 Going to: ${job.title} at ${job.company}`);
-                window.location.href = job.link;
+                console.log('🔍 DEBUG - Job URL from storage:', job.link);
+                console.log('🔍 DEBUG - Is Lever URL?', job.link.includes('jobs.lever.co'));
+                console.log('🔍 DEBUG - Has /apply?', job.link.endsWith('/apply'));
+                
+                // Fix Lever URL if needed before navigation
+                let finalUrl = job.link;
+                if (finalUrl.includes('jobs.lever.co') && !finalUrl.endsWith('/apply')) {
+                    finalUrl = finalUrl.replace(/\/$/, '') + '/apply';
+                    console.log('🔧 Fixed URL during navigation:', job.link, '→', finalUrl);
+                }
+                
+                console.log('🚀 FINAL URL BEING USED:', finalUrl);
+                window.location.href = finalUrl;
             } else {
                 console.error('❌ Invalid job index or missing job link');
             }
@@ -2497,7 +2515,19 @@ class JobApplicationAssistant {
                 const nextJob = jobQueue[currentJobIndex];
                 if (nextJob && nextJob.link) {
                     console.log(`🚀 Navigating to: ${nextJob.title} at ${nextJob.company}`);
-                    window.location.href = nextJob.link;
+                    console.log('🔍 DEBUG - Next job URL from storage:', nextJob.link);
+                    console.log('🔍 DEBUG - Is Lever URL?', nextJob.link.includes('jobs.lever.co'));
+                    console.log('🔍 DEBUG - Has /apply?', nextJob.link.endsWith('/apply'));
+                    
+                    // Fix Lever URL if needed before navigation
+                    let finalUrl = nextJob.link;
+                    if (finalUrl.includes('jobs.lever.co') && !finalUrl.endsWith('/apply')) {
+                        finalUrl = finalUrl.replace(/\/$/, '') + '/apply';
+                        console.log('🔧 Fixed URL during navigation:', nextJob.link, '→', finalUrl);
+                    }
+                    
+                    console.log('🚀 FINAL URL BEING USED:', finalUrl);
+                    window.location.href = finalUrl;
                 } else {
                     console.error('❌ Next job URL not found');
                 }

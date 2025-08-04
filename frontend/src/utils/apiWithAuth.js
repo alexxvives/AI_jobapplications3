@@ -22,8 +22,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
+    // Only handle 401s if we actually have a token (to avoid noisy errors on startup)
+    if (error.response?.status === 401 && (localStorage.getItem('authToken') || window.authToken)) {
+      console.log('Auth token expired, redirecting to login')
       localStorage.removeItem('authToken')
       window.authToken = null
       window.location.reload()
@@ -70,6 +71,23 @@ export const deleteProfile = async (profileId) => {
   return response.data
 }
 
+export const updateProfile = async (profileId, profileData) => {
+  console.log('🌐 API: updateProfile called', { profileId, profileData })
+  console.log('🔑 Auth token:', localStorage.getItem('authToken') ? 'Present' : 'Missing')
+  
+  try {
+    const response = await api.put(`/user/profile/${profileId}`, profileData)
+    console.log('📡 API response status:', response.status)
+    console.log('📄 API response data:', response.data)
+    return response.data
+  } catch (error) {
+    console.error('❌ API updateProfile error:', error)
+    console.error('❌ Error response:', error.response?.data)
+    console.error('❌ Error status:', error.response?.status)
+    throw error
+  }
+}
+
 // Job-related API calls
 export const searchJobs = async (title, location = '', limit = 50) => {
   const response = await api.get('/jobs/search', {
@@ -85,6 +103,11 @@ export const fetchJobsManually = async () => {
 
 export const getJobStats = async () => {
   const response = await api.get('/jobs/stats')
+  return response.data
+}
+
+export const getJobCountries = async () => {
+  const response = await api.get('/jobs/countries')
   return response.data
 }
 
