@@ -1,0 +1,368 @@
+{
+  "companies": [
+    {
+      "company": "Activecampaign",
+      "job_link": "https://api.lever.co/v0/postings/activecampaign?mode=json"
+    },
+    {
+      "company": "AllTrails",
+      "job_link": "https://api.lever.co/v0/postings/alltrails?mode=json"
+    },
+    {
+      "company": "AngelList",
+      "job_link": "https://api.lever.co/v0/postings/angellist?mode=json"
+    },
+    {
+      "company": "Back Market",
+      "job_link": "https://jobs.lever.co/backmarket"
+    },
+    {
+      "company": "Bazaarvoice",
+      "job_link": "https://api.lever.co/v0/postings/bazaarvoice?mode=json"
+    },
+    {
+      "company": "Beam",
+      "job_link": "https://api.lever.co/v0/postings/beam?mode=json"
+    },
+    {
+      "company": "Beta",
+      "job_link": "https://api.lever.co/v0/postings/beta?mode=json"
+    },
+    {
+      "company": "Binance",
+      "job_link": "https://api.lever.co/v0/postings/binance?mode=json"
+    },
+    {
+      "company": "Blue Bottle Coffee",
+      "job_link": "https://api.lever.co/v0/postings/bluebottlecoffee?mode=json"
+    },
+    {
+      "company": "Clubhouse",
+      "job_link": "https://api.lever.co/v0/postings/clubhouse?mode=json"
+    },
+    {
+      "company": "CoinGecko",
+      "job_link": "https://api.lever.co/v0/postings/coingecko?mode=json"
+    },
+    {
+      "company": "Coins.ph",
+      "job_link": "https://api.lever.co/v0/postings/coins?mode=json"
+    },
+    {
+      "company": "Color",
+      "job_link": "https://api.lever.co/v0/postings/color?mode=json"
+    },
+    {
+      "company": "Dwolla",
+      "job_link": "https://api.lever.co/v0/postings/dwolla?mode=json"
+    },
+    {
+      "company": "FI",
+      "job_link": "https://api.lever.co/v0/postings/fi?mode=json"
+    },
+    {
+      "company": "Immuta",
+      "job_link": "https://api.lever.co/v0/postings/immuta?mode=json"
+    },
+    {
+      "company": "Kitware",
+      "job_link": "https://api.lever.co/v0/postings/kitware?mode=json"
+    },
+    {
+      "company": "Kogan Retail",
+      "job_link": "https://api.lever.co/v0/postings/kogan?mode=json"
+    },
+    {
+      "company": "LogRocket",
+      "job_link": "https://api.lever.co/v0/postings/logrocket?mode=json"
+    },
+    {
+      "company": "Logz",
+      "job_link": "https://api.lever.co/v0/postings/logz?mode=json"
+    },
+    {
+      "company": "Metabase",
+      "job_link": "https://api.lever.co/v0/postings/metabase?mode=json"
+    },
+    {
+      "company": "Neon",
+      "job_link": "https://api.lever.co/v0/postings/neon?mode=json"
+    },
+    {
+      "company": "Observable Inc",
+      "job_link": "https://api.lever.co/v0/postings/observablehq?mode=json"
+    },
+    {
+      "company": "Olo Inc",
+      "job_link": "https://api.lever.co/v0/postings/olo?mode=json"
+    },
+    {
+      "company": "OpenX",
+      "job_link": "https://api.lever.co/v0/postings/openx?mode=json"
+    },
+    {
+      "company": "Palantir",
+      "job_link": "https://api.lever.co/v0/postings/palantir?mode=json"
+    },
+    {
+      "company": "Plaid",
+      "job_link": "https://api.lever.co/v0/postings/plaid?mode=json"
+    },
+    {
+      "company": "Recurly",
+      "job_link": "https://api.lever.co/v0/postings/recurly?mode=json"
+    },
+    {
+      "company": "Ro",
+      "job_link": "https://api.lever.co/v0/postings/ro?mode=json"
+    },
+    {
+      "company": "Scaleway",
+      "job_link": "https://api.lever.co/v0/postings/scaleway?mode=json"
+    },
+    {
+      "company": "Sila",
+      "job_link": "https://api.lever.co/v0/postings/sila?mode=json"
+    },
+    {
+      "company": "Spotify",
+      "job_link": "https://api.lever.co/v0/postings/spotify?mode=json"
+    },
+    {
+      "company": "StackBlitz",
+      "job_link": "https://api.lever.co/v0/postings/stackblitz?mode=json"
+    },
+    {
+      "company": "Teleport",
+      "job_link": "https://api.lever.co/v0/postings/teleport?mode=json"
+    },
+    {
+      "company": "Teramind Inc",
+      "job_link": "https://api.lever.co/v0/postings/teramind?mode=json"
+    },
+    {
+      "company": "The Athletic Media Company",
+      "job_link": "https://api.lever.co/v0/postings/theathletic?mode=json"
+    },
+    {
+      "company": "The Black Tux Inc",
+      "job_link": "https://api.lever.co/v0/postings/theblacktux?mode=json"
+    },
+    {
+      "company": "Treering",
+      "job_link": "https://api.lever.co/v0/postings/treering?mode=json"
+    },
+    {
+      "company": "Trendyol.com",
+      "job_link": "https://api.lever.co/v0/postings/trendyol?mode=json"
+    },
+    {
+      "company": "Wandb",
+      "job_link": "https://api.lever.co/v0/postings/wandb?mode=json"
+    },
+    {
+      "company": "Weights & Biases",
+      "job_link": "https://api.lever.co/v0/postings/wandb?mode=json"
+    },
+    {
+      "company": "Whoop",
+      "job_link": "https://api.lever.co/v0/postings/whoop?mode=json"
+    },
+    {
+      "company": "Workos",
+      "job_link": "https://api.lever.co/v0/postings/workos?mode=json"
+    },
+    {
+      "company": "Octopus Energy",
+      "job_link": "https://api.lever.co/v0/postings/octoenergy?mode=json"
+    },
+    {
+      "company": "StackAdapt",
+      "job_link": "https://api.lever.co/v0/postings/stackadapt?mode=json"
+    },
+    {
+      "company": "Job&Talent",
+      "job_link": "https://api.lever.co/v0/postings/jobandtalent?mode=json"
+    },
+    {
+      "company": "Kraken Digital Asset Exchange",
+      "job_link": "https://api.lever.co/v0/postings/kraken123?mode=json"
+    },
+    {
+      "company": "The Voleon Group",
+      "job_link": "https://api.lever.co/v0/postings/voleon?mode=json"
+    },
+    {
+      "company": "GoodLeap",
+      "job_link": "https://api.lever.co/v0/postings/goodleap?mode=json"
+    },
+    {
+      "company": "Sprinto",
+      "job_link": "https://api.lever.co/v0/postings/Sprinto?mode=json"
+    },
+    {
+      "company": "Provectus",
+      "job_link": "https://api.lever.co/v0/postings/provectus?mode=json"
+    },
+    {
+      "company": "Tala",
+      "job_link": "https://api.lever.co/v0/postings/tala?mode=json"
+    },
+    {
+      "company": "MoonPay",
+      "job_link": "https://api.lever.co/v0/postings/moonpay?mode=json"
+    },
+    {
+      "company": "Rover.com",
+      "job_link": "https://api.lever.co/v0/postings/rover?mode=json"
+    },
+    {
+      "company": "Drivetrain",
+      "job_link": "https://api.lever.co/v0/postings/drivetrain?mode=json"
+    },
+    {
+      "company": "Smarsh",
+      "job_link": "https://api.lever.co/v0/postings/smarsh?mode=json"
+    },
+    {
+      "company": "Superside",
+      "job_link": "https://api.lever.co/v0/postings/superside?mode=json"
+    },
+    {
+      "company": "MeridianLink",
+      "job_link": "https://api.lever.co/v0/postings/meridianlink?mode=json"
+    },
+    {
+      "company": "Belvedere Trading",
+      "job_link": "https://api.lever.co/v0/postings/belvederetrading?mode=json"
+    },
+    {
+      "company": "Houzz",
+      "job_link": "https://api.lever.co/v0/postings/houzz?mode=json"
+    },
+    {
+      "company": "Telda",
+      "job_link": "https://api.lever.co/v0/postings/telda.app?mode=json"
+    },
+    {
+      "company": "Oowlish Technology",
+      "job_link": "https://api.lever.co/v0/postings/oowlish?mode=json"
+    },
+    {
+      "company": "Wahed",
+      "job_link": "https://api.lever.co/v0/postings/wahed.com?mode=json"
+    },
+    {
+      "company": "QuantCo",
+      "job_link": "https://api.lever.co/v0/postings/quantco-?mode=json"
+    },
+    {
+      "company": "CDC Foundation",
+      "job_link": "https://api.lever.co/v0/postings/cdcfoundation?mode=json"
+    },
+    {
+      "company": "Wealthfront",
+      "job_link": "https://api.lever.co/v0/postings/wealthfront?mode=json"
+    },
+    {
+      "company": "Supernova Technology",
+      "job_link": "https://api.lever.co/v0/postings/supernovacompanies?mode=json"
+    },
+    {
+      "company": "Veo",
+      "job_link": "https://api.lever.co/v0/postings/veo?mode=json"
+    },
+    {
+      "company": "Zartis",
+      "job_link": "https://api.lever.co/v0/postings/zartis?mode=json"
+    },
+    {
+      "company": "Fliff",
+      "job_link": "https://api.lever.co/v0/postings/Fliff?mode=json"
+    },
+    {
+      "company": "Improvado",
+      "job_link": "https://api.lever.co/v0/postings/improvadoio?mode=json"
+    },
+    {
+      "company": "Orum",
+      "job_link": "https://api.lever.co/v0/postings/orum?mode=json"
+    },
+    {
+      "company": "Vendavo",
+      "job_link": "https://api.lever.co/v0/postings/vendavo?mode=json"
+    },
+    {
+      "company": "Gauntlet",
+      "job_link": "https://api.lever.co/v0/postings/gauntlet?mode=json"
+    },
+    {
+      "company": "Archive",
+      "job_link": "https://api.lever.co/v0/postings/Archive?mode=json"
+    },
+    {
+      "company": "Anagram",
+      "job_link": "https://api.lever.co/v0/postings/anagram?mode=json"
+    },
+    {
+      "company": "Atomi",
+      "job_link": "https://api.lever.co/v0/postings/atomi?mode=json"
+    },
+    {
+      "company": "Ivo",
+      "job_link": "https://api.lever.co/v0/postings/ivo?mode=json"
+    },
+    {
+      "company": "ZOE",
+      "job_link": "https://api.lever.co/v0/postings/joinzoe?mode=json"
+    },
+    {
+      "company": "Brilliant",
+      "job_link": "https://api.lever.co/v0/postings/brilliant?mode=json"
+    },
+    {
+      "company": "Loop",
+      "job_link": "https://api.lever.co/v0/postings/loopreturns?mode=json"
+    },
+    {
+      "company": "Pelago",
+      "job_link": "https://api.lever.co/v0/postings/Pelago?mode=json"
+    },
+    {
+      "company": "Huckleberry Labs",
+      "job_link": "https://api.lever.co/v0/postings/Huckleberrylabs?mode=json"
+    },
+    {
+      "company": "Artera",
+      "job_link": "https://api.lever.co/v0/postings/artera?mode=json"
+    },
+    {
+      "company": "Concurrency",
+      "job_link": "https://api.lever.co/v0/postings/concurrency?mode=json"
+    },
+    {
+      "company": "Age of Learning",
+      "job_link": "https://api.lever.co/v0/postings/aofl?mode=json"
+    },
+    {
+      "company": "Blue Coding",
+      "job_link": "https://api.lever.co/v0/postings/bluecoding?mode=json"
+    },
+    {
+      "company": "CleverTap",
+      "job_link": "https://api.lever.co/v0/postings/clevertap?mode=json"
+    },
+    {
+      "company": "Appcues",
+      "job_link": "https://api.lever.co/v0/postings/appcues-2?mode=json"
+    },
+    {
+      "company": "Raya",
+      "job_link": "https://api.lever.co/v0/postings/raya?mode=json"
+    }
+  ],
+  "summary": {
+    "total_companies": 90,
+    "last_updated": "2025-08-04T11:44:08.024845"
+  }
+}

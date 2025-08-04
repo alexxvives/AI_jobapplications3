@@ -1,7 +1,0 @@
-John Doe
-john.doe@email.com
-555-123-4567
-123 Main St
-Software Engineer at Tech Corp
-Experience with Python, JavaScript
-Bachelor's Degree in Computer Science

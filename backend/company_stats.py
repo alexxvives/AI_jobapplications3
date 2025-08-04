@@ -18,15 +18,40 @@ def get_comprehensive_stats(db: Session = None) -> Dict[str, Any]:
             func.count(Job.id).label('count')
         ).group_by(Job.platform).all()
         
-        # Jobs by company
+        # Jobs by company (exclude empty company names)
         company_stats = db.query(
             Job.company,
             func.count(Job.id).label('count')
-        ).group_by(Job.company).order_by(func.count(Job.id).desc()).limit(10).all()
+        ).filter(Job.company.isnot(None), Job.company != "").group_by(Job.company).order_by(func.count(Job.id).desc()).all()
+        
+        # Companies by platform
+        companies_by_platform_raw = db.query(
+            Job.platform,
+            func.count(func.distinct(Job.company)).label('company_count')
+        ).filter(Job.company.isnot(None), Job.company != "").group_by(Job.platform).order_by(func.count(func.distinct(Job.company)).desc()).all()
+        
+        # Get company names for each platform
+        companies_by_platform = []
+        for platform, company_count in companies_by_platform_raw:
+            # Get distinct company names for this platform
+            platform_companies = db.query(func.distinct(Job.company)).filter(
+                Job.platform == platform,
+                Job.company.isnot(None),
+                Job.company != ""
+            ).all()
+            
+            company_names = sorted([company[0] for company in platform_companies])
+            
+            companies_by_platform.append({
+                "platform": platform,
+                "company_count": company_count,
+                "companies": company_names
+            })
         
         return {
             "total_jobs": total_jobs,
             "platforms": [{"platform": p.platform, "count": p.count} for p in platform_stats],
+            "companies_by_platform": companies_by_platform,
             "top_companies": [{"company": c.company, "count": c.count} for c in company_stats]
         }
     except Exception as e:

@@ -4,11 +4,14 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # Database configuration
-# Use single unified database for everything
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./job_automation.db")
+# Use centralized database configuration to ensure consistency
+from db_config import get_db_path, get_database_url
+
+DB_PATH = get_db_path()
+DATABASE_URL = os.getenv("DATABASE_URL", get_database_url())
 
 # Job scraping database path (same as main database)
-SCRAPING_DB_PATH = os.path.join(os.path.dirname(__file__), "job_automation.db")
+SCRAPING_DB_PATH = DB_PATH
 
 # Create SQLAlchemy engine
 engine = create_engine(
