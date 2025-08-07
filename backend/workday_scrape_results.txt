@@ -1,0 +1,311 @@
+🚀 WORKDAY JOB SCRAPER
+==================================================
+📋 Found 28 companies with Workday job pages
+
+[1/28] Accenture
+  📊 Scraping Accenture (1 Workday URLs)...
+    🌐 Trying: https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers
+      🔗 Trying AJAX endpoint: https://accenture.wd103.myworkdayjobs.com/en-US/AccentureCareers/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 45 jobs from AJAX data
+      ✅ Found 45 jobs via AJAX
+  ✅ Saved 45 new jobs to database
+
+[2/28] Analog Devices
+  📊 Scraping Analog Devices (1 Workday URLs)...
+    🌐 Trying: https://analogdevices.wd1.myworkdayjobs.com/External
+      🔗 Trying AJAX endpoint: https://analogdevices.wd1.myworkdayjobs.com/External/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 50 jobs from AJAX data
+      ✅ Found 50 jobs via AJAX
+  ✅ Saved 50 new jobs to database
+
+[3/28] Autodesk
+  📊 Scraping Autodesk (1 Workday URLs)...
+    🌐 Trying: https://autodesk.wd1.myworkdayjobs.com/Ext
+      🔗 Trying AJAX endpoint: https://autodesk.wd1.myworkdayjobs.com/Ext/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 46 jobs from AJAX data
+      ✅ Found 46 jobs via AJAX
+  ✅ Saved 46 new jobs to database
+
+[4/28] CAE
+  📊 Scraping CAE (1 Workday URLs)...
+    🌐 Trying: https://cae.wd3.myworkdayjobs.com/career
+      🔗 Trying AJAX endpoint: https://cae.wd3.myworkdayjobs.com/career/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 49 jobs from AJAX data
+      ✅ Found 49 jobs via AJAX
+  ✅ Saved 49 new jobs to database
+
+[5/28] Clayton Homes
+  📊 Scraping Clayton Homes (1 Workday URLs)...
+    🌐 Trying: https://claytonhomes.wd1.myworkdayjobs.com/en-US/ClaytonCareers
+      🔗 Trying AJAX endpoint: https://claytonhomes.wd1.myworkdayjobs.com/en-US/ClaytonCareers/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 37 jobs from AJAX data
+      ✅ Found 37 jobs via AJAX
+  ✅ Saved 37 new jobs to database
+
+[6/28] Deckers
+  📊 Scraping Deckers (1 Workday URLs)...
+    🌐 Trying: https://deckers.wd5.myworkdayjobs.com/en-US/Deckers
+      🔗 Trying AJAX endpoint: https://deckers.wd5.myworkdayjobs.com/en-US/Deckers/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 50 jobs from AJAX data
+      ✅ Found 50 jobs via AJAX
+  ✅ Saved 50 new jobs to database
+
+[7/28] DraftKings
+  📊 Scraping DraftKings (1 Workday URLs)...
+    🌐 Trying: https://draftkings.wd1.myworkdayjobs.com/en-US/DraftKings
+      🔗 Trying AJAX endpoint: https://draftkings.wd1.myworkdayjobs.com/en-US/DraftKings/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 48 jobs from AJAX data
+      ✅ Found 48 jobs via AJAX
+  ✅ Saved 48 new jobs to database
+
+[8/28] EMBL
+  📊 Scraping EMBL (1 Workday URLs)...
+    🌐 Trying: https://embl.wd103.myworkdayjobs.com/en-US/EMBL
+      🔗 Trying AJAX endpoint: https://embl.wd103.myworkdayjobs.com/en-US/EMBL/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 31 jobs via AJAX
+      🔄 Processing 31 job items from AJAX response
+      ✅ Successfully parsed 30 jobs from AJAX data
+      ✅ Found 30 jobs via AJAX
+  ✅ Saved 30 new jobs to database
+
+[9/28] FFD
+  📊 Scraping FFD (1 Workday URLs)...
+    🌐 Trying: https://ffd.wd1.myworkdayjobs.com/en-US/EmploymentOpportunities
+      🔗 Trying AJAX endpoint: https://ffd.wd1.myworkdayjobs.com/en-US/EmploymentOpportunities/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 49 jobs via AJAX
+      🔄 Processing 49 job items from AJAX response
+      ✅ Successfully parsed 49 jobs from AJAX data
+      ✅ Found 49 jobs via AJAX
+  ✅ Saved 49 new jobs to database
+
+[10/28] GN
+  📊 Scraping GN (1 Workday URLs)...
+    🌐 Trying: https://gn.wd3.myworkdayjobs.com/en-US/GN-Careers
+      🔗 Trying AJAX endpoint: https://gn.wd3.myworkdayjobs.com/en-US/GN-Careers/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 50 jobs from AJAX data
+      ✅ Found 50 jobs via AJAX
+  ✅ Saved 50 new jobs to database
+
+[11/28] Gen
+  📊 Scraping Gen (1 Workday URLs)...
+    🌐 Trying: https://gen.wd1.myworkdayjobs.com/careers
+      🔗 Trying AJAX endpoint: https://gen.wd1.myworkdayjobs.com/careers/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 46 jobs from AJAX data
+      ✅ Found 46 jobs via AJAX
+  ✅ Saved 46 new jobs to database
+
+[12/28] HP
+  📊 Scraping HP (1 Workday URLs)...
+    🌐 Trying: https://hp.wd5.myworkdayjobs.com/en-US/EXTEU-AC-CareerSite
+      🔗 Trying AJAX endpoint: https://hp.wd5.myworkdayjobs.com/en-US/EXTEU-AC-CareerSite/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 48 jobs from AJAX data
+      ✅ Found 48 jobs via AJAX
+  ✅ Saved 48 new jobs to database
+
+[13/28] Intel
+  📊 Scraping Intel (1 Workday URLs)...
+    🌐 Trying: https://intel.wd1.myworkdayjobs.com/External
+      🔗 Trying AJAX endpoint: https://intel.wd1.myworkdayjobs.com/External/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 49 jobs from AJAX data
+      ✅ Found 49 jobs via AJAX
+  ✅ Saved 49 new jobs to database
+
+[14/28] Invisors
+  📊 Scraping Invisors (1 Workday URLs)...
+    🌐 Trying: https://invisors.wd5.myworkdayjobs.com/en-US/External
+      🔗 Trying AJAX endpoint: https://invisors.wd5.myworkdayjobs.com/en-US/External/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 21 jobs via AJAX
+      🔄 Processing 21 job items from AJAX response
+      ✅ Successfully parsed 21 jobs from AJAX data
+      ✅ Found 21 jobs via AJAX
+  ✅ Saved 21 new jobs to database
+
+[15/28] Life Fitness
+  📊 Scraping Life Fitness (1 Workday URLs)...
+    🌐 Trying: https://lifefitness.wd1.myworkdayjobs.com/en-US/searchLFN
+      🔗 Trying AJAX endpoint: https://lifefitness.wd1.myworkdayjobs.com/en-US/searchLFN/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 49 jobs from AJAX data
+      ✅ Found 49 jobs via AJAX
+  ✅ Saved 49 new jobs to database
+
+[16/28] MLP
+  📊 Scraping MLP (1 Workday URLs)...
+    🌐 Trying: https://mlp.wd5.myworkdayjobs.com/en-US/mlpcareers
+      🔗 Trying AJAX endpoint: https://mlp.wd5.myworkdayjobs.com/en-US/mlpcareers/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 0 jobs via AJAX
+      🔄 AJAX failed, trying HTML fallback...
+      🔍 Found 0 job links with data-automation-id='jobTitle'
+      🔄 No jobs found with primary selector, trying fallbacks...
+      🔍 Fallback 'a[href*="job"]': found 0 links
+      🔍 Fallback 'h3 a': found 0 links
+      🔍 Fallback 'h4 a': found 0 links
+      🔍 Fallback 'a[class*="job"]': found 0 links
+      📋 Parsed 0 unique jobs
+      ⚠️  HTML loaded but no jobs found
+  ⚠️  No jobs found
+
+[17/28] Medimpact
+  📊 Scraping Medimpact (1 Workday URLs)...
+    🌐 Trying: https://medimpact.wd5.myworkdayjobs.com/en-US/MedImpact
+      🔗 Trying AJAX endpoint: https://medimpact.wd5.myworkdayjobs.com/en-US/MedImpact/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ❌ AJAX request error: HTTPSConnectionPool(host='medimpact.wd5.myworkdayjobs.com', port=443): Read timed out. (read timeout=15)
+      🔄 AJAX failed, trying HTML fallback...
+      🔍 Found 0 job links with data-automation-id='jobTitle'
+      🔄 No jobs found with primary selector, trying fallbacks...
+      🔍 Fallback 'a[href*="job"]': found 0 links
+      🔍 Fallback 'h3 a': found 0 links
+      🔍 Fallback 'h4 a': found 0 links
+      🔍 Fallback 'a[class*="job"]': found 0 links
+      📋 Parsed 0 unique jobs
+      ⚠️  HTML loaded but no jobs found
+  ⚠️  No jobs found
+
+[18/28] Microchip Technology
+  📊 Scraping Microchip Technology (1 Workday URLs)...
+    🌐 Trying: https://microchiphr.wd5.myworkdayjobs.com/en-US/External
+      🔗 Trying AJAX endpoint: https://microchiphr.wd5.myworkdayjobs.com/en-US/External/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 49 jobs from AJAX data
+      ✅ Found 49 jobs via AJAX
+  ✅ Saved 49 new jobs to database
+
+[19/28] NVIDIA
+  📊 Scraping NVIDIA (1 Workday URLs)...
+    🌐 Trying: https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite
+      🔗 Trying AJAX endpoint: https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 50 jobs from AJAX data
+      ✅ Found 50 jobs via AJAX
+  ✅ Saved 50 new jobs to database
+
+[20/28] Nasdaq
+  📊 Scraping Nasdaq (1 Workday URLs)...
+    🌐 Trying: https://nasdaq.wd1.myworkdayjobs.com/US_External_Career_Site
+      🔗 Trying AJAX endpoint: https://nasdaq.wd1.myworkdayjobs.com/US_External_Career_Site/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 16 jobs via AJAX
+      🔄 Processing 16 job items from AJAX response
+      ✅ Successfully parsed 11 jobs from AJAX data
+      ✅ Found 11 jobs via AJAX
+  ✅ Saved 11 new jobs to database
+
+[21/28] National Geographic Society
+  📊 Scraping National Geographic Society (1 Workday URLs)...
+    🌐 Trying: https://ngs.wd1.myworkdayjobs.com/en-US/ngs_external_career_site
+      🔗 Trying AJAX endpoint: https://ngs.wd1.myworkdayjobs.com/en-US/ngs_external_career_site/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 23 jobs via AJAX
+      🔄 Processing 23 job items from AJAX response
+      ✅ Successfully parsed 22 jobs from AJAX data
+      ✅ Found 22 jobs via AJAX
+  ✅ Saved 22 new jobs to database
+
+[22/28] Specialized
+  📊 Scraping Specialized (1 Workday URLs)...
+    🌐 Trying: https://specialized.wd5.myworkdayjobs.com/en-US/Specialized_External_Career_Site
+      🔗 Trying AJAX endpoint: https://specialized.wd5.myworkdayjobs.com/en-US/Specialized_External_Career_Site/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 50 jobs from AJAX data
+      ✅ Found 50 jobs via AJAX
+  ✅ Saved 50 new jobs to database
+
+[23/28] TAG
+  📊 Scraping TAG (1 Workday URLs)...
+    🌐 Trying: https://tag.wd3.myworkdayjobs.com/en-US/Tag_Careers
+      🔗 Trying AJAX endpoint: https://tag.wd3.myworkdayjobs.com/en-US/Tag_Careers/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 30 jobs via AJAX
+      🔄 Processing 30 job items from AJAX response
+      ✅ Successfully parsed 30 jobs from AJAX data
+      ✅ Found 30 jobs via AJAX
+  ✅ Saved 30 new jobs to database
+
+[24/28] The New York Times
+  📊 Scraping The New York Times (1 Workday URLs)...
+    🌐 Trying: https://nytimes.wd5.myworkdayjobs.com/en-US/News
+      🔗 Trying AJAX endpoint: https://nytimes.wd5.myworkdayjobs.com/en-US/News/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 0 jobs via AJAX
+      🔄 AJAX failed, trying HTML fallback...
+      🔍 Found 0 job links with data-automation-id='jobTitle'
+      🔄 No jobs found with primary selector, trying fallbacks...
+      🔍 Fallback 'a[href*="job"]': found 0 links
+      🔍 Fallback 'h3 a': found 0 links
+      🔍 Fallback 'h4 a': found 0 links
+      🔍 Fallback 'a[class*="job"]': found 0 links
+      📋 Parsed 0 unique jobs
+      ⚠️  HTML loaded but no jobs found
+  ⚠️  No jobs found
+
+[25/28] Thomson Reuters
+  📊 Scraping Thomson Reuters (1 Workday URLs)...
+    🌐 Trying: https://thomsonreuters.wd5.myworkdayjobs.com/en-US/External_Career_Site
+      🔗 Trying AJAX endpoint: https://thomsonreuters.wd5.myworkdayjobs.com/en-US/External_Career_Site/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 47 jobs from AJAX data
+      ✅ Found 47 jobs via AJAX
+  ✅ Saved 47 new jobs to database
+
+[26/28] Walmart
+  📊 Scraping Walmart (1 Workday URLs)...
+    🌐 Trying: https://walmart.wd5.myworkdayjobs.com/en-US/WalmartExternal
+      🔗 Trying AJAX endpoint: https://walmart.wd5.myworkdayjobs.com/en-US/WalmartExternal/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 47 jobs from AJAX data
+      ✅ Found 47 jobs via AJAX
+  ✅ Saved 47 new jobs to database
+
+[27/28] Wood Mackenzie
+  📊 Scraping Wood Mackenzie (1 Workday URLs)...
+    🌐 Trying: https://woodmac.wd3.myworkdayjobs.com/en-US/woodmaccareers
+      🔗 Trying AJAX endpoint: https://woodmac.wd3.myworkdayjobs.com/en-US/woodmaccareers/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 37 jobs from AJAX data
+      ✅ Found 37 jobs via AJAX
+  ✅ Saved 37 new jobs to database
+
+[28/28] Workday
+  📊 Scraping Workday (1 Workday URLs)...
+    🌐 Trying: https://workday.wd5.myworkdayjobs.com/en-US/Workday
+      🔗 Trying AJAX endpoint: https://workday.wd5.myworkdayjobs.com/en-US/Workday/1/refreshFacet/318c8bb6f553100021d223d9780d30be
+      ✅ Found 50 jobs via AJAX
+      🔄 Processing 50 job items from AJAX response
+      ✅ Successfully parsed 45 jobs from AJAX data
+      ✅ Found 45 jobs via AJAX
+  ✅ Saved 45 new jobs to database
+
+==================================================
+📊 WORKDAY SCRAPING SUMMARY
+   🏢 Companies processed: 28
+   ✅ Successful: 25
+   ❌ Failed: 3
+   💼 Total jobs saved: 1055
+   📈 Average jobs per company: 42.2
+
+🎉 Workday scraping completed successfully!

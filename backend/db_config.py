@@ -11,7 +11,7 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Database paths - always in backend directory
 DB_PATH = os.path.join(BACKEND_DIR, "job_automation.db")
-TRACKER_PATH = os.path.join(BACKEND_DIR, "scrapers", "lever", "company_job_tracker.json")
+TRACKER_PATH = os.path.join(BACKEND_DIR, "scrapers", "company_job_tracker.json")
 
 # For SQLAlchemy
 DATABASE_URL = f"sqlite:///{DB_PATH}"

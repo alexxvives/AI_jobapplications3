@@ -19,7 +19,7 @@ class LeverCompanyDiscovery:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
-        self.tracker_path = Path(__file__).parent / "company_job_tracker.json"
+        self.tracker_path = Path(__file__).parent.parent / "company_job_tracker.json"
         
     def extract_company_slugs_from_urls(self, urls: List[str]) -> Set[str]:
         """Extract company slugs from Lever job URLs"""
@@ -160,7 +160,7 @@ class LeverCompanyDiscovery:
             
             company_entry = {
                 'company': company_name,
-                'job_link': company_data['api_url']
+                'job_links': [company_data['api_url']]
             }
             
             if company_name.lower() in existing_dict:

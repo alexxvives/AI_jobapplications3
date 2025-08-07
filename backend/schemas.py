@@ -14,7 +14,6 @@ class JobResult(BaseModel):
     work_type: Optional[str] = None
     experience_level: Optional[str] = None
     salary_range: Optional[str] = None
-    remote_option: Optional[bool] = False
     scraped_at: Optional[datetime] = None
 
     class Config:

@@ -54,8 +54,7 @@ class UnifiedDatabaseService:
                 job_type=job_data.get('job_type'),
                 work_type=job_data.get('work_type'),
                 experience_level=job_data.get('experience_level'),
-                salary_range=job_data.get('salary_range'),
-                remote_option=job_data.get('remote_option', False)
+                salary_range=job_data.get('salary_range')
             )
             
             # Check for duplicates by link

@@ -296,7 +296,6 @@ def search_jobs(
                 work_type=job.work_type or "",
                 experience_level=job.experience_level or "",
                 salary_range=job.salary_range or "",
-                remote_option=job.remote_option or False,
                 scraped_at=job.fetched_at
             ))
         

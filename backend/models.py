@@ -70,7 +70,6 @@ class Job(Base):
     work_type = Column(String)  # "remote", "hybrid", "on-site"
     experience_level = Column(String)  # "entry", "mid", "senior", "executive"
     salary_range = Column(String)
-    remote_option = Column(Boolean, default=False)  # Kept for backward compatibility
     
     fetched_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
