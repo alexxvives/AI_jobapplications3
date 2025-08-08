@@ -707,6 +707,102 @@
       "job_links": [
         "https://api.lever.co/v0/postings/zartis?mode=json"
       ]
+    },
+    {
+      "company": "Linear",
+      "job_links": [
+        "https://jobs.ashbyhq.com/linear"
+      ]
+    },
+    {
+      "company": "Loom",
+      "job_links": [
+        "https://jobs.ashbyhq.com/loom"
+      ]
+    },
+    {
+      "company": "Notion",
+      "job_links": [
+        "https://jobs.ashbyhq.com/notion"
+      ]
+    },
+    {
+      "company": "Ramp",
+      "job_links": [
+        "https://jobs.ashbyhq.com/ramp"
+      ]
+    },
+    {
+      "company": "Retool",
+      "job_links": [
+        "https://jobs.ashbyhq.com/retool"
+      ]
+    },
+    {
+      "company": "Vercel",
+      "job_links": [
+        "https://jobs.ashbyhq.com/vercel"
+      ]
+    },
+    {
+      "company": "Astronomer",
+      "job_links": [
+        "https://jobs.ashbyhq.com/astronomer"
+      ]
+    },
+    {
+      "company": "Cluely",
+      "job_links": [
+        "https://jobs.ashbyhq.com/cluely"
+      ]
+    },
+    {
+      "company": "Supabase",
+      "job_links": [
+        "https://jobs.ashbyhq.com/supabase"
+      ]
+    },
+    {
+      "company": "OpenAI",
+      "job_links": [
+        "https://jobs.ashbyhq.com/openai"
+      ]
+    },
+    {
+      "company": "V7",
+      "job_links": [
+        "https://jobs.ashbyhq.com/v7labs.com"
+      ]
+    },
+    {
+      "company": "Sentry",
+      "job_links": [
+        "https://jobs.ashbyhq.com/sentry"
+      ]
+    },
+    {
+      "company": "Cognition",
+      "job_links": [
+        "https://jobs.ashbyhq.com/cognition"
+      ]
+    },
+    {
+      "company": "Cargo One",
+      "job_links": [
+        "https://jobs.ashbyhq.com/cargo-one"
+      ]
+    },
+    {
+      "company": "Kindred",
+      "job_links": [
+        "https://jobs.ashbyhq.com/kindred"
+      ]
+    },
+    {
+      "company": "Docker",
+      "job_links": [
+        "https://jobs.ashbyhq.com/docker"
+      ]
     }
   ],
   "metadata": {
@@ -728,5 +824,9 @@
       "JSON endpoints return redirect/SPA configuration, not job data",
       "Future scraping may require browser automation or AJAX simulation"
     ]
+  },
+  "summary": {
+    "total_companies": 134,
+    "last_updated": "2025-08-07T16:23:05.892611"
   }
 }

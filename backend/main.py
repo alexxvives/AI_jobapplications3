@@ -279,7 +279,20 @@ def search_jobs(
                 query = query.filter(or_(*location_conditions))
         
         # Order by most recent and limit results
-        jobs = query.order_by(Job.fetched_at.desc()).limit(limit).all()
+        final_query = query.order_by(Job.fetched_at.desc()).limit(limit)
+        
+        # Debug: Print the SQL query
+        print(f"🔍 SQL Query: {final_query}")
+        print(f"🔍 Search params: title='{title}', location='{location}', limit={limit}")
+        
+        jobs = final_query.all()
+        print(f"🔍 Found {len(jobs)} jobs in database")
+        
+        # Debug: Print first few job types if any internships
+        internship_jobs = [j for j in jobs if j.job_type and 'intern' in j.job_type.lower()]
+        print(f"🔍 Internship jobs found: {len(internship_jobs)}")
+        for job in internship_jobs[:3]:
+            print(f"   - {job.title} ({job.job_type}) at {job.company}")
         
         # Convert to response format
         job_results = []

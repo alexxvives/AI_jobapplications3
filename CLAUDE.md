@@ -33,7 +33,7 @@ This platform has **3 core modules** that work together:
 
 ---
 
-## 📂 Project Structure
+## 📂 Project Structure (Updated 2025-08-05)
 
 ```
 ├── backend/                   # FastAPI server (centralized)
@@ -41,35 +41,31 @@ This platform has **3 core modules** that work together:
 │   ├── models.py             # Database models
 │   ├── database.py           # Database connection
 │   ├── db_config.py          # Centralized database configuration
-│   ├── job_automation.db     # SINGLE database (2,746 jobs, 84 companies)
-│   ├── enhanced_scraper.py   # Current scraper (maintains both tables)
+│   ├── job_automation.db     # SINGLE database (2,746 jobs, 90 companies)
+│   ├── scrapers/             # **NEW**: Platform-organized scrapers
+│   │   ├── company_job_tracker.json # **UPDATED**: Multi-platform tracker (90 companies)
+│   │   ├── lever/            # Lever platform scraping
+│   │   │   ├── lever_company_discovery.py # WebSearch-based discovery
+│   │   │   └── lever_scraper.py # Lever API integration
+│   │   ├── workday/          # **NEW**: Workday platform scraping
+│   │   │   ├── workday_company_discovery.py # site:myworkdayjobs.com discovery
+│   │   │   └── workday_scraper.py # Workday jobs scraper
+│   │   └── adp/              # ADP platform scraping
+│   │       └── adp_scraper.py # ADP jobs scraper
 │   ├── services/             # All business logic modules
 │   │   ├── profile_parsing/   # Resume → JSON conversion
-│   │   │   ├── ai_parser.py   # Ollama integration
-│   │   │   ├── file_extractor.py # PDF/DOCX text extraction
-│   │   │   ├── schema.py      # Profile data structure
-│   │   │   └── prompts/       # Ollama prompts + examples
-│   │   ├── job_scraping/      # ATS platform scraping
-│   │   │   └── scrapers/      # Platform-specific scrapers
-│   │   │       ├── lever_scraper.py # Lever API integration
-│   │   │       └── shared_utils.py # Common scraping utilities
 │   │   ├── job_application/   # Form automation logic
-│   │   │   ├── instruction_generator.py # Profile → form mapping
-│   │   │   ├── intelligent_form_filler.py
-│   │   │   └── prompts/       # Form filling prompts
 │   │   └── cover_letters/     # Cover letter generation
-│   ├── data/                 # Company data & tracking
-│   │   ├── company_job_tracker.json # 84 validated Lever companies
-│   │   └── consolidated_companies.json # Frontend company data
 │   └── storage/              # User resumes & data
 ├── frontend/                 # React dashboard
-│   └── src/components/       # UI components
+│   ├── src/components/       # UI components
+│   │   └── ModernJobSearch.jsx # **FIXED**: Profile selection bug resolved
+│   └── public/assets/logos/  # **NEW**: Company logo assets
 ├── chrome-extension/         # Browser automation
 │   ├── content.js           # DOM interaction
 │   ├── background.js        # Ollama communication
-│   └── popup.js             # User controls
-├── shared/                   # Common utilities
-└── docs/                     # Essential documentation
+│   └── web-bridge.js        # Cross-domain communication
+└── lib/ollama/              # **CONFIRMED**: Ollama runtime libraries (2.6GB - required)
 ```
 
 ---
@@ -82,9 +78,10 @@ This platform has **3 core modules** that work together:
    - Profile stored in backend database for editing
 
 2. **Job Discovery**
-   - WebSearch discovery finds companies using `site:jobs.lever.co`
-   - `enhanced_scraper.py` fetches jobs from 84 validated Lever companies
-   - Jobs displayed in React frontend with filters (2,746 active jobs)
+   - **Multi-platform discovery**: `site:jobs.lever.co` for Lever, `site:myworkdayjobs.com` for Workday
+   - **Platform-specific scrapers**: Lever API + Workday HTML parsing
+   - **Centralized tracking**: `company_job_tracker.json` with `job_links` array supporting multiple platforms per company
+   - Jobs displayed in React frontend with filters (2,746+ active jobs)
 
 3. **Application Automation**
    - User selects jobs to apply to
@@ -313,8 +310,9 @@ CREATE TABLE profiles (
 
 ### **Database Path Management** 
 - **Single database file**: `backend/job_automation.db`
-- **All scrapers must run from**: `backend/` directory (not `backend/services/job_scraping/scrapers/`)
-- **Database service**: Uses relative path `./job_automation.db`
+- **All scrapers must run from**: `backend/` directory (not subdirectories)
+- **New scraper structure**: `backend/scrapers/{platform}/{platform}_scraper.py`
+- **Database service**: Uses `db_config.py` for consistent paths
 
 ⚠️ **Important**: Always run scraping scripts from `backend/` directory to avoid creating duplicate database files in subdirectories.
 
@@ -323,20 +321,21 @@ CREATE TABLE profiles (
 
 **Solution**:
 ```bash
-# ✅ CORRECT - Run from backend directory
+# ✅ CORRECT - Run from backend directory (NEW STRUCTURE)
 cd backend
-python3 -c "from services.job_scraping.scrapers.lever_scraper import LeverScraper; ..."
+python3 scrapers/lever/lever_scraper.py
+python3 scrapers/workday/workday_scraper.py
 
-# ❌ WRONG - Creates duplicate database in scrapers/ directory  
-cd backend/services/job_scraping/scrapers
+# ❌ WRONG - Creates duplicate database in scrapers/ subdirectories  
+cd backend/scrapers/lever
 python3 lever_scraper.py
 ```
 
 **Prevention Rules**:
 1. **Always run Python scripts from** `backend/` **directory**
-2. **Database file path**: `backend/job_automation.db` (relative: `./job_automation.db`)
-3. **Import scrapers with**: `from services.job_scraping.scrapers.xxx import ...`
-4. **Before scraping**: Check you're in `backend/` directory with `pwd`
+2. **Database file path**: `backend/job_automation.db` (managed by `db_config.py`)
+3. **New scraper paths**: `backend/scrapers/{platform}/{platform}_scraper.py`
+4. **Centralized tracker**: `backend/scrapers/company_job_tracker.json`
 
 ---
 
@@ -349,12 +348,13 @@ cd backend && uvicorn main:app --reload
 # Frontend  
 cd frontend && npm run dev
 
-# Job Scrapers (prevents duplicate databases)
-cd backend && python3 run_scraper.py
+# Job Scrapers (NEW STRUCTURE - prevents duplicate databases)
+cd backend && python3 scrapers/lever/lever_scraper.py
+cd backend && python3 scrapers/workday/workday_scraper.py
 
-# Manual scraper testing
-cd backend
-python3 -c "from services.job_scraping.scrapers.lever_scraper import LeverScraper; ..."
+# Company Discovery (run via Claude with WebSearch)
+cd backend && python3 scrapers/lever/lever_company_discovery.py
+cd backend && python3 scrapers/workday/workday_company_discovery.py
 
 # Database inspection
 cd backend && python3 check_actual_database.py
@@ -372,12 +372,19 @@ Load unpacked from chrome-extension/ directory
 ## 📋 Current Implementation Status
 
 ✅ **Completed**:
-- ✅ **WebSearch Company Discovery** (2025-08-04): Found 84 validated Lever companies using `site:jobs.lever.co` strategy
-- ✅ **Enhanced Scraper System**: `enhanced_scraper.py` maintains both jobs AND companies tables automatically
-- ✅ **Database Consolidation**: Single `job_automation.db` with 2,746 jobs from 84 companies (all with valid URLs)
-- ✅ **Data Quality Control**: Removed companies without URLs, fixed duplicates, synchronized table relationships
-- ✅ **Centralized Database Configuration**: `db_config.py` ensures consistent database paths regardless of working directory
-- ✅ **Codebase Cleanup**: Removed 78+ outdated discovery/testing files, streamlined project structure
+- ✅ **Major Codebase Reorganization** (2025-08-05): Complete restructuring and cleanup
+  - **Platform-Organized Scrapers**: Moved scrapers into `backend/scrapers/{platform}/` folders
+  - **Multi-Platform Company Tracker**: Updated `company_job_tracker.json` to use `job_links` array format
+  - **Workday Platform Support**: Created `workday_company_discovery.py` and `workday_scraper.py` 
+  - **Centralized Tracker**: Single `company_job_tracker.json` supports multiple platforms per company
+  - **Massive File Cleanup**: Removed 50+ outdated files (docs, test files, legacy code)
+- ✅ **ModernJobSearch Bug Fix** (2025-08-05): Fixed critical "profiles.map is not a function" error
+  - **Enhanced Error Handling**: Added comprehensive array validation and loading states
+  - **Mandatory Profile Selection**: Users must select profile before job automation
+  - **Improved UX**: Loading spinners and detailed error logging
+- ✅ **WebSearch Company Discovery** (2025-08-04): Found 90 validated companies using platform-specific searches
+- ✅ **Database Consolidation**: Single `job_automation.db` with 2,746+ jobs from 90 companies
+- ✅ **Centralized Database Configuration**: `db_config.py` ensures consistent database paths
 - ✅ **Database schema cleanup** (2025-07-13): Simplified tables, renamed fields, fixed parsing issues
 - ✅ **Lever scraper working**: Successfully tested with Activecampaign (33+ jobs)
 - ✅ **Unified database architecture**: Single SQLite file, consistent schema
@@ -409,32 +416,49 @@ Load unpacked from chrome-extension/ directory
 - **Chrome Extension Testing**: End-to-end testing with real job application forms
 - **Session Management**: Debugging automation session endpoint issues
 
-## 🔍 Current Job Scraping Approach (2025-08-04)
+## 🔍 Current Job Scraping Approach (Updated 2025-08-05)
 
-### **WebSearch-Based Company Discovery**
-- **Strategy**: Use `site:jobs.lever.co` searches to find companies actually using Lever
-- **Discovery Tool**: Claude's WebSearch with job-related search terms
-- **Success Rate**: 100% - all discovered companies have working Lever APIs
-- **Current Database**: 84 validated companies with 2,746 active jobs
+### **Multi-Platform Company Discovery**
+- **Lever Discovery**: `site:jobs.lever.co {search_term}` → `lever_company_discovery.py`
+- **Workday Discovery**: `site:myworkdayjobs.com {search_term}` → `workday_company_discovery.py`
+- **Success Rate**: 100% - all discovered companies have validated job platforms
+- **Current Database**: 90 companies with 2,746+ active jobs
 
-### **Lever API Integration**
-- **Endpoint**: `https://api.lever.co/v0/postings/{company_slug}?mode=json`
-- **Data Source**: `backend/data/company_job_tracker.json` - 84 companies with job links
-- **Scraper**: `backend/enhanced_scraper.py` - maintains both jobs AND companies tables
-- **Database**: Single `backend/job_automation.db` with synchronized tables
+### **Company Tracker Format (NEW)**
+```json
+{
+  "company": "Company Name",
+  "job_links": [
+    "https://api.lever.co/v0/postings/company?mode=json",
+    "https://company.wd1.myworkdayjobs.com/CompanyCareers"
+  ]
+}
+```
+
+### **Platform-Specific Scrapers**
+- **Lever**: `lever_scraper.py` - Uses Lever API (`api.lever.co`)
+- **Workday**: `workday_scraper.py` - Parses HTML from Workday sites (`myworkdayjobs.com`)
+- **ADP**: `adp_scraper.py` - Ready for ADP platform integration
+- **Centralized**: Single `company_job_tracker.json` supports all platforms
 
 ### **Data Quality Standards**
-- ✅ **URL Validation**: Only companies with valid Lever URLs are kept
-- ✅ **Duplicate Prevention**: Enhanced scraper checks for existing jobs before insertion
-- ✅ **Table Synchronization**: Job counts automatically maintained in companies table
-- ✅ **Clean Data**: Companies without URLs and their jobs are removed
+- ✅ **Multi-Platform Support**: Companies can have multiple job platforms
+- ✅ **Platform Validation**: Each platform type validated differently
+- ✅ **Centralized Tracking**: Single tracker file prevents data fragmentation
+- ✅ **Extensible Design**: Easy to add new platforms (Greenhouse, etc.)
 
-🗓️ **Planned**:
-- **Application status tracking**
-- **Cover letter generation**
-- **Email follow-ups** 
-- **Advanced job matching**
-- **Production deployment**
+🗓️ **Next Session Priorities**:
+1. **Workday Company Discovery**: Run WebSearch discovery to find Workday companies using `site:myworkdayjobs.com` with job search terms
+2. **Test Workday Scraper**: Validate `workday_scraper.py` works with real Workday job sites
+3. **Expand Company Database**: Add discovered Workday companies to `company_job_tracker.json`
+4. **Platform Integration**: Ensure both Lever and Workday scrapers work together seamlessly
+5. **Job Database Growth**: Aim to expand from 2,746 to 4,000+ jobs with Workday integration
+
+**Future Planned**:
+- **Greenhouse Platform**: Add `site:boards.greenhouse.io` discovery
+- **Application Status Tracking**: Enhanced dashboard features  
+- **Cover Letter Generation**: AI-powered personalized letters
+- **Production Deployment**: Scale to handle thousands of companies
 
 ---
 

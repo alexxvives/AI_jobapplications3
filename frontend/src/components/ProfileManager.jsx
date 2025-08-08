@@ -19,6 +19,10 @@ function ProfileManager() {
   const [viewingProfile, setViewingProfile] = useState(null)
   const [editingSection, setEditingSection] = useState(null)
   const [editedData, setEditedData] = useState(null)
+  
+  // Profile name editing states
+  const [editingProfileName, setEditingProfileName] = useState(null)
+  const [newProfileName, setNewProfileName] = useState('')
 
   useEffect(() => {
     loadProfiles()
@@ -193,6 +197,44 @@ function ProfileManager() {
     setEditedData(null)
   }
 
+  const handleEditProfileName = (profile) => {
+    setEditingProfileName(profile.id)
+    setNewProfileName(profile.title)
+  }
+
+  const handleSaveProfileName = async (profileId) => {
+    try {
+      const updatedProfile = await updateProfile(profileId, { title: newProfileName })
+      
+      // Update local state
+      const updatedProfiles = profiles.map(profile => 
+        profile.id === profileId 
+          ? { ...profile, title: updatedProfile.title, updated_at: updatedProfile.updated_at }
+          : profile
+      )
+      setProfiles(updatedProfiles)
+      
+      // Update viewing profile if it's the same one
+      if (viewingProfile?.id === profileId) {
+        setViewingProfile({ ...viewingProfile, title: updatedProfile.title })
+      }
+      
+      setEditingProfileName(null)
+      setNewProfileName('')
+      setMessage('Profile name updated successfully!')
+      setTimeout(() => setMessage(null), 3000)
+      
+    } catch (err) {
+      setError('Failed to update profile name')
+      console.error('Profile name update error:', err)
+    }
+  }
+
+  const handleCancelProfileNameEdit = () => {
+    setEditingProfileName(null)
+    setNewProfileName('')
+  }
+
   return (
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Profile Management</h1>
@@ -284,7 +326,47 @@ function ProfileManager() {
               <div key={profile.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{profile.title}</h3>
+                    {editingProfileName === profile.id ? (
+                      <div className="flex items-center space-x-2 mb-2">
+                        <input
+                          type="text"
+                          value={newProfileName}
+                          onChange={(e) => setNewProfileName(e.target.value)}
+                          className="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSaveProfileName(profile.id)
+                            }
+                          }}
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleSaveProfileName(profile.id)}
+                          className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={handleCancelProfileNameEdit}
+                          className="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="font-medium text-gray-900">{profile.title}</h3>
+                        <button
+                          onClick={() => handleEditProfileName(profile)}
+                          className="text-gray-400 hover:text-blue-600 transition-colors"
+                          title="Edit profile name"
+                        >
+                          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                          </svg>
+                        </button>
+                      </div>
+                    )}
                     <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
                       <span>{profile.full_name || 'No Name'}</span>
                       <span>{profile.email || 'No email'}</span>
@@ -320,15 +402,57 @@ function ProfileManager() {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
             <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-bold text-white">Profile Details</h2>
-                <p className="text-blue-100 text-sm mt-1">
-                  {viewingProfile.personal_information?.basic_information?.first_name} {viewingProfile.personal_information?.basic_information?.last_name}
-                </p>
+              <div className="flex-1">
+                {editingProfileName === viewingProfile.id ? (
+                  <div className="flex items-center space-x-2 mb-2">
+                    <input
+                      type="text"
+                      value={newProfileName}
+                      onChange={(e) => setNewProfileName(e.target.value)}
+                      className="px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-white text-gray-900 bg-white text-lg font-bold flex-1"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSaveProfileName(viewingProfile.id)
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleSaveProfileName(viewingProfile.id)}
+                      className="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
+                    >
+                      ✓ Save
+                    </button>
+                    <button
+                      onClick={handleCancelProfileNameEdit}
+                      className="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-3">
+                    <div>
+                      <h2 className="text-xl font-bold text-white">{viewingProfile.title}</h2>
+                      <p className="text-blue-100 text-sm mt-1">
+                        {viewingProfile.personal_information?.basic_information?.first_name} {viewingProfile.personal_information?.basic_information?.last_name}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleEditProfileName(viewingProfile)}
+                      className="text-blue-200 hover:text-white transition-colors p-1"
+                      title="Edit profile name"
+                    >
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => setViewingProfile(null)}
-                className="text-white hover:text-blue-200 bg-blue-800 hover:bg-blue-900 px-3 py-1 rounded-md text-sm transition-colors"
+                className="text-white hover:text-blue-200 bg-blue-800 hover:bg-blue-900 px-3 py-1 rounded-md text-sm transition-colors ml-4"
               >
                 ✕ Close
               </button>

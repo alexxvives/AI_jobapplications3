@@ -172,7 +172,12 @@ function ModernJobSearch() {
       filtered = filtered.filter(job => job.platform === selectedFilters.platform)
     }
     if (selectedFilters.jobType !== 'all') {
-      filtered = filtered.filter(job => job.job_type?.toLowerCase().includes(selectedFilters.jobType))
+      filtered = filtered.filter(job => {
+        const jobType = job.job_type?.toLowerCase() || ''
+        const filterType = selectedFilters.jobType.toLowerCase()
+        console.log('🔍 Filtering job type:', { jobType, filterType, match: jobType.includes(filterType) })
+        return jobType.includes(filterType)
+      })
     }
     if (selectedFilters.workType !== 'all') {
       filtered = filtered.filter(job => job.work_type?.toLowerCase() === selectedFilters.workType)
@@ -443,9 +448,12 @@ function ModernJobSearch() {
                 </div>
               </div>
 
-              {/* Job Type Filter */}
+              {/* Job Type Filter - Enhanced */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Job Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Job Type
+                  <span className="ml-2 text-xs text-teal-600 font-medium">✨ Enhanced</span>
+                </label>
                 <select
                   value={selectedFilters.jobType}
                   onChange={(e) => updateFilter('jobType', e.target.value)}
@@ -456,6 +464,24 @@ function ModernJobSearch() {
                   <option value="part-time">Part-time</option>
                   <option value="contract">Contract</option>
                   <option value="internship">Internship</option>
+                </select>
+              </div>
+
+              {/* Work Type Filter - Enhanced */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Work Arrangement
+                  <span className="ml-2 text-xs text-teal-600 font-medium">✨ Enhanced</span>
+                </label>
+                <select
+                  value={selectedFilters.workType}
+                  onChange={(e) => updateFilter('workType', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                >
+                  <option value="all">All Arrangements</option>
+                  <option value="remote">Remote</option>
+                  <option value="hybrid">Hybrid</option>
+                  <option value="on-site">On-site</option>
                 </select>
               </div>
             </div>
@@ -476,6 +502,27 @@ function ModernJobSearch() {
                 )}
               </div>
             </div>
+
+            {/* Enhanced Data Quality Banner */}
+            {jobs.some(job => job.platform === 'workday') && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-200 rounded-xl">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-teal-800">
+                      ✨ Enhanced Job Data Quality
+                    </h3>
+                    <p className="text-sm text-teal-700 mt-1">
+                      Workday jobs now include real-time job types, work arrangements, and full descriptions extracted using advanced scraping.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (
@@ -548,23 +595,49 @@ function ModernJobSearch() {
                             </div>
 
                             {job.description && (
-                              <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                                {job.description.substring(0, 150)}...
-                              </p>
+                              <div className="mb-4">
+                                <p className="text-gray-600 text-sm line-clamp-2">
+                                  {job.description.substring(0, 150)}...
+                                </p>
+                                {job.platform === 'workday' && (
+                                  <span className="inline-flex items-center mt-1 text-xs text-teal-600">
+                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                                    </svg>
+                                    Enhanced with full job description
+                                  </span>
+                                )}
+                              </div>
                             )}
 
-                            <div className="flex items-center space-x-2 mb-3">
+                            <div className="flex items-center space-x-2 mb-3 flex-wrap">
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPlatformColor(job.platform)}`}>
                                 {job.platform}
                               </span>
-                              {job.remote_option && (
-                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  Remote
+                              
+                              {/* Enhanced Work Type Display */}
+                              {job.work_type && (
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                  job.work_type.toLowerCase() === 'remote' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : job.work_type.toLowerCase() === 'hybrid'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {job.work_type}
+                                  {job.platform === 'workday' && (
+                                    <span className="ml-1 text-teal-600">✨</span>
+                                  )}
                                 </span>
                               )}
+                              
+                              {/* Enhanced Job Type Display */}
                               {job.job_type && (
-                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                   {job.job_type}
+                                  {job.platform === 'workday' && (
+                                    <span className="ml-1 text-teal-600">✨</span>
+                                  )}
                                 </span>
                               )}
                             </div>
